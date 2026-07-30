@@ -3,6 +3,7 @@ import { Hotbar } from '../inventory/Hotbar';
 import { getItemById } from '../inventory/ItemRegistry';
 import { inputManager } from '../core/InputManager';
 import { checkRecipe } from '../crafting/CraftingSystem';
+import { createItemIcon } from './IconGenerator';
 
 export class InventoryScreen {
   private container: HTMLDivElement | null = null;
@@ -11,6 +12,7 @@ export class InventoryScreen {
   private readonly hotbar: Hotbar;
   private dragItem: { itemId: string; count: number } | null = null;
   private dragEl: HTMLDivElement | null = null;
+  private tooltipEl: HTMLDivElement | null = null;
 
   // Crafting
   private craftGrid: (string | null)[][] = [[null, null, null], [null, null, null], [null, null, null]];
@@ -100,7 +102,17 @@ export class InventoryScreen {
     `;
     document.body.appendChild(this.dragEl);
 
-    document.addEventListener('mousemove', this.onDragMove);
+    // Tooltip
+    this.tooltipEl = document.createElement('div');
+    this.tooltipEl.style.cssText = `
+      position: fixed; pointer-events: none; z-index: 400; display: none;
+      background: rgba(16, 16, 24, 0.9); border: 2px solid #555; border-radius: 4px;
+      padding: 4px 8px; font-family: monospace; font-size: 12px; color: #fff;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.6); white-space: nowrap;
+    `;
+    document.body.appendChild(this.tooltipEl);
+
+    document.addEventListener('mousemove', this.onMouseMove);
     document.addEventListener('mouseup', this.onDragEnd);
   }
 
@@ -196,14 +208,55 @@ export class InventoryScreen {
     this.refresh();
   }
 
-  private onDragMove = (e: MouseEvent): void => {
-    if (!this.dragEl) return;
-    if (!this.dragItem) { this.dragEl.style.display = 'none'; return; }
-    this.dragEl.style.display = 'flex';
-    this.dragEl.style.left = `${e.clientX - 22}px`;
-    this.dragEl.style.top = `${e.clientY - 22}px`;
-    const item = getItemById(this.dragItem.itemId);
-    this.dragEl.textContent = item ? `${item.name[0]}${this.dragItem.count > 1 ? ' ' + this.dragItem.count : ''}` : '';
+  private onMouseMove = (e: MouseEvent): void => {
+    if (!this.visible) {
+      if (this.dragEl) this.dragEl.style.display = 'none';
+      if (this.tooltipEl) this.tooltipEl.style.display = 'none';
+      return;
+    }
+
+    if (this.dragItem) {
+      if (this.tooltipEl) this.tooltipEl.style.display = 'none';
+      if (this.dragEl) {
+        this.dragEl.style.display = 'flex';
+        this.dragEl.style.left = `${e.clientX - 22}px`;
+        this.dragEl.style.top = `${e.clientY - 22}px`;
+        this.dragEl.textContent = '';
+        if (this.dragItem.itemId) {
+          const icon = createItemIcon(this.dragItem.itemId, 28);
+          this.dragEl.appendChild(icon);
+          if (this.dragItem.count > 1) {
+            const c = document.createElement('span');
+            c.style.cssText = 'position:absolute;bottom:1px;right:3px;font-size:10px;font-weight:bold;color:#fff;text-shadow:1px 1px 0 #000;';
+            c.textContent = String(this.dragItem.count);
+            this.dragEl.appendChild(c);
+          }
+        }
+      }
+      return;
+    }
+
+    if (this.dragEl) this.dragEl.style.display = 'none';
+
+    if (this.tooltipEl) {
+      const target = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+      const slotEl = target?.closest<HTMLElement>('[data-item-id]');
+      const itemId = slotEl?.dataset.itemId;
+
+      if (itemId) {
+        const itemDef = getItemById(itemId);
+        if (itemDef) {
+          this.tooltipEl.textContent = itemDef.name;
+          this.tooltipEl.style.display = 'block';
+          const left = Math.min(e.clientX + 14, window.innerWidth - 150);
+          const top = Math.min(e.clientY + 14, window.innerHeight - 40);
+          this.tooltipEl.style.left = `${Math.max(8, left)}px`;
+          this.tooltipEl.style.top = `${Math.max(8, top)}px`;
+          return;
+        }
+      }
+      this.tooltipEl.style.display = 'none';
+    }
   };
 
   private onDragEnd = (): void => {
@@ -217,23 +270,21 @@ export class InventoryScreen {
 
   refresh(): void {
     if (!this.container) return;
-    const divs = this.container.querySelectorAll<HTMLDivElement>('div[style*="width: 44px"]');
-    const allSlots = Array.from(divs);
 
-    // Craft grid (first 9)
-    for (let i = 0; i < 9; i++) {
-      const r = Math.floor(i / 3), c = i % 3;
-      this.renderSlot(allSlots[i], { itemId: this.craftGrid[r][c], count: 1 });
+    // Collect all slots (0..8 = craft grid, 9 = craft result, 10..36 = inv, 37..45 = hotbar)
+    const allSlots = this.container.querySelectorAll<HTMLDivElement>('div[style*="width: 44px"]');
+
+    // Craft grid (indices 0-8)
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) {
+        const item = this.craftGrid[r][c];
+        this.renderSlot(allSlots[r * 3 + c], item ? { itemId: item, count: 1 } : { itemId: null, count: 0 });
+      }
     }
-    // Output (index 9)
+
+    // Craft result (index 9)
     const recipe = checkRecipe(this.craftGrid);
-    this.renderSlot(allSlots[9], recipe ? { itemId: recipe.result.itemId, count: 1 } : { itemId: null, count: 0 });
-    if (recipe && recipe.result.count > 1) {
-      const c = document.createElement('span');
-      c.style.cssText = 'position:absolute;bottom:1px;right:3px;font-size:10px;';
-      c.textContent = String(recipe.result.count);
-      allSlots[9].appendChild(c);
-    }
+    this.renderSlot(allSlots[9], recipe ? { itemId: recipe.result.itemId, count: recipe.result.count } : { itemId: null, count: 0 });
 
     // Inventory (indices 10-36)
     for (let i = 0; i < 27; i++) {
@@ -249,14 +300,17 @@ export class InventoryScreen {
   private renderSlot(el: HTMLDivElement, slot: { itemId: string | null; count: number }): void {
     el.textContent = '';
     if (slot.itemId) {
-      const item = getItemById(slot.itemId);
-      el.textContent = item ? item.name[0] : '?';
+      el.dataset.itemId = slot.itemId;
+      const icon = createItemIcon(slot.itemId, 28);
+      el.appendChild(icon);
       if (slot.count > 1) {
         const c = document.createElement('span');
-        c.style.cssText = 'position:absolute;bottom:1px;right:3px;font-size:10px;';
+        c.style.cssText = 'position:absolute;bottom:1px;right:3px;font-size:10px;font-weight:bold;color:#fff;text-shadow:1px 1px 0 #000;';
         c.textContent = String(slot.count);
         el.appendChild(c);
       }
+    } else {
+      delete el.dataset.itemId;
     }
   }
 
@@ -264,6 +318,9 @@ export class InventoryScreen {
     this.visible = !this.visible;
     if (this.container) {
       this.container.style.display = this.visible ? 'flex' : 'none';
+    }
+    if (!this.visible && this.tooltipEl) {
+      this.tooltipEl.style.display = 'none';
     }
     if (this.visible) {
       this.refresh();

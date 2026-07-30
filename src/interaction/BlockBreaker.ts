@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { raycaster } from '../player/Raycaster';
 import type { World } from '../world/World';
 import { getBlockById } from '../world/BlockRegistry';
+import { getItemById } from '../inventory/ItemRegistry';
+import { AudioManager } from '../audio/AudioManager';
 
 export class BlockBreaker {
   private outline: THREE.LineSegments | null = null;
@@ -42,7 +44,7 @@ export class BlockBreaker {
     this.scene.add(this.outline);
   }
 
-  updateBreak(deltaTime: number, isHolding: boolean, camera: THREE.PerspectiveCamera): void {
+  updateBreak(deltaTime: number, isHolding: boolean, camera: THREE.PerspectiveCamera, activeItem?: { itemId: string | null; count: number }): void {
     if (!isHolding) {
       this.breakProgress = 0;
       return;
@@ -57,10 +59,19 @@ export class BlockBreaker {
     const block = getBlockById(hit.blockId);
     if (!block || block.hardness <= 0) return;
 
-    this.breakProgress += deltaTime / block.hardness;
+    let speedMult = 1.0;
+    if (activeItem?.itemId) {
+      const itemDef = getItemById(activeItem.itemId);
+      if (itemDef?.speedMultiplier) {
+        speedMult = itemDef.speedMultiplier;
+      }
+    }
+
+    this.breakProgress += (deltaTime * speedMult) / block.hardness;
 
     if (this.breakProgress >= 1) {
       this.world.setBlock(hit.blockX, hit.blockY, hit.blockZ, 0);
+      AudioManager.getInstance().playSFX('break');
       this.onBlockBroken?.(hit.blockX, hit.blockY, hit.blockZ, hit.blockId);
       this.breakProgress = 0;
     }

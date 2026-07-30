@@ -3,9 +3,14 @@ import type { Player } from '../player/Player';
 import type { Inventory } from '../inventory/Inventory';
 import type { Hotbar } from '../inventory/Hotbar';
 import type { DayNightCycle } from '../environment/DayNightCycle';
+import type { World, BlockModification } from '../world/World';
+import type { ChunkManager } from '../world/ChunkManager';
+import { gameSettings } from '../core/GameSettings';
 
 export class SaveManager {
   private storage = new StorageAdapter();
+  private chunkManager: ChunkManager;
+  private world: World;
   private player: Player;
   private inventory: Inventory;
   private hotbar: Hotbar;
@@ -14,13 +19,16 @@ export class SaveManager {
   private getSeed: () => number;
 
   constructor(
-    _chunkManager: unknown,
+    chunkManager: ChunkManager,
+    world: World,
     player: Player,
     inventory: Inventory,
     hotbar: Hotbar,
     dayNight: DayNightCycle,
     getSeed: () => number,
   ) {
+    this.chunkManager = chunkManager;
+    this.world = world;
     this.player = player;
     this.inventory = inventory;
     this.hotbar = hotbar;
@@ -45,6 +53,7 @@ export class SaveManager {
       hotbar: this.hotbar.slots,
       hotbarIndex: this.hotbar.activeSlotIndex,
       timeOfDay: this.dayNight.timeOfDay,
+      modifiedBlocks: this.world.getModifiedBlocks(),
     };
     await this.storage.saveData('world', data);
   }
@@ -57,6 +66,7 @@ export class SaveManager {
       hotbar: { itemId: string | null; count: number }[];
       hotbarIndex: number;
       timeOfDay: number;
+      modifiedBlocks?: BlockModification[];
     }>('world');
 
     if (!data) return null;
@@ -75,6 +85,11 @@ export class SaveManager {
     this.hotbar.activeSlotIndex = data.hotbarIndex;
 
     this.dayNight.timeOfDay = data.timeOfDay;
+
+    if (data.modifiedBlocks) {
+      this.world.setModifiedBlocks(data.modifiedBlocks);
+      this.chunkManager.forceReload(gameSettings.renderDistance, this.player.position.x, this.player.position.z);
+    }
 
     return data.worldSeed;
   }

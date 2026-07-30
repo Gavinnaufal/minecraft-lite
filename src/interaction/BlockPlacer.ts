@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { raycaster } from '../player/Raycaster';
 import type { World } from '../world/World';
+import { AudioManager } from '../audio/AudioManager';
 
 export class BlockPlacer {
   private readonly world: World;
@@ -35,6 +36,7 @@ export class BlockPlacer {
     if (existing !== 0) return false;
 
     this.world.setBlock(placeX, placeY, placeZ, blockId);
+    AudioManager.getInstance().playSFX('place');
     return true;
   }
 }

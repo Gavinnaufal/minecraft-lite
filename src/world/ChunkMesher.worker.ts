@@ -5,6 +5,7 @@ interface BlockInfo {
   id: number;
   solid: boolean;
   transparent: boolean;
+  name?: string;
 }
 
 type Axis = 'x' | 'y' | 'z';
@@ -41,7 +42,24 @@ function getBlock(id: number): BlockInfo | undefined {
 
 function isSolid(id: number): boolean {
   const b = getBlock(id);
+  return b ? b.solid : false;
+}
+
+function isOpaque(id: number): boolean {
+  const b = getBlock(id);
   return b ? b.solid && !b.transparent : false;
+}
+
+function isWater(id: number): boolean {
+  const b = getBlock(id);
+  return b ? b.name === 'water' : false;
+}
+
+function getFaceIndices(faIdx: number): number[] {
+  if (faIdx === 0 || faIdx === 3 || faIdx === 5) {
+    return [0, 1, 2, 0, 2, 3];
+  }
+  return [0, 2, 1, 0, 3, 2];
 }
 
 const mask = new Uint8Array(MAX_DIM * MAX_DIM);
@@ -51,6 +69,11 @@ const POS = new Float32Array(MAX_QUADS * 4 * 3);
 const NRM = new Float32Array(MAX_QUADS * 4 * 3);
 const UV = new Float32Array(MAX_QUADS * 4 * 2);
 const IDX = new Uint32Array(MAX_QUADS * 6);
+
+const WATER_POS = new Float32Array(MAX_QUADS * 4 * 3);
+const WATER_NRM = new Float32Array(MAX_QUADS * 4 * 3);
+const WATER_UV = new Float32Array(MAX_QUADS * 4 * 2);
+const WATER_IDX = new Uint32Array(MAX_QUADS * 6);
 
 function borderIndexX(y: number, z: number): number {
   return z + y * CHUNK_SIZE_Z;
@@ -78,121 +101,57 @@ function blockIndex(x: number, y: number, z: number): number {
 
 function isFaceVisible(
   blocks: Uint8Array,
-  x: number,
-  y: number,
-  z: number,
-  nx: number,
-  ny: number,
-  nz: number,
-  eastBorder?: Uint8Array,
-  westBorder?: Uint8Array,
-  northBorder?: Uint8Array,
-  southBorder?: Uint8Array,
+  x: number, y: number, z: number,
+  nx: number, ny: number, nz: number,
+  currentBlockId: number,
+  eastBorder?: Uint8Array, westBorder?: Uint8Array,
+  northBorder?: Uint8Array, southBorder?: Uint8Array,
 ): boolean {
   const nxPos = x + nx;
   const nyPos = y + ny;
   const nzPos = z + nz;
-
   if (nyPos < 0 || nyPos >= CHUNK_HEIGHT) return true;
 
-  // Horizontal neighbor in adjacent chunk
+  let neighborId: number;
+
   if (nxPos < 0 && westBorder) {
-    const nId = westBorder[borderIndexX(nyPos, z)];
-    if (nId === 0) return true;
-    return !isSolid(nId);
-  }
-  if (nxPos >= CHUNK_SIZE_X && eastBorder) {
-    const nId = eastBorder[borderIndexX(nyPos, z)];
-    if (nId === 0) return true;
-    return !isSolid(nId);
-  }
-  if (nzPos < 0 && southBorder) {
-    const nId = southBorder[borderIndexZ(x, nyPos)];
-    if (nId === 0) return true;
-    return !isSolid(nId);
-  }
-  if (nzPos >= CHUNK_SIZE_Z && northBorder) {
-    const nId = northBorder[borderIndexZ(x, nyPos)];
-    if (nId === 0) return true;
-    return !isSolid(nId);
-  }
-
-  if (nxPos < 0 || nxPos >= CHUNK_SIZE_X || nzPos < 0 || nzPos >= CHUNK_SIZE_Z) {
+    neighborId = westBorder[borderIndexX(nyPos, z)];
+  } else if (nxPos >= CHUNK_SIZE_X && eastBorder) {
+    neighborId = eastBorder[borderIndexX(nyPos, z)];
+  } else if (nzPos < 0 && southBorder) {
+    neighborId = southBorder[borderIndexZ(x, nyPos)];
+  } else if (nzPos >= CHUNK_SIZE_Z && northBorder) {
+    neighborId = northBorder[borderIndexZ(x, nyPos)];
+  } else if (nxPos < 0 || nxPos >= CHUNK_SIZE_X || nzPos < 0 || nzPos >= CHUNK_SIZE_Z) {
     return true;
+  } else {
+    neighborId = blocks[blockIndex(nxPos, nyPos, nzPos)];
   }
-  const neighborId = blocks[blockIndex(nxPos, nyPos, nzPos)];
+
   if (neighborId === 0) return true;
-  return !isSolid(neighborId);
+  if (neighborId === currentBlockId) return false;
+  if (isOpaque(neighborId)) return false;
+  return true;
 }
 
-function addQuad(
-  quadCount: number,
-  x: number,
-  y: number,
-  z: number,
-  w: number,
-  h: number,
-  fa: FaceAxis,
-): number {
-  const baseIdx = quadCount * 4;
-  const px: number[] = [x], py: number[] = [y], pz: number[] = [z];
-  setAxis(px, py, pz, fa.planeAxis, getAxisVal(x, y, z, fa.planeAxis) + fa.quadFacePos);
-
-  const ax0 = getAxisVal(x, y, z, fa.aAxis);
-  const bx0 = getAxisVal(x, y, z, fa.bAxis);
-
-  const corners: [number, number][] = [
-    [ax0 + w, bx0],
-    [ax0, bx0],
-    [ax0, bx0 + h],
-    [ax0 + w, bx0 + h],
-  ];
-
-  const [nx, ny, nz] = fa.dir;
-
-  for (let v = 0; v < 4; v++) {
-    const vo = (baseIdx + v) * 3;
-    const cp: number[] = [px[0], py[0], pz[0]];
-    setAxis(cp, cp, cp, fa.aAxis, corners[v][0]);
-    setAxis(cp, cp, cp, fa.bAxis, corners[v][1]);
-
-    POS[vo] = cp[0];
-    POS[vo + 1] = cp[1];
-    POS[vo + 2] = cp[2];
-
-    NRM[vo] = nx;
-    NRM[vo + 1] = ny;
-    NRM[vo + 2] = nz;
-
-    const uvOff = (baseIdx + v) * 2;
-    UV[uvOff] = v === 0 || v === 3 ? w : 0;
-    UV[uvOff + 1] = v < 2 ? 0 : h;
-  }
-
-  const idxBase = quadCount * 6;
-  IDX[idxBase] = baseIdx;
-  IDX[idxBase + 1] = baseIdx + 1;
-  IDX[idxBase + 2] = baseIdx + 2;
-  IDX[idxBase + 3] = baseIdx;
-  IDX[idxBase + 4] = baseIdx + 2;
-  IDX[idxBase + 5] = baseIdx + 3;
-
-  return baseIdx + 4;
+interface QuadData {
+  positions: number[];
+  normals: number[];
+  uvs: number[];
+  indices: number[];
 }
 
-function meshChunk(
+function meshSolid(
   blocks: Uint8Array,
   eastBorder?: Uint8Array,
   westBorder?: Uint8Array,
   northBorder?: Uint8Array,
   southBorder?: Uint8Array,
 ) {
-  let quadCount = 0;
-  let vertexIndex = 0;
+  const blockGroups = new Map<string, QuadData[]>();
 
-  const groupQuads = new Map<number, number>();
-
-  for (const fa of FACE_AXES) {
+  for (let faIdx = 0; faIdx < FACE_AXES.length; faIdx++) {
+    const fa = FACE_AXES[faIdx];
     for (let plane = 0; plane < fa.planeSize; plane++) {
       mask.fill(0);
       visited.fill(0);
@@ -204,14 +163,13 @@ function meshChunk(
         setAxis(px, py, pz, fa.bAxis, b);
         for (let a = 0; a < fa.aSize; a++) {
           setAxis(px, py, pz, fa.aAxis, a);
-
           const x = px[0], y = py[0], z = pz[0];
-          const blockId = blocks[blockIndex(x, y, z)];
-          if (blockId === 0) continue;
-          if (!isSolid(blockId)) continue;
+          const bid = blocks[blockIndex(x, y, z)];
+          if (bid === 0 || isWater(bid)) continue;
+          if (!isSolid(bid)) continue;
 
-          if (isFaceVisible(blocks, x, y, z, fa.dir[0], fa.dir[1], fa.dir[2], eastBorder, westBorder, northBorder, southBorder)) {
-            mask[b * fa.aSize + a] = blockId;
+          if (isFaceVisible(blocks, x, y, z, fa.dir[0], fa.dir[1], fa.dir[2], bid, eastBorder, westBorder, northBorder, southBorder)) {
+            mask[b * fa.aSize + a] = bid;
           }
         }
       }
@@ -219,55 +177,218 @@ function meshChunk(
       for (let b = 0; b < fa.bSize; b++) {
         for (let a = 0; a < fa.aSize; a++) {
           const idx = b * fa.aSize + a;
-          const blockId = mask[idx];
-          if (blockId === 0 || visited[idx]) continue;
+          const bid = mask[idx];
+          if (bid === 0 || visited[idx]) continue;
 
           let w = 1;
-          while (a + w < fa.aSize && mask[idx + w] === blockId && !visited[idx + w]) {
-            w++;
-          }
-
+          while (a + w < fa.aSize && mask[idx + w] === bid && !visited[idx + w]) w++;
           let h = 1;
           outer: for (; b + h < fa.bSize; h++) {
             for (let k = 0; k < w; k++) {
-              if (mask[(b + h) * fa.aSize + a + k] !== blockId || visited[(b + h) * fa.aSize + a + k]) {
-                break outer;
-              }
+              if (mask[(b + h) * fa.aSize + a + k] !== bid || visited[(b + h) * fa.aSize + a + k]) break outer;
             }
           }
-
-          for (let dy = 0; dy < h; dy++) {
-            for (let dx = 0; dx < w; dx++) {
-              visited[(b + dy) * fa.aSize + a + dx] = 1;
-            }
-          }
+          for (let dy = 0; dy < h; dy++) for (let dx = 0; dx < w; dx++) visited[(b + dy) * fa.aSize + a + dx] = 1;
 
           const bx: number[] = [0], by: number[] = [0], bz: number[] = [0];
           setAxis(bx, by, bz, fa.planeAxis, plane);
           setAxis(bx, by, bz, fa.aAxis, a);
           setAxis(bx, by, bz, fa.bAxis, b);
 
-          vertexIndex = addQuad(quadCount, bx[0], by[0], bz[0], w, h, fa);
-          groupQuads.set(blockId, (groupQuads.get(blockId) ?? 0) + 1);
-          quadCount++;
+          const px2: number[] = [bx[0]], py2: number[] = [by[0]], pz2: number[] = [bz[0]];
+          setAxis(px2, py2, pz2, fa.planeAxis, getAxisVal(bx[0], by[0], bz[0], fa.planeAxis) + fa.quadFacePos);
+
+          const ax0 = getAxisVal(bx[0], by[0], bz[0], fa.aAxis);
+          const bx0 = getAxisVal(bx[0], by[0], bz[0], fa.bAxis);
+          const corners: [number, number][] = [[ax0 + w, bx0], [ax0, bx0], [ax0, bx0 + h], [ax0 + w, bx0 + h]];
+
+          const quadPositions: number[] = [];
+          const quadNormals: number[] = [];
+          const quadUVs: number[] = [];
+
+          for (let v = 0; v < 4; v++) {
+            const cp = [px2[0], py2[0], pz2[0]];
+            if (fa.aAxis === 'x') cp[0] = corners[v][0];
+            else if (fa.aAxis === 'y') cp[1] = corners[v][0];
+            else cp[2] = corners[v][0];
+
+            if (fa.bAxis === 'x') cp[0] = corners[v][1];
+            else if (fa.bAxis === 'y') cp[1] = corners[v][1];
+            else cp[2] = corners[v][1];
+
+            quadPositions.push(cp[0], cp[1], cp[2]);
+            quadNormals.push(fa.dir[0], fa.dir[1], fa.dir[2]);
+            quadUVs.push(v === 0 || v === 3 ? w : 0, v < 2 ? 0 : h);
+          }
+
+          const indices = getFaceIndices(faIdx);
+          const groupKey = `${bid}_${faIdx}`;
+
+          if (!blockGroups.has(groupKey)) {
+            blockGroups.set(groupKey, []);
+          }
+          blockGroups.get(groupKey)!.push({
+            positions: quadPositions,
+            normals: quadNormals,
+            uvs: quadUVs,
+            indices,
+          });
         }
       }
     }
   }
 
-  return {
-    quadCount,
-    vertexIndex,
-    groupQuads,
-  };
+  let quadCount = 0;
+  const groupQuads: Record<string, number> = {};
+
+  const sortedKeys = Array.from(blockGroups.keys()).sort((a, b) => {
+    const [bidA, faA] = a.split('_').map(Number);
+    const [bidB, faB] = b.split('_').map(Number);
+    if (bidA !== bidB) return bidA - bidB;
+    return faA - faB;
+  });
+
+  for (const key of sortedKeys) {
+    const quads = blockGroups.get(key)!;
+    groupQuads[key] = quads.length;
+
+    for (const quad of quads) {
+      const baseVertex = quadCount * 4;
+      const baseIdx = quadCount * 6;
+
+      for (let i = 0; i < 12; i++) POS[baseVertex * 3 + i] = quad.positions[i];
+      for (let i = 0; i < 12; i++) NRM[baseVertex * 3 + i] = quad.normals[i];
+      for (let i = 0; i < 8; i++) UV[baseVertex * 2 + i] = quad.uvs[i];
+      for (let i = 0; i < 6; i++) IDX[baseIdx + i] = quad.indices[i] + baseVertex;
+
+      quadCount++;
+    }
+  }
+
+  return { quadCount, vertexIndex: quadCount * 4, groupQuads };
 }
 
-interface MeshResult {
-  positions: Float32Array;
-  normals: Float32Array;
-  uvs: Float32Array;
-  indices: Uint32Array;
-  groups: { blockId: number; quadCount: number }[];
+function meshWater(
+  blocks: Uint8Array,
+  eastBorder?: Uint8Array,
+  westBorder?: Uint8Array,
+  northBorder?: Uint8Array,
+  southBorder?: Uint8Array,
+) {
+  const blockGroups = new Map<string, QuadData[]>();
+
+  for (let faIdx = 0; faIdx < FACE_AXES.length; faIdx++) {
+    const fa = FACE_AXES[faIdx];
+    for (let plane = 0; plane < fa.planeSize; plane++) {
+      mask.fill(0);
+      visited.fill(0);
+
+      const px: number[] = [0], py: number[] = [0], pz: number[] = [0];
+      setAxis(px, py, pz, fa.planeAxis, plane);
+
+      for (let b = 0; b < fa.bSize; b++) {
+        setAxis(px, py, pz, fa.bAxis, b);
+        for (let a = 0; a < fa.aSize; a++) {
+          setAxis(px, py, pz, fa.aAxis, a);
+          const x = px[0], y = py[0], z = pz[0];
+          const bid = blocks[blockIndex(x, y, z)];
+          if (!isWater(bid)) continue;
+
+          if (isFaceVisible(blocks, x, y, z, fa.dir[0], fa.dir[1], fa.dir[2], bid, eastBorder, westBorder, northBorder, southBorder)) {
+            mask[b * fa.aSize + a] = bid;
+          }
+        }
+      }
+
+      for (let b = 0; b < fa.bSize; b++) {
+        for (let a = 0; a < fa.aSize; a++) {
+          const idx = b * fa.aSize + a;
+          const bid = mask[idx];
+          if (bid === 0 || visited[idx]) continue;
+
+          let w = 1;
+          while (a + w < fa.aSize && mask[idx + w] === bid && !visited[idx + w]) w++;
+          let h = 1;
+          outer2: for (; b + h < fa.bSize; h++) {
+            for (let k = 0; k < w; k++) {
+              if (mask[(b + h) * fa.aSize + a + k] !== bid || visited[(b + h) * fa.aSize + a + k]) break outer2;
+            }
+          }
+          for (let dy = 0; dy < h; dy++) for (let dx = 0; dx < w; dx++) visited[(b + dy) * fa.aSize + a + dx] = 1;
+
+          const bx: number[] = [0], by: number[] = [0], bz: number[] = [0];
+          setAxis(bx, by, bz, fa.planeAxis, plane);
+          setAxis(bx, by, bz, fa.aAxis, a);
+          setAxis(bx, by, bz, fa.bAxis, b);
+
+          const px2: number[] = [bx[0]], py2: number[] = [by[0]], pz2: number[] = [bz[0]];
+          setAxis(px2, py2, pz2, fa.planeAxis, getAxisVal(bx[0], by[0], bz[0], fa.planeAxis) + fa.quadFacePos);
+
+          const ax0 = getAxisVal(bx[0], by[0], bz[0], fa.aAxis);
+          const bx0 = getAxisVal(bx[0], by[0], bz[0], fa.bAxis);
+          const corners: [number, number][] = [[ax0 + w, bx0], [ax0, bx0], [ax0, bx0 + h], [ax0 + w, bx0 + h]];
+
+          const quadPositions: number[] = [];
+          const quadNormals: number[] = [];
+          const quadUVs: number[] = [];
+
+          for (let v = 0; v < 4; v++) {
+            const cp = [px2[0], py2[0], pz2[0]];
+            if (fa.aAxis === 'x') cp[0] = corners[v][0];
+            else if (fa.aAxis === 'y') cp[1] = corners[v][0];
+            else cp[2] = corners[v][0];
+
+            if (fa.bAxis === 'x') cp[0] = corners[v][1];
+            else if (fa.bAxis === 'y') cp[1] = corners[v][1];
+            else cp[2] = corners[v][1];
+
+            quadPositions.push(cp[0], cp[1], cp[2]);
+            quadNormals.push(fa.dir[0], fa.dir[1], fa.dir[2]);
+            quadUVs.push(v === 0 || v === 3 ? w : 0, v < 2 ? 0 : h);
+          }
+
+          const indices = getFaceIndices(faIdx);
+          const groupKey = `${bid}_${faIdx}`;
+
+          if (!blockGroups.has(groupKey)) {
+            blockGroups.set(groupKey, []);
+          }
+          blockGroups.get(groupKey)!.push({
+            positions: quadPositions,
+            normals: quadNormals,
+            uvs: quadUVs,
+            indices,
+          });
+        }
+      }
+    }
+  }
+
+  let quadCount = 0;
+
+  const sortedKeys = Array.from(blockGroups.keys()).sort((a, b) => {
+    const [bidA, faA] = a.split('_').map(Number);
+    const [bidB, faB] = b.split('_').map(Number);
+    if (bidA !== bidB) return bidA - bidB;
+    return faA - faB;
+  });
+
+  for (const key of sortedKeys) {
+    const quads = blockGroups.get(key)!;
+    for (const quad of quads) {
+      const baseVertex = quadCount * 4;
+      const baseIdx = quadCount * 6;
+
+      for (let i = 0; i < 12; i++) WATER_POS[baseVertex * 3 + i] = quad.positions[i];
+      for (let i = 0; i < 12; i++) WATER_NRM[baseVertex * 3 + i] = quad.normals[i];
+      for (let i = 0; i < 8; i++) WATER_UV[baseVertex * 2 + i] = quad.uvs[i];
+      for (let i = 0; i < 6; i++) WATER_IDX[baseIdx + i] = quad.indices[i] + baseVertex;
+
+      quadCount++;
+    }
+  }
+
+  return { quadCount, vertexIndex: quadCount * 4 };
 }
 
 self.onmessage = (event: MessageEvent) => {
@@ -275,61 +396,62 @@ self.onmessage = (event: MessageEvent) => {
 
   if (msg.type === 'init') {
     blockById = msg.blockTypes;
-    for (let i = 0; i < blockById.length; i++) {
-      if (!blockById[i]) {
-        blockById[i] = { id: i, solid: false, transparent: true };
-      }
-    }
     self.postMessage({ type: 'initDone' });
     return;
   }
 
   if (msg.type === 'mesh') {
+    const { id, chunkX, chunkZ } = msg;
     const blocks = msg.blocks as Uint8Array;
     const eastBorder = msg.eastBorder as Uint8Array | undefined;
     const westBorder = msg.westBorder as Uint8Array | undefined;
     const northBorder = msg.northBorder as Uint8Array | undefined;
     const southBorder = msg.southBorder as Uint8Array | undefined;
 
-    const { quadCount, vertexIndex, groupQuads } = meshChunk(
-      blocks,
-      eastBorder,
-      westBorder,
-      northBorder,
-      southBorder,
-    );
+    const solidRes = meshSolid(blocks, eastBorder, westBorder, northBorder, southBorder);
+    const waterRes = meshWater(blocks, eastBorder, westBorder, northBorder, southBorder);
 
-    if (quadCount === 0) {
-      (self as unknown as Worker).postMessage({ type: 'meshResult', id: msg.id, quadCount: 0 });
-      return;
-    }
+    const posCopy = POS.slice(0, solidRes.vertexIndex * 3);
+    const nrmCopy = NRM.slice(0, solidRes.vertexIndex * 3);
+    const uvCopy = UV.slice(0, solidRes.vertexIndex * 2);
+    const idxCopy = IDX.slice(0, solidRes.quadCount * 6);
 
-    const groups: { blockId: number; quadCount: number }[] = [];
-    groupQuads.forEach((qc, blockId) => {
-      groups.push({ blockId, quadCount: qc });
-    });
+    const waterPosCopy = WATER_POS.slice(0, waterRes.vertexIndex * 3);
+    const waterNrmCopy = WATER_NRM.slice(0, waterRes.vertexIndex * 3);
+    const waterUvCopy = WATER_UV.slice(0, waterRes.vertexIndex * 2);
+    const waterIdxCopy = WATER_IDX.slice(0, waterRes.quadCount * 6);
 
-    const result: MeshResult = {
-      positions: POS.slice(0, vertexIndex * 3),
-      normals: NRM.slice(0, vertexIndex * 3),
-      uvs: UV.slice(0, vertexIndex * 2),
-      indices: IDX.slice(0, quadCount * 6),
-      groups,
-    };
+    const transferables: Transferable[] = [
+      posCopy.buffer,
+      nrmCopy.buffer,
+      uvCopy.buffer,
+      idxCopy.buffer,
+      waterPosCopy.buffer,
+      waterNrmCopy.buffer,
+      waterUvCopy.buffer,
+      waterIdxCopy.buffer,
+    ];
 
     (self as unknown as Worker).postMessage(
       {
         type: 'meshResult',
-        id: msg.id,
-        quadCount,
-        ...result,
+        id,
+        chunkX,
+        chunkZ,
+        quadCount: solidRes.quadCount,
+        positions: posCopy,
+        normals: nrmCopy,
+        uvs: uvCopy,
+        indices: idxCopy,
+        groupQuads: solidRes.groupQuads,
+        waterQuadCount: waterRes.quadCount,
+        waterPositions: waterPosCopy,
+        waterNormals: waterNrmCopy,
+        waterUvs: waterUvCopy,
+        waterIndices: waterIdxCopy,
       },
-      [
-        result.positions.buffer,
-        result.normals.buffer,
-        result.uvs.buffer,
-        result.indices.buffer,
-      ] as Transferable[],
+      transferables,
     );
   }
 };
+

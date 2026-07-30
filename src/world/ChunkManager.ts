@@ -1,15 +1,20 @@
 import * as THREE from 'three';
 import { Chunk } from './Chunk';
-import { buildChunkMesh } from './ChunkMesher';
+import { buildChunkMesh, buildChunkMeshFromWorkerData } from './ChunkMesher';
 import type { NeighborBorders } from './ChunkMesher';
 import { worldToChunkCoord } from '../utils/math';
 import { CHUNK_SIZE_X, CHUNK_SIZE_Z, CHUNK_HEIGHT } from '../utils/constants';
+import { getAllBlocks } from './BlockRegistry';
+import ChunkWorker from './ChunkMesher.worker?worker';
 
 export class ChunkManager {
   private readonly chunks = new Map<string, Chunk>();
   private readonly meshes = new Map<string, THREE.Mesh>();
   private readonly waterMeshes = new Map<string, THREE.Mesh>();
   private readonly scene: THREE.Scene;
+
+  private worker: Worker | null = null;
+  private nextRequestId = 1;
 
   private lastPlayerChunkX = NaN;
   private lastPlayerChunkZ = NaN;
@@ -18,6 +23,32 @@ export class ChunkManager {
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
+    this.initWorker();
+  }
+
+  private initWorker(): void {
+    try {
+      this.worker = new ChunkWorker();
+      this.worker.postMessage({
+        type: 'init',
+        blockTypes: getAllBlocks().map((b) => ({
+          id: b.id,
+          solid: b.solid,
+          transparent: b.transparent,
+          name: b.name,
+        })),
+      });
+
+      this.worker.onmessage = (e: MessageEvent) => {
+        const data = e.data;
+        if (data.type === 'meshResult') {
+          this.applyWorkerMeshResult(data);
+        }
+      };
+    } catch (err) {
+      console.warn('[ChunkManager] Web Worker initialization failed, using fallback:', err);
+      this.worker = null;
+    }
   }
 
   private static key(chunkX: number, chunkZ: number): string {
@@ -80,11 +111,46 @@ export class ChunkManager {
     return border;
   }
 
-  async meshChunk(chunkX: number, chunkZ: number): Promise<void> {
+  meshChunk(chunkX: number, chunkZ: number): void {
+    const key = ChunkManager.key(chunkX, chunkZ);
+    const chunk = this.chunks.get(key);
+    if (!chunk || !chunk.isDirty) return;
+
+    const neighbors: NeighborBorders = {};
+    const east = this.getChunk(chunkX + 1, chunkZ);
+    if (east) neighbors.east = this.extractEastBorder(east);
+    const west = this.getChunk(chunkX - 1, chunkZ);
+    if (west) neighbors.west = this.extractWestBorder(west);
+    const north = this.getChunk(chunkX, chunkZ + 1);
+    if (north) neighbors.north = this.extractNorthBorder(north);
+    const south = this.getChunk(chunkX, chunkZ - 1);
+    if (south) neighbors.south = this.extractSouthBorder(south);
+
+    if (this.worker) {
+      const reqId = ++this.nextRequestId;
+      this.worker.postMessage({
+        type: 'mesh',
+        id: reqId,
+        chunkX,
+        chunkZ,
+        blocks: chunk.blocks,
+        eastBorder: neighbors.east,
+        westBorder: neighbors.west,
+        northBorder: neighbors.north,
+        southBorder: neighbors.south,
+      });
+      chunk.isDirty = false;
+      return;
+    }
+
+    this.meshChunkSync(chunkX, chunkZ, neighbors);
+    chunk.isDirty = false;
+  }
+
+  private meshChunkSync(chunkX: number, chunkZ: number, neighbors: NeighborBorders): void {
     const key = ChunkManager.key(chunkX, chunkZ);
     const chunk = this.chunks.get(key);
     if (!chunk) return;
-    if (!chunk.isDirty) return;
 
     // Clean up old solid mesh
     const oldMesh = this.meshes.get(key);
@@ -107,36 +173,16 @@ export class ChunkManager {
       (oldWaterMesh.material as THREE.Material).dispose();
     }
 
-    const neighbors: NeighborBorders = {};
-    const east = this.getChunk(chunkX + 1, chunkZ);
-    if (east) neighbors.east = this.extractEastBorder(east);
-    const west = this.getChunk(chunkX - 1, chunkZ);
-    if (west) neighbors.west = this.extractWestBorder(west);
-    const north = this.getChunk(chunkX, chunkZ + 1);
-    if (north) neighbors.north = this.extractNorthBorder(north);
-    const south = this.getChunk(chunkX, chunkZ - 1);
-    if (south) neighbors.south = this.extractSouthBorder(south);
-
     const meshData = buildChunkMesh(chunk, neighbors);
     if (meshData) {
-      // Create solid mesh
       const mesh = new THREE.Mesh(meshData.geometry, meshData.materials);
-      mesh.position.set(
-        chunkX * CHUNK_SIZE_X,
-        0,
-        chunkZ * CHUNK_SIZE_Z,
-      );
+      mesh.position.set(chunkX * CHUNK_SIZE_X, 0, chunkZ * CHUNK_SIZE_Z);
       this.scene.add(mesh);
       this.meshes.set(key, mesh);
 
-      // Create water mesh if present
       if (meshData.waterGeometry && meshData.waterMaterial) {
         const waterMesh = new THREE.Mesh(meshData.waterGeometry, meshData.waterMaterial);
-        waterMesh.position.set(
-          chunkX * CHUNK_SIZE_X,
-          0,
-          chunkZ * CHUNK_SIZE_Z,
-        );
+        waterMesh.position.set(chunkX * CHUNK_SIZE_X, 0, chunkZ * CHUNK_SIZE_Z);
         waterMesh.renderOrder = 1;
         this.scene.add(waterMesh);
         this.waterMeshes.set(key, waterMesh);
@@ -147,8 +193,72 @@ export class ChunkManager {
       this.meshes.delete(key);
       this.waterMeshes.delete(key);
     }
+  }
 
-    chunk.isDirty = false;
+  private applyWorkerMeshResult(data: {
+    id: number;
+    chunkX: number;
+    chunkZ: number;
+    quadCount: number;
+    positions?: Float32Array;
+    normals?: Float32Array;
+    uvs?: Float32Array;
+    indices?: Uint32Array;
+    groupQuads?: Record<string, number>;
+    waterQuadCount?: number;
+    waterPositions?: Float32Array;
+    waterNormals?: Float32Array;
+    waterUvs?: Float32Array;
+    waterIndices?: Uint32Array;
+  }): void {
+    const key = ChunkManager.key(data.chunkX, data.chunkZ);
+    if (!this.chunks.has(key)) return;
+
+    // Clean up old solid mesh
+    const oldMesh = this.meshes.get(key);
+    if (oldMesh) {
+      this.scene.remove(oldMesh);
+      oldMesh.geometry.dispose();
+      const mat = oldMesh.material;
+      if (Array.isArray(mat)) {
+        mat.forEach((m) => m.dispose());
+      } else {
+        (mat as THREE.Material).dispose();
+      }
+    }
+
+    // Clean up old water mesh
+    const oldWaterMesh = this.waterMeshes.get(key);
+    if (oldWaterMesh) {
+      this.scene.remove(oldWaterMesh);
+      oldWaterMesh.geometry.dispose();
+      (oldWaterMesh.material as THREE.Material).dispose();
+    }
+
+    const meshData = buildChunkMeshFromWorkerData(data);
+    if (meshData) {
+      if (meshData.geometry.attributes.position && meshData.geometry.attributes.position.count > 0) {
+        const mesh = new THREE.Mesh(meshData.geometry, meshData.materials);
+        mesh.position.set(data.chunkX * CHUNK_SIZE_X, 0, data.chunkZ * CHUNK_SIZE_Z);
+        this.scene.add(mesh);
+        this.meshes.set(key, mesh);
+      } else {
+        this.meshes.delete(key);
+      }
+
+      if (meshData.waterGeometry && meshData.waterMaterial) {
+        const waterMesh = new THREE.Mesh(meshData.waterGeometry, meshData.waterMaterial);
+        waterMesh.position.set(data.chunkX * CHUNK_SIZE_X, 0, data.chunkZ * CHUNK_SIZE_Z);
+        waterMesh.renderOrder = 1;
+        this.scene.add(waterMesh);
+        this.waterMeshes.set(key, waterMesh);
+      } else {
+        this.waterMeshes.delete(key);
+      }
+    } else {
+      this.meshes.delete(key);
+      this.waterMeshes.delete(key);
+    }
   }
 
   unloadChunk(chunkX: number, chunkZ: number): void {
@@ -197,19 +307,17 @@ export class ChunkManager {
     }
   }
 
+  private loadQueue: { cx: number; cz: number }[] = [];
+
   update(worldX: number, worldZ: number, renderDistance: number): void {
     const { chunkX, chunkZ } = worldToChunkCoord(worldX, 0, worldZ);
-
-    if (chunkX === this.lastPlayerChunkX && chunkZ === this.lastPlayerChunkZ) return;
-
-    this.lastPlayerChunkX = chunkX;
-    this.lastPlayerChunkZ = chunkZ;
 
     const minCX = chunkX - renderDistance;
     const maxCX = chunkX + renderDistance;
     const minCZ = chunkZ - renderDistance;
     const maxCZ = chunkZ + renderDistance;
 
+    // Unload out-of-range chunks
     for (const key of this.chunks.keys()) {
       const [cx, cz] = key.split(',').map(Number);
       if (cx < minCX || cx > maxCX || cz < minCZ || cz > maxCZ) {
@@ -217,19 +325,107 @@ export class ChunkManager {
       }
     }
 
+    if (chunkX === this.lastPlayerChunkX && chunkZ === this.lastPlayerChunkZ) {
+      this.processLoadQueue(2);
+      return;
+    }
+
+    this.lastPlayerChunkX = chunkX;
+    this.lastPlayerChunkZ = chunkZ;
+
+    // Rebuild pending load queue sorted by distance to player chunk
+    const pending: { cx: number; cz: number; distSq: number }[] = [];
     for (let cx = minCX; cx <= maxCX; cx++) {
       for (let cz = minCZ; cz <= maxCZ; cz++) {
         if (!this.chunks.has(ChunkManager.key(cx, cz))) {
-          const chunk = this.loadChunk(cx, cz);
-          if (this.terrainFiller) {
-            this.terrainFiller(chunk);
-          } else {
-            this.fillTestTerrain(chunk);
-          }
-          this.meshChunk(cx, cz);
+          const dx = cx - chunkX;
+          const dz = cz - chunkZ;
+          pending.push({ cx, cz, distSq: dx * dx + dz * dz });
         }
       }
     }
+
+    pending.sort((a, b) => a.distSq - b.distSq);
+    this.loadQueue = pending.map((p) => ({ cx: p.cx, cz: p.cz }));
+
+    this.processLoadQueue(2);
+  }
+
+  processLoadQueue(maxChunksPerFrame = 2): void {
+    if (this.loadQueue.length === 0) {
+      this.meshDirtyChunks(maxChunksPerFrame);
+      return;
+    }
+
+    const count = Math.min(maxChunksPerFrame, this.loadQueue.length);
+    const newChunks: Chunk[] = [];
+
+    for (let i = 0; i < count; i++) {
+      const item = this.loadQueue.shift();
+      if (!item) break;
+      if (this.chunks.has(ChunkManager.key(item.cx, item.cz))) continue;
+
+      const chunk = this.loadChunk(item.cx, item.cz);
+      if (this.terrainFiller) {
+        this.terrainFiller(chunk);
+      } else {
+        this.fillTestTerrain(chunk);
+      }
+      newChunks.push(chunk);
+    }
+
+    for (const chunk of newChunks) {
+      const east = this.getChunk(chunk.chunkX + 1, chunk.chunkZ);
+      if (east) east.isDirty = true;
+      const west = this.getChunk(chunk.chunkX - 1, chunk.chunkZ);
+      if (west) west.isDirty = true;
+      const north = this.getChunk(chunk.chunkX, chunk.chunkZ + 1);
+      if (north) north.isDirty = true;
+      const south = this.getChunk(chunk.chunkX, chunk.chunkZ - 1);
+      if (south) south.isDirty = true;
+    }
+
+    for (const chunk of newChunks) {
+      this.meshChunk(chunk.chunkX, chunk.chunkZ);
+    }
+  }
+
+  private meshDirtyChunks(maxCount = 2): void {
+    let meshed = 0;
+    for (const chunk of this.chunks.values()) {
+      if (chunk.isDirty) {
+        this.meshChunk(chunk.chunkX, chunk.chunkZ);
+        meshed++;
+        if (meshed >= maxCount) break;
+      }
+    }
+  }
+
+  private projScreenMatrix = new THREE.Matrix4();
+  private frustum = new THREE.Frustum();
+
+  updateFrustumCulling(camera: THREE.PerspectiveCamera): void {
+    this.projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    this.frustum.setFromProjectionMatrix(this.projScreenMatrix);
+
+    const box = new THREE.Box3();
+    const minVec = new THREE.Vector3();
+    const maxVec = new THREE.Vector3();
+
+    this.meshes.forEach((mesh, key) => {
+      const [cx, cz] = key.split(',').map(Number);
+      minVec.set(cx * CHUNK_SIZE_X, 0, cz * CHUNK_SIZE_Z);
+      maxVec.set((cx + 1) * CHUNK_SIZE_X, CHUNK_HEIGHT, (cz + 1) * CHUNK_SIZE_Z);
+      box.set(minVec, maxVec);
+
+      const isVisible = this.frustum.intersectsBox(box);
+      mesh.visible = isVisible;
+
+      const waterMesh = this.waterMeshes.get(key);
+      if (waterMesh) {
+        waterMesh.visible = isVisible;
+      }
+    });
   }
 
   private fillTestTerrain(chunk: Chunk): void {
@@ -244,3 +440,4 @@ export class ChunkManager {
     }
   }
 }
+

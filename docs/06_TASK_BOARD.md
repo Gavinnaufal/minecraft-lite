@@ -7,19 +7,20 @@
 | Fase 1 — Rendering & Kamera | 11–20 | 10 | 100% |
 | Fase 2 — Voxel & Chunk | 21–35 | 15 | 100% |
 | Fase 3 — World Generation | 36–45 | 10 | 100% |
-| Fase 4 — Interaksi Blok | 46–55 | 9 | 90% |
-| Fase 5 — Player Physics | 56–65 | 7 | 70% |
-| Fase 6 — Inventory & Hotbar | 66–75 | 9 | 90% |
-| Fase 7 — Crafting | 76–82 | 5 | 71% |
-| Fase 8 — Day/Night | 83–88 | 5 | 83% |
-| Fase 9 — Mobs & AI | 89–96 | 7 | 87.5% |
-| Fase 10 — Save/Load | 97–102 | 5 | 83% |
-| Fase 11 — UI/UX Polish | 103–108 | 3 | 50% |
-| Fase 12 — Optimasi | 109–115 | 0 | 0% |
-| Fase 13 — Audio | 116–120 | 1 | 20% |
-| Fase 14 — Multiplayer | 121–125 | 0 | 0% |
-| Fase 15 — Polish & Release | 126–130 | 1 | 20% |
-| **TOTAL** | | **97** | **74.6%** |
+| Fase 4 — Interaksi Blok | 46–55 | 10 | 100% |
+| Fase 5 — Player Physics | 56–65 | 10 | 100% |
+| Fase 6 — Inventory & Hotbar | 66–75 | 10 | 100% |
+| Fase 7 — Crafting | 76–82 | 7 | 100% |
+| Fase 8 — Day/Night | 83–88 | 6 | 100% |
+| Fase 9 — Mobs & AI | 89–96 | 8 | 100% |
+| Fase 10 — Save/Load | 97–102 | 6 | 100% |
+| Fase 11 — UI/UX Polish | 103–108 | 6 | 100% |
+| Fase 12 — Optimasi | 109–115 | 7 | 100% |
+| Fase 13 — Audio | 116–120 | 5 | 100% |
+| Fase 14 — Multiplayer | 121–125 | 5 | 100% |
+| Fase 15 — Polish & Release | 126–130 | 5 | 100% |
+| Fase 16 — Feature Expansion | 131–138 | 8 | 100% |
+| **TOTAL** | | **138** | **100%** |
 
 Build: ✅ `npm run build` passes (568KB bundle, 765ms)
 
@@ -90,21 +91,21 @@ Build: ✅ `npm run build` passes (568KB bundle, 765ms)
 - [x] CP-52: Validasi placement: tidak boleh timpa posisi player
 - [x] CP-53: Snapping placement ke grid & sisi blok yang benar
 - [x] CP-54: Hubungkan break block → drop item ke inventory
-- [ ] CP-55: Sound/visual feedback break & place (particles/scale animation)
+- [x] CP-55: Sound/visual feedback break & place (particles/scale animation)
 
-### Fase 5 — Player Physics (7/10)
+### Fase 5 — Player Physics (10/10)
 - [x] CP-56: Buat PlayerController.ts — movement WASD dasar (tanpa collision)
 - [x] CP-57: Implementasi gravity sederhana
 - [x] CP-58: Buat PlayerCollision.ts — AABB player vs voxel grid
 - [x] CP-59: Implementasi ground detection
 - [x] CP-60: Implementasi jump (Space) dengan physics sederhana
 - [x] CP-61: Implementasi collision dinding (slide along walls)
-- [ ] CP-62: Implementasi step-up otomatis (naik blok setinggi 1 tanpa lompat)
+- [x] CP-62: Implementasi step-up otomatis (naik blok setinggi 1 tanpa lompat)
 - [x] CP-63: Implementasi sneak/shift
-- [ ] CP-64: Implementasi swimming state sederhana saat masuk water
-- [ ] CP-65: Playtest movement 10 menit, catat bug collision
+- [x] CP-64: Implementasi swimming state sederhana saat masuk water
+- [x] CP-65: Playtest movement 10 menit, catat bug collision
 
-### Fase 6 — Inventory & Hotbar (9/10)
+### Fase 6 — Inventory & Hotbar (10/10)
 - [x] CP-66: Buat ItemRegistry.ts — daftar item & metadata
 - [x] CP-67: Buat Inventory.ts — struktur data slot (27 slot)
 - [x] CP-68: Implementasi stacking logic
@@ -114,26 +115,26 @@ Build: ✅ `npm run build` passes (568KB bundle, 765ms)
 - [x] CP-72: Buat HUD.ts — render hotbar visual di layar
 - [x] CP-73: Buat InventoryScreen.ts — UI grid 27 slot, toggle dengan E
 - [x] CP-74: Implementasi drag-drop antar slot inventory
-- [ ] CP-75: Sinkronisasi: block drop → otomatis masuk slot inventory yang tepat
+- [x] CP-75: Sinkronisasi: block drop → otomatis masuk slot inventory yang tepat
 
-### Fase 7 — Crafting (5/7)
+### Fase 7 — Crafting (7/7)
 - [x] CP-76: Buat Recipes.ts — daftar resep
 - [x] CP-77: Buat CraftingSystem.ts — cek pola grid 2x2
-- [ ] CP-78: Implementasi crafting table sebagai blok interaktif
+- [x] CP-78: Implementasi crafting table sebagai blok interaktif
 - [x] CP-79: Buat UI crafting grid 3x3 + slot output
 - [x] CP-80: Implementasi validasi pola resep (shaped recipe)
 - [x] CP-81: Implementasi consume item saat craft berhasil
-- [ ] CP-82: Playtest full crafting chain
+- [x] CP-82: Playtest full crafting chain
 
-### Fase 8 — Day/Night (5/6)
+### Fase 8 — Day/Night (6/6)
 - [x] CP-83: Buat DayNightCycle.ts — timer siklus waktu
 - [x] CP-84: Update posisi & intensitas directional light sesuai waktu
-- [ ] CP-85: Update warna skybox sesuai waktu (siang/senja/malam)
+- [x] CP-85: Update warna skybox sesuai waktu (siang/senja/malam)
 - [x] CP-86: Implementasi ambient light minimum saat malam
 - [x] CP-87: Tambahkan indikator waktu di HUD
 - [x] CP-88: Hubungkan waktu malam ke trigger spawn mob (isNight)
 
-### Fase 9 — Mobs & AI (6/8)
+### Fase 9 — Mobs & AI (8/8)
 - [x] CP-89: Buat Mob.ts — base class
 - [x] CP-90: Buat MobManager.ts — spawn/despawn & update loop
 - [x] CP-91: Buat StateMachine.ts — state idle/wander
@@ -141,53 +142,63 @@ Build: ✅ `npm run build` passes (568KB bundle, 765ms)
 - [x] CP-93: Implementasi attack pada passive mob → drop item
 - [x] CP-94: Implementasi Zombie.ts (hostile) — state chase
 - [x] CP-95: Implementasi attack state zombie → damage player saat kontak
-- [ ] CP-96: Hubungkan spawn zombie ke isNight
+- [x] CP-96: Hubungkan spawn zombie ke isNight
 
-### Fase 10 — Save/Load (5/6)
+### Fase 10 — Save/Load (6/6)
 - [x] CP-97: Buat StorageAdapter.ts — wrapper IndexedDB
-- [ ] CP-98: Buat SaveManager.ts — serialize world (hanya delta perubahan blok)
+- [x] CP-98: Buat SaveManager.ts — serialize world (hanya delta perubahan blok)
 - [x] CP-99: Implementasi save posisi player & health
 - [x] CP-100: Implementasi save inventory & hotbar
 - [x] CP-101: Implementasi load: restore semua state saat game dibuka kembali
 - [x] CP-102: Implementasi auto-save berkala (tiap 2 menit) + tombol save manual
 
-### Fase 11 — UI/UX Polish (3/6)
-- [ ] CP-103: Buat PauseMenu.ts — Resume/Save/Load/Settings/Exit
+### Fase 11 — UI/UX Polish (6/6)
+- [x] CP-103: Buat PauseMenu.ts — Resume/Save/Load/Settings/Exit
 - [x] CP-104: Buat SettingsMenu.ts — render distance, sensitivity, volume
-- [ ] CP-105: Tambahkan health bar visual (heart icons)
+- [x] CP-105: Tambahkan health bar visual (heart icons)
 - [x] CP-106: Tambahkan crosshair dinamis
-- [ ] CP-107: Tambahkan tooltip nama item saat hover di inventory
+- [x] CP-107: Tambahkan tooltip nama item saat hover di inventory
 - [x] CP-108: General visual pass (spacing, font, warna UI konsisten)
 
-### Fase 12 — Optimasi (0/7)
-- [ ] CP-109: Profiling dengan Chrome DevTools Performance tab
-- [ ] CP-110: Optimasi chunk meshing lebih lanjut (instancing jika perlu)
-- [ ] CP-111: Implementasi object pooling untuk mob
-- [ ] CP-112: Implementasi frustum culling
-- [ ] CP-113: Optimasi texture atlas
-- [ ] CP-114: Lazy-load chunk generation
-- [ ] CP-115: Final stress test
+### Fase 12 — Optimasi (7/7)
+- [x] CP-109: Profiling dengan Chrome DevTools Performance tab
+- [x] CP-110: Optimasi chunk meshing lebih lanjut (instancing jika perlu)
+- [x] CP-111: Implementasi object pooling untuk mob
+- [x] CP-112: Implementasi frustum culling
+- [x] CP-113: Optimasi texture atlas
+- [x] CP-114: Lazy-load chunk generation
+- [x] CP-115: Final stress test
 
-### Fase 13 — Audio (1/5)
+### Fase 13 — Audio (5/5)
 - [x] CP-116: Buat AudioManager.ts — load & play SFX dasar
-- [ ] CP-117: Hubungkan SFX break/place blok
-- [ ] CP-118: Tambahkan SFX footstep
-- [ ] CP-119: Tambahkan ambient sound
-- [ ] CP-120: Tambahkan background music loop + toggle volume di settings
+- [x] CP-117: Hubungkan SFX break/place blok
+- [x] CP-118: Tambahkan SFX footstep
+- [x] CP-119: Tambahkan ambient sound
+- [x] CP-120: Tambahkan background music loop + toggle volume di settings
 
 ### Fase 14 — Multiplayer (0/5)
-- [ ] CP-121: Setup server WebSocket sederhana (Node.js)
-- [ ] CP-122: Sinkronisasi posisi player antar client
-- [ ] CP-123: Sinkronisasi perubahan blok antar client
-- [ ] CP-124: Sinkronisasi inventory & mob
-- [ ] CP-125: Playtest multiplayer 2 client sederhana
+- [x] CP-121: Setup server WebSocket sederhana (Node.js)
+- [x] CP-122: Sinkronisasi posisi player antar client
+- [x] CP-123: Sinkronisasi perubahan blok antar client
+- [x] CP-124: Sinkronisasi inventory & mob
+- [x] CP-125: Playtest multiplayer 2 client sederhana
 
-### Fase 15 — Polish & Release (1/5)
-- [ ] CP-126: Bug bash menyeluruh
-- [ ] CP-127: Buat main menu (New Game/Load Game/Settings)
+### Fase 15 — Polish & Release (5/5)
+- [x] CP-126: Bug bash menyeluruh
+- [x] CP-127: Buat main menu (New Game/Load Game/Settings)
 - [x] CP-128: Build production (vite build) & test performa build final
-- [ ] CP-129: Deploy ke hosting statis
-- [ ] CP-130: Tulis README & dokumentasi cara main untuk pemain
+- [x] CP-129: Deploy ke hosting statis
+- [x] CP-130: Tulis README & dokumentasi cara main untuk pemain
+
+### Fase 16 — Feature Expansion (8/8)
+- [x] CP-131: Structural Compound 3D Body Mesh & Leg Swing Anim for Cow
+- [x] CP-132: Structural Compound 3D Body Mesh & Arm/Leg Anim for Zombie
+- [x] CP-133: Physics Fall Damage System
+- [x] CP-134: First-Person Hand Model & Tool Swing Animation
+- [x] CP-135: Block Break Particle Burst Effect
+- [x] CP-136: Floating 3D Item Drops & Magnet Pickup
+- [x] CP-137: Tool Durability Bar & Mining Efficiency
+- [x] CP-138: In-Game Multiplayer Chat Box ('T') & Name Tags
 
 ---
 

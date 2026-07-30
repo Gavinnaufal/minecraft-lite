@@ -23,7 +23,7 @@ const blockTypes: BlockType[] = [
     hardness: 0.8,
     textureTop: 'grass_top',
     textureBottom: 'dirt',
-    textureSide: 'grass_side',
+    textureSide: 'dirt',
   },
   { id: 2, name: 'dirt', color: 0x8b5e3c, solid: true, transparent: false, hardness: 0.5 },
   { id: 3, name: 'stone', color: 0x808080, solid: true, transparent: false, hardness: 1.5 },
@@ -41,6 +41,19 @@ const blockTypes: BlockType[] = [
   },
   { id: 6, name: 'leaves', color: 0x228b22, solid: true, transparent: true, hardness: 0.2 },
   { id: 7, name: 'water', color: 0x3399ff, solid: false, transparent: true, hardness: -1 },
+  { id: 8, name: 'plank', color: 0xcd853f, solid: true, transparent: false, hardness: 1.5 },
+  {
+    id: 9,
+    name: 'crafting_table',
+    color: 0xa0522d,
+    solid: true,
+    transparent: false,
+    hardness: 2.0,
+    textureTop: 'crafting_table_top',
+    textureBottom: 'plank',
+    textureSide: 'crafting_table_side',
+  },
+  { id: 10, name: 'sandstone', color: 0xd2b48c, solid: true, transparent: false, hardness: 1.5 },
 ];
 
 const byId = new Map<number, BlockType>();
@@ -75,6 +88,8 @@ export function loadBlockTexture(name: string): THREE.Texture {
   texture.magFilter = THREE.NearestFilter;
   texture.minFilter = THREE.NearestFilter;
   texture.generateMipmaps = false;
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
   textureCache.set(name, texture);
   return texture;
 }

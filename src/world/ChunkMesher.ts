@@ -40,6 +40,8 @@ const FACE_AXES: FaceAxis[] = [
   { dir: [ 0,  0, -1], planeAxis: 'z', aAxis: 'x', bAxis: 'y', planeSize: CHUNK_SIZE_Z, aSize: CHUNK_SIZE_X, bSize: CHUNK_HEIGHT, quadFacePos: 0 },
 ];
 
+const FACE_TO_MAT_OFFSET = [2, 3, 0, 1, 4, 5];
+
 const MAX_DIM = Math.max(CHUNK_SIZE_X, CHUNK_SIZE_Z, CHUNK_HEIGHT);
 const MAX_QUADS = CHUNK_SIZE_X * CHUNK_SIZE_Z * CHUNK_HEIGHT * 6;
 
@@ -76,6 +78,13 @@ function isOpaque(blockId: number): boolean {
 function isWater(blockId: number): boolean {
   const b = getBlockById(blockId);
   return b ? b.name === 'water' : false;
+}
+
+function getFaceIndices(faIdx: number): number[] {
+  if (faIdx === 0 || faIdx === 3 || faIdx === 5) {
+    return [0, 1, 2, 0, 2, 3];
+  }
+  return [0, 2, 1, 0, 3, 2];
 }
 
 interface QuadData {
@@ -132,14 +141,15 @@ function doMesh(
   pos: Float32Array, nrm: Float32Array, uv: Float32Array, idx: Uint32Array,
   eastBorder?: Uint8Array, westBorder?: Uint8Array,
   northBorder?: Uint8Array, southBorder?: Uint8Array,
-): { quadCount: number; vertexIndex: number; groupQuads: Map<number, number> } {
+): { quadCount: number; vertexIndex: number; groupQuads: Map<string, number> } {
   const mask = new Uint8Array(MAX_DIM * MAX_DIM);
   const visited = new Uint8Array(MAX_DIM * MAX_DIM);
 
-  // Phase 1: Collect quads grouped by blockId
-  const blockGroups = new Map<number, QuadData[]>();
+  // Phase 1: Collect quads grouped by (blockId_faIdx)
+  const blockGroups = new Map<string, QuadData[]>();
 
-  for (const fa of FACE_AXES) {
+  for (let faIdx = 0; faIdx < FACE_AXES.length; faIdx++) {
+    const fa = FACE_AXES[faIdx];
     for (let plane = 0; plane < fa.planeSize; plane++) {
       mask.fill(0);
       visited.fill(0);
@@ -209,12 +219,13 @@ function doMesh(
             quadUVs.push(v === 0 || v === 3 ? w : 0, v < 2 ? 0 : h);
           }
 
-          const indices = fa.quadFacePos === 0 ? [0, 2, 1, 0, 3, 2] : [0, 1, 2, 0, 2, 3];
+          const indices = getFaceIndices(faIdx);
+          const groupKey = `${bid}_${faIdx}`;
 
-          if (!blockGroups.has(bid)) {
-            blockGroups.set(bid, []);
+          if (!blockGroups.has(groupKey)) {
+            blockGroups.set(groupKey, []);
           }
-          blockGroups.get(bid)!.push({
+          blockGroups.get(groupKey)!.push({
             positions: quadPositions,
             normals: quadNormals,
             uvs: quadUVs,
@@ -227,13 +238,18 @@ function doMesh(
 
   // Phase 2: Flatten grouped quads into final buffers
   let quadCount = 0;
-  const groupQuads = new Map<number, number>();
+  const groupQuads = new Map<string, number>();
 
-  const sortedBlockIds = Array.from(blockGroups.keys()).sort((a, b) => a - b);
+  const sortedKeys = Array.from(blockGroups.keys()).sort((a, b) => {
+    const [bidA, faA] = a.split('_').map(Number);
+    const [bidB, faB] = b.split('_').map(Number);
+    if (bidA !== bidB) return bidA - bidB;
+    return faA - faB;
+  });
 
-  for (const bid of sortedBlockIds) {
-    const quads = blockGroups.get(bid)!;
-    groupQuads.set(bid, quads.length);
+  for (const key of sortedKeys) {
+    const quads = blockGroups.get(key)!;
+    groupQuads.set(key, quads.length);
 
     for (const quad of quads) {
       const baseVertex = quadCount * 4;
@@ -271,10 +287,10 @@ function doWaterMesh(
   const mask = new Uint8Array(MAX_DIM * MAX_DIM);
   const visited = new Uint8Array(MAX_DIM * MAX_DIM);
 
-  // Phase 1: Collect quads grouped by blockId
-  const blockGroups = new Map<number, QuadData[]>();
+  const blockGroups = new Map<string, QuadData[]>();
 
-  for (const fa of FACE_AXES) {
+  for (let faIdx = 0; faIdx < FACE_AXES.length; faIdx++) {
+    const fa = FACE_AXES[faIdx];
     for (let plane = 0; plane < fa.planeSize; plane++) {
       mask.fill(0);
       visited.fill(0);
@@ -343,12 +359,13 @@ function doWaterMesh(
             quadUVs.push(v === 0 || v === 3 ? w : 0, v < 2 ? 0 : h);
           }
 
-          const indices = fa.quadFacePos === 0 ? [0, 2, 1, 0, 3, 2] : [0, 1, 2, 0, 2, 3];
+          const indices = getFaceIndices(faIdx);
+          const groupKey = `${bid}_${faIdx}`;
 
-          if (!blockGroups.has(bid)) {
-            blockGroups.set(bid, []);
+          if (!blockGroups.has(groupKey)) {
+            blockGroups.set(groupKey, []);
           }
-          blockGroups.get(bid)!.push({
+          blockGroups.get(groupKey)!.push({
             positions: quadPositions,
             normals: quadNormals,
             uvs: quadUVs,
@@ -359,13 +376,17 @@ function doWaterMesh(
     }
   }
 
-  // Phase 2: Flatten grouped quads into final buffers
   let quadCount = 0;
 
-  const sortedBlockIds = Array.from(blockGroups.keys()).sort((a, b) => a - b);
+  const sortedKeys = Array.from(blockGroups.keys()).sort((a, b) => {
+    const [bidA, faA] = a.split('_').map(Number);
+    const [bidB, faB] = b.split('_').map(Number);
+    if (bidA !== bidB) return bidA - bidB;
+    return faA - faB;
+  });
 
-  for (const bid of sortedBlockIds) {
-    const quads = blockGroups.get(bid)!;
+  for (const key of sortedKeys) {
+    const quads = blockGroups.get(key)!;
 
     for (const quad of quads) {
       const baseVertex = quadCount * 4;
@@ -420,22 +441,35 @@ export function buildChunkMesh(
   geometry.computeBoundingSphere();
 
   const materials: THREE.Material[] = [];
-  const groups: { blockId: number; quadCount: number }[] = [];
   
-  // IMPORTANT: Must iterate in same sorted order as doMesh() flattening
-  const sortedBlockIds = Array.from(groupQuads.keys()).sort((a, b) => a - b);
-  for (const blockId of sortedBlockIds) {
-    const quadCount = groupQuads.get(blockId)!;
-    groups.push({ blockId, quadCount });
-  }
+  // Extract unique blockIds in sorted order
+  const blockIds = Array.from(new Set(Array.from(groupQuads.keys()).map((k) => Number(k.split('_')[0])))).sort((a, b) => a - b);
 
   let indexOffset = 0;
-  for (const group of groups) {
-    const mat = createBlockMaterial(group.blockId);
-    const matIdx = materials.length;
-    materials.push(...(Array.isArray(mat) ? mat : [mat]));
-    geometry.addGroup(indexOffset * 6, group.quadCount * 6, matIdx);
-    indexOffset += group.quadCount;
+  for (const bid of blockIds) {
+    const mat = createBlockMaterial(bid);
+    if (Array.isArray(mat)) {
+      const baseMatIdx = materials.length;
+      materials.push(...mat);
+      for (let faIdx = 0; faIdx < 6; faIdx++) {
+        const qc = groupQuads.get(`${bid}_${faIdx}`);
+        if (qc && qc > 0) {
+          const targetMatIdx = baseMatIdx + FACE_TO_MAT_OFFSET[faIdx];
+          geometry.addGroup(indexOffset * 6, qc * 6, targetMatIdx);
+          indexOffset += qc;
+        }
+      }
+    } else {
+      const matIdx = materials.length;
+      materials.push(mat);
+      for (let faIdx = 0; faIdx < 6; faIdx++) {
+        const qc = groupQuads.get(`${bid}_${faIdx}`);
+        if (qc && qc > 0) {
+          geometry.addGroup(indexOffset * 6, qc * 6, matIdx);
+          indexOffset += qc;
+        }
+      }
+    }
   }
 
   // Water mesh pass
@@ -472,6 +506,95 @@ export function buildChunkMesh(
   return { geometry, materials, waterGeometry, waterMaterial };
 }
 
+export function buildChunkMeshFromWorkerData(data: {
+  quadCount: number;
+  positions?: Float32Array;
+  normals?: Float32Array;
+  uvs?: Float32Array;
+  indices?: Uint32Array;
+  groupQuads?: Record<string, number>;
+  waterQuadCount?: number;
+  waterPositions?: Float32Array;
+  waterNormals?: Float32Array;
+  waterUvs?: Float32Array;
+  waterIndices?: Uint32Array;
+}): ChunkMeshData | null {
+  if (data.quadCount === 0 && (!data.waterQuadCount || data.waterQuadCount === 0)) {
+    return null;
+  }
+
+  let geometry: THREE.BufferGeometry | undefined;
+  const materials: THREE.Material[] = [];
+
+  if (data.quadCount > 0 && data.positions && data.normals && data.uvs && data.indices && data.groupQuads) {
+    geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(data.positions, 3));
+    geometry.setAttribute('normal', new THREE.BufferAttribute(data.normals, 3));
+    geometry.setAttribute('uv', new THREE.BufferAttribute(data.uvs, 2));
+    geometry.setIndex(new THREE.BufferAttribute(data.indices, 1));
+    geometry.computeBoundingSphere();
+
+    const groupQuads = new Map<string, number>(Object.entries(data.groupQuads));
+    const blockIds = Array.from(new Set(Array.from(groupQuads.keys()).map((k) => Number(k.split('_')[0])))).sort((a, b) => a - b);
+
+    let indexOffset = 0;
+    for (const bid of blockIds) {
+      const mat = createBlockMaterial(bid);
+      if (Array.isArray(mat)) {
+        const baseMatIdx = materials.length;
+        materials.push(...mat);
+        for (let faIdx = 0; faIdx < 6; faIdx++) {
+          const qc = groupQuads.get(`${bid}_${faIdx}`);
+          if (qc && qc > 0) {
+            const targetMatIdx = baseMatIdx + FACE_TO_MAT_OFFSET[faIdx];
+            geometry.addGroup(indexOffset * 6, qc * 6, targetMatIdx);
+            indexOffset += qc;
+          }
+        }
+      } else {
+        const matIdx = materials.length;
+        materials.push(mat);
+        for (let faIdx = 0; faIdx < 6; faIdx++) {
+          const qc = groupQuads.get(`${bid}_${faIdx}`);
+          if (qc && qc > 0) {
+            geometry.addGroup(indexOffset * 6, qc * 6, matIdx);
+            indexOffset += qc;
+          }
+        }
+      }
+    }
+  }
+
+  let waterGeometry: THREE.BufferGeometry | undefined;
+  let waterMaterial: THREE.Material | undefined;
+
+  if (data.waterQuadCount && data.waterQuadCount > 0 && data.waterPositions && data.waterNormals && data.waterUvs && data.waterIndices) {
+    waterGeometry = new THREE.BufferGeometry();
+    waterGeometry.setAttribute('position', new THREE.BufferAttribute(data.waterPositions, 3));
+    waterGeometry.setAttribute('normal', new THREE.BufferAttribute(data.waterNormals, 3));
+    waterGeometry.setAttribute('uv', new THREE.BufferAttribute(data.waterUvs, 2));
+    waterGeometry.setIndex(new THREE.BufferAttribute(data.waterIndices, 1));
+    waterGeometry.computeBoundingSphere();
+
+    waterMaterial = new THREE.MeshStandardMaterial({
+      color: 0x3399ff,
+      transparent: true,
+      opacity: 0.6,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+  }
+
+  if (!geometry && !waterGeometry) return null;
+
+  return {
+    geometry: geometry ?? new THREE.BufferGeometry(),
+    materials,
+    waterGeometry,
+    waterMaterial,
+  };
+}
+
 // Placeholder for async worker path (not yet used)
 export async function buildChunkMeshAsync(
   chunk: Chunk,
@@ -479,3 +602,4 @@ export async function buildChunkMeshAsync(
 ): Promise<ChunkMeshData | null> {
   return buildChunkMesh(chunk, neighbors);
 }
+

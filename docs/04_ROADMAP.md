@@ -215,11 +215,26 @@ Setiap checkpoint (CP) dirancang untuk **1 sesi vibe coding** (1 prompt DeepSeek
 | 129 | Deploy ke hosting statis (Vercel/Netlify/GitHub Pages) | Game bisa diakses via URL publik |
 | 130 | Tulis README & dokumentasi cara main untuk pemain | README lengkap dengan cara instal/main |
 
+## FASE 16 — FEATURE EXPANSION (CP131–CP138)
+
+| CP | Checkpoint | Output |
+|---|---|---|
+| 131 | Structural Compound 3D Body Mesh & Leg Swing Anim for Cow | Sapi memiliki bentuk anatomi 3D (kepala, moncong, badan, 4 kaki) & animasi berjalan |
+| 132 | Structural Compound 3D Body Mesh & Arm/Leg Anim for Zombie | Zombie memiliki anatomi 3D (kepala, badan, 2 tangan, 2 kaki) & animasi mengejar |
+| 133 | Physics Fall Damage System | Jatuh dari ketinggian tinggi mengurangi HP bar player |
+| 134 | First-Person Hand Model & Tool Swing Animation | Model tangan/alat 3D terlihat di sudut layar & berayun saat action |
+| 135 | Block Break Particle Burst Effect | Partikel pecahan blok berhamburan saat menggali |
+| 136 | Floating 3D Item Drops & Magnet Pickup | Item melayang 3D di tanah dan terbang magnetik ke player |
+| 137 | Tool Durability Bar & Mining Efficiency | Pickaxe/Axe memiliki durabilitas & kecepatan menggali bertingkat |
+| 138 | In-Game Multiplayer Chat Box ('T') & Name Tags | Chat box dan name tag melayang di atas player multiplayer |
+
 ---
 
 ## RINGKASAN
 
-- **Total checkpoint: 130** (110 wajib MVP hingga CP115 + Fase 13 audio, 10 stretch multiplayer, 5 polish akhir)
+- **Total checkpoint: 138** (130 checkpoint inti + 8 feature expansion CP131-CP138)
 - MVP inti selesai di **CP102** (save/load) — dari titik ini game sudah "playable end-to-end".
-- CP103–115 = polish wajib sebelum dianggap release-ready.
-- CP116–130 = nice-to-have & rilis.
+- CP103–115 = polish & optimasi wajib.
+- CP116–130 = audio, multiplayer & release.
+- CP131–138 = feature expansion (3D Mob Anatomy, Fall Damage, Hand Model, Particles, Floating Drops, Durability, Chat).
+

@@ -62,7 +62,7 @@ export class PlayerCollision {
     const bz = axis === 'z' ? coord : Math.floor(this.player.position.z);
 
     const blockId = this.world.getBlock(bx, by, bz);
-    if (blockId === 0) return 0;
+    if (blockId === 0 || blockId === 7) return 0;
 
     const blockMinX = bx, blockMaxX = bx + 1;
     const blockMinY = by, blockMaxY = by + 1;

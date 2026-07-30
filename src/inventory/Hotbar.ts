@@ -42,4 +42,17 @@ export class Hotbar {
     }
     return remaining;
   }
+
+  removeItem(itemId: string, count = 1): boolean {
+    const activeSlot = this.getActiveItem();
+    if (activeSlot.itemId === itemId && activeSlot.count >= count) {
+      activeSlot.count -= count;
+      if (activeSlot.count <= 0) {
+        activeSlot.itemId = null;
+        activeSlot.count = 0;
+      }
+      return true;
+    }
+    return false;
+  }
 }

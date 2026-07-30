@@ -465,3 +465,32 @@ Berikan kode lengkap + penjelasan singkat perubahan apa saja.
 
 **CP130** — *Files: -*
 > "Buatkan README.md untuk end-user (bukan developer): cara membuka/main game, kontrol dasar, tips awal survival, dan cara save/load. Bahasa santai dan jelas."
+
+---
+
+## FASE 16 — FEATURE EXPANSION
+
+**CP131** — *Files: src/mobs/passive/Cow.ts, src/mobs/Mob.ts*
+> "Ubah struktur mesh Cow.ts dari kubus tunggal menjadi compound 3D hierarchical mesh (Head, Snout, Torso, 4 Legs) dan tambahkan animasi ayunan kaki saat berjalan."
+
+**CP132** — *Files: src/mobs/hostile/Zombie.ts, src/mobs/Mob.ts*
+> "Ubah struktur mesh Zombie.ts dari kubus tunggal menjadi compound 3D hierarchical mesh (Head, Torso, 2 Arms, 2 Legs) dan tambahkan animasi ayunan tangan/kaki saat mengejar player."
+
+**CP133** — *Files: src/player/PlayerController.ts, src/player/Player.ts*
+> "Implementasikan fisika fall damage saat mendarat dari ketinggian tinggi (kecepatan jatuh > threshold), lalu kurangi player health bar."
+
+**CP134** — *Files: src/ui/HandModel.ts (baru), src/main.ts*
+> "Buat 3D First-Person Hand Model & Tool Model di sudut kanan bawah kamera, dan tambahkan animasi swing saat melakukan aksi memukul/memasang blok."
+
+**CP135** — *Files: src/interaction/BlockBreaker.ts, src/world/ParticleSystem.ts (baru)*
+> "Buat particle burst effect yang memancarkan pecahan 3D voxel kecil berwarna senada saat blok hancur."
+
+**CP136** — *Files: src/world/ItemDropManager.ts (baru), src/inventory/Inventory.ts*
+> "Buat sistem 3D floating item drop di tanah yang melayang/berputar, dan tertarik secara magnetik ke player saat jarak dekat."
+
+**CP137** — *Files: src/inventory/ItemRegistry.ts, src/interaction/BlockBreaker.ts*
+> "Tambahkan bar durabilitas pada alat (Pickaxe, Axe, Shovel) dan bedakan kecepatan menggali tergantung tipe alat yang dipegang."
+
+**CP138** — *Files: src/multiplayer/ChatBox.ts (baru), src/multiplayer/NetworkManager.ts*
+> "Buat UI Chat Box interaktif yang dibuka dengan tombol 'T', serta tampilkan name tag melayang di atas avatar player multiplayer."
+

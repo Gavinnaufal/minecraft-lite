@@ -1,5 +1,5 @@
 import { Hotbar } from '../inventory/Hotbar';
-import { getItemById } from '../inventory/ItemRegistry';
+import { createItemIcon } from './IconGenerator';
 
 export class HUD {
   private hotbar: Hotbar;
@@ -8,6 +8,8 @@ export class HUD {
   private crosshair: HTMLDivElement;
   private timeDisplay: HTMLDivElement;
   private timeIcon: HTMLDivElement;
+  private healthContainer: HTMLDivElement;
+  private heartEls: HTMLSpanElement[] = [];
 
   constructor(hotbar: Hotbar) {
     this.hotbar = hotbar;
@@ -39,6 +41,22 @@ export class HUD {
       this.slots.push(slot);
     }
 
+    // Health bar visual (10 heart icons = 20 HP)
+    this.healthContainer = document.createElement('div');
+    this.healthContainer.style.cssText = `
+      position: fixed; bottom: 58px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 3px; z-index: 100; pointer-events: none;
+    `;
+    for (let i = 0; i < 10; i++) {
+      const heart = document.createElement('span');
+      heart.style.cssText = 'font-size: 16px; text-shadow: 1px 1px 2px #000; filter: drop-shadow(0 0 2px rgba(0,0,0,0.8));';
+      heart.textContent = '❤';
+      heart.style.color = '#ff3333';
+      this.healthContainer.appendChild(heart);
+      this.heartEls.push(heart);
+    }
+    document.body.appendChild(this.healthContainer);
+
     this.timeIcon = document.createElement('div');
     this.timeIcon.style.cssText = `
       position: fixed; top: 8px; left: 50%; transform: translateX(-50%); z-index: 100;
@@ -64,22 +82,71 @@ export class HUD {
     this.timeDisplay.textContent = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
   }
 
-  update(): void {
+  setCrosshairState(state: 'none' | 'block' | 'mob'): void {
+    if (state === 'mob') {
+      this.crosshair.style.width = '8px';
+      this.crosshair.style.height = '8px';
+      this.crosshair.style.background = '#ff3333';
+      this.crosshair.style.borderColor = '#ffffff';
+      this.crosshair.style.transform = 'translate(-50%, -50%) scale(1.2)';
+    } else if (state === 'block') {
+      this.crosshair.style.width = '6px';
+      this.crosshair.style.height = '6px';
+      this.crosshair.style.background = '#ffcc00';
+      this.crosshair.style.borderColor = '#000000';
+      this.crosshair.style.transform = 'translate(-50%, -50%) scale(1.1)';
+    } else {
+      this.crosshair.style.width = '4px';
+      this.crosshair.style.height = '4px';
+      this.crosshair.style.background = '#ffffff';
+      this.crosshair.style.borderColor = '#000000';
+      this.crosshair.style.transform = 'translate(-50%, -50%) scale(1.0)';
+    }
+  }
+
+  updateHealth(health: number): void {
+    const clampedHp = Math.max(0, Math.min(20, health));
+    for (let i = 0; i < 10; i++) {
+      const el = this.heartEls[i];
+      const fullThreshold = (i + 1) * 2;
+      const halfThreshold = fullThreshold - 1;
+
+      if (clampedHp >= fullThreshold) {
+        el.textContent = '❤';
+        el.style.color = '#ff3333';
+        el.style.opacity = '1.0';
+      } else if (clampedHp === halfThreshold) {
+        el.textContent = '💔';
+        el.style.color = '#ff8833';
+        el.style.opacity = '1.0';
+      } else {
+        el.textContent = '❤';
+        el.style.color = '#444444';
+        el.style.opacity = '0.4';
+      }
+    }
+  }
+
+  update(playerHealth?: number): void {
+    if (playerHealth !== undefined) {
+      this.updateHealth(playerHealth);
+    }
     for (let i = 0; i < 9; i++) {
       const slot = this.slots[i];
       const item = this.hotbar.slots[i];
       const isActive = i === this.hotbar.activeSlotIndex;
       slot.style.borderColor = isActive ? '#fff' : '#555';
+      slot.style.boxShadow = isActive ? '0 0 6px rgba(255,255,255,0.6)' : 'none';
 
       if (item.itemId) {
-        const itemDef = getItemById(item.itemId);
-        slot.textContent = itemDef ? itemDef.name[0] : '?';
+        slot.textContent = '';
+        const icon = createItemIcon(item.itemId, 28);
+        slot.appendChild(icon);
+
         if (item.count > 1) {
           const countEl = document.createElement('span');
-          countEl.style.cssText = 'position:absolute;bottom:1px;right:3px;font-size:10px;';
+          countEl.style.cssText = 'position:absolute;bottom:1px;right:3px;font-size:10px;font-weight:bold;color:#fff;text-shadow:1px 1px 0 #000;';
           countEl.textContent = String(item.count);
-          slot.textContent = '';
-          slot.appendChild(document.createTextNode(itemDef ? itemDef.name[0] : '?'));
           slot.appendChild(countEl);
         }
       } else {

@@ -18,6 +18,8 @@ export const renderer = new THREE.WebGLRenderer({
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+scene.background = new THREE.Color('#4da6ff');
+scene.fog = new THREE.FogExp2('#87ceeb', 0.012);
 
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
 scene.add(ambientLight);

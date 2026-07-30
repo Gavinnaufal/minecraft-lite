@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Mob } from './Mob';
+import type { Player } from '../player/Player';
 
 export class MobManager {
   mobs: Mob[] = [];
@@ -24,9 +25,9 @@ export class MobManager {
     (mob.mesh.material as THREE.Material).dispose();
   }
 
-  update(deltaTime: number, playerPos?: import('three').Vector3): void {
+  update(deltaTime: number, playerPos?: THREE.Vector3, player?: Player): void {
     for (const mob of this.mobs) {
-      mob.update(deltaTime, playerPos);
+      mob.update(deltaTime, playerPos, player);
     }
   }
 }

@@ -251,7 +251,7 @@ engine.setUpdateCallback((deltaTime) => {
   );
   lights.directional.intensity = dayNight.lightIntensity;
   lights.ambient.intensity = Math.max(0.1, dayNight.lightIntensity * 0.3);
-  mobManager.update(deltaTime, new THREE.Vector3(player.position.x, player.position.y, player.position.z));
+  mobManager.update(deltaTime, new THREE.Vector3(player.position.x, player.position.y, player.position.z), player);
 
   blockBreaker.updateOutline(camera);
   blockBreaker.updateBreak(deltaTime, inputManager.isLeftMouseDown, camera);

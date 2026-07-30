@@ -13,7 +13,8 @@ export class Mob {
     this.mesh.position.copy(position);
   }
 
-  update(_deltaTime: number, _playerPos?: import('three').Vector3): void {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  update(_deltaTime: number, _playerPos?: import('three').Vector3, _player?: import('../player/Player').Player): void {}
 
   takeDamage(amount: number): boolean {
     this.health -= amount;

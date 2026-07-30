@@ -100,7 +100,12 @@ export function createBlockMaterial(blockId: number): THREE.Material | THREE.Mat
   const texture = loadBlockTexture(block.name);
   const material = new THREE.MeshStandardMaterial({ map: texture });
 
-  if (block.transparent) {
+  if (block.name === 'leaves') {
+    material.transparent = false;
+    material.alphaTest = 0.5;
+    material.depthWrite = true;
+    material.side = THREE.DoubleSide;
+  } else if (block.transparent) {
     material.transparent = true;
     material.opacity = 0.6;
     material.depthWrite = false;

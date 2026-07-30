@@ -98,7 +98,7 @@ function isFaceVisible(
   const nzPos = z + nz;
   if (nyPos < 0 || nyPos >= CHUNK_HEIGHT) return true;
 
-  let neighborId = 0;
+  let neighborId: number;
   
   if (nxPos < 0 && westBorder) {
     neighborId = westBorder[borderIndexX(nyPos, z)];

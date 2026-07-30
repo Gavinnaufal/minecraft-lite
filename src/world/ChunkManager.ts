@@ -210,7 +210,7 @@ export class ChunkManager {
     const minCZ = chunkZ - renderDistance;
     const maxCZ = chunkZ + renderDistance;
 
-    for (const [key, _chunk] of this.chunks) {
+    for (const key of this.chunks.keys()) {
       const [cx, cz] = key.split(',').map(Number);
       if (cx < minCX || cx > maxCX || cz < minCZ || cz > maxCZ) {
         this.unloadChunk(cx, cz);

@@ -98,6 +98,8 @@ export class Zombie extends Mob {
       if (horizDist < ATTACK_RANGE_HORIZ && dy < ATTACK_RANGE_VERT) {
         // Face player while attacking
         this.mesh.rotation.y = Math.atan2(dx, dz);
+        this.velocity.x = 0;
+        this.velocity.z = 0;
         if (this.attackTimer >= ATTACK_COOLDOWN) {
           this.attackTimer = 0;
           if (player && player.health > 0) {
@@ -109,16 +111,16 @@ export class Zombie extends Mob {
         if (horizDist > 0.001) {
           const nx = dx / horizDist;
           const nz = dz / horizDist;
-          this.position.x += nx * CHASE_SPEED * deltaTime;
-          this.position.z += nz * CHASE_SPEED * deltaTime;
+          this.velocity.x = nx * CHASE_SPEED;
+          this.velocity.z = nz * CHASE_SPEED;
           this.mesh.rotation.y = Math.atan2(dx, dz);
           isMoving = true;
         }
       } else if (state === State.Wander) {
-        const wanderDx = (Math.random() - 0.5) * 1.5 * deltaTime;
-        const wanderDz = (Math.random() - 0.5) * 1.5 * deltaTime;
-        this.position.x += wanderDx;
-        this.position.z += wanderDz;
+        const wanderDx = (Math.random() - 0.5) * 1.5;
+        const wanderDz = (Math.random() - 0.5) * 1.5;
+        this.velocity.x = wanderDx;
+        this.velocity.z = wanderDz;
         isMoving = Math.abs(wanderDx) > 0.001 || Math.abs(wanderDz) > 0.001;
 
         if (isMoving) {

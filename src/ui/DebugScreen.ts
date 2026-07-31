@@ -5,22 +5,12 @@ export class DebugScreen {
   constructor() {
     this.container = document.createElement('div');
     this.container.id = 'debug-screen';
-    this.container.style.position = 'fixed';
-    this.container.style.top = '16px';
-    this.container.style.left = '16px';
-    this.container.style.padding = '12px 16px';
-    this.container.style.background = 'rgba(10, 15, 30, 0.75)';
-    this.container.style.backdropFilter = 'blur(8px)';
-    this.container.style.border = '1px solid rgba(255, 255, 255, 0.15)';
-    this.container.style.borderRadius = '8px';
-    this.container.style.color = '#e0e6ed';
-    this.container.style.fontFamily = 'monospace';
-    this.container.style.fontSize = '12px';
-    this.container.style.lineHeight = '1.6';
-    this.container.style.pointerEvents = 'none';
-    this.container.style.zIndex = '99999';
-    this.container.style.display = 'none';
-    this.container.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.4)';
+    this.container.style.cssText = `
+      position: fixed; top: 8px; left: 8px; right: 8px;
+      display: none; justify-content: space-between; pointer-events: none; z-index: 9999;
+      font-family: monospace; font-size: 13px; color: #ffffff; text-shadow: 1px 1px 0 #000;
+      line-height: 1.4; user-select: none;
+    `;
 
     document.body.appendChild(this.container);
 
@@ -34,7 +24,7 @@ export class DebugScreen {
 
   public toggle(): void {
     this.visible = !this.visible;
-    this.container.style.display = this.visible ? 'block' : 'none';
+    this.container.style.display = this.visible ? 'flex' : 'none';
   }
 
   public update(stats: {
@@ -50,14 +40,25 @@ export class DebugScreen {
   }): void {
     if (!this.visible) return;
 
+    const bgStyle = 'background: rgba(0, 0, 0, 0.5); padding: 4px 8px; border-radius: 2px;';
+
     this.container.innerHTML = `
-      <div style="font-weight: bold; color: #4da6ff; margin-bottom: 4px;">MINI MINECRAFT v1.0 (DEBUG F3)</div>
-      <div><strong>FPS:</strong> <span style="color: ${stats.fps >= 50 ? '#59c738' : '#ffaa00'}">${stats.fps}</span></div>
-      <div><strong>XYZ:</strong> ${stats.posX.toFixed(2)} / ${stats.posY.toFixed(2)} / ${stats.posZ.toFixed(2)}</div>
-      <div><strong>Chunk:</strong> [${stats.chunkX}, ${stats.chunkZ}]</div>
-      <div><strong>Facing:</strong> ${stats.facing}</div>
-      <div><strong>Biome:</strong> <span style="color: #64b5f6">${stats.biome}</span></div>
-      <div><strong>Entities:</strong> ${stats.mobsCount} mobs active</div>
+      <div style="${bgStyle}">
+        <div style="font-weight: bold; color: #ffffa0;">Minecraft Lite 1.0.0 (Three.js Voxel Engine)</div>
+        <div>${stats.fps} fps T: 60</div>
+        <div style="margin-top: 4px;">XYZ: ${stats.posX.toFixed(3)} / ${stats.posY.toFixed(5)} / ${stats.posZ.toFixed(3)}</div>
+        <div>Block: ${Math.floor(stats.posX)} ${Math.floor(stats.posY)} ${Math.floor(stats.posZ)}</div>
+        <div>Chunk: ${stats.chunkX} ${stats.chunkZ} in [0 0 0]</div>
+        <div>Facing: ${stats.facing}</div>
+        <div>Biome: ${stats.biome}</div>
+        <div>Local Difficulty: 1.50 (Day 1)</div>
+      </div>
+      <div style="${bgStyle} text-align: right;">
+        <div style="color: #aaaaaa;">Display: 1920x1080 (WebGL)</div>
+        <div>Three.js (r160) + TS</div>
+        <div>Entities: ${stats.mobsCount} active</div>
+        <div style="margin-top: 4px; color: #55ff55;">Mem: 45% 240/512MB</div>
+      </div>
     `;
   }
 }

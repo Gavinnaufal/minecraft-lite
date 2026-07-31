@@ -16,10 +16,12 @@ export class PlayerController {
   private readonly world?: World;
   private stepTimer = 0;
   private wasGroundedLastFrame = false;
+  private wasInWaterLastFrame = false;
   private prevVelocityY = 0;
   public oxygen = 20.0;
   public isSubmerged = false;
   private drownTimer = 0;
+  public onWaterSplash?: (pos: THREE.Vector3) => void;
 
   constructor(player: Player, world?: World) {
     this.player = player;
@@ -49,6 +51,13 @@ export class PlayerController {
     const inWater = this.world?.getBlock(px, py, pz) === 7 || this.world?.getBlock(px, py + 1, pz) === 7;
     this.isSubmerged = this.world?.getBlock(px, headY, pz) === 7;
 
+    if (inWater && !this.wasInWaterLastFrame) {
+      if (this.onWaterSplash) {
+        this.onWaterSplash(new THREE.Vector3(this.player.position.x, this.player.position.y, this.player.position.z));
+      }
+    }
+    this.wasInWaterLastFrame = inWater;
+
     const len = Math.sqrt(moveX * moveX + moveZ * moveZ);
     if (len > 0) {
       let speed = PLAYER_SPEED * (inputManager.isKeyPressed('Shift') && !inWater ? 0.5 : 1);
@@ -58,6 +67,13 @@ export class PlayerController {
     } else {
       this.player.velocity.x *= 0.8;
       this.player.velocity.z *= 0.8;
+    }
+
+    // Dynamic FOV Speed Effect
+    const targetFov = len > 0 && !inputManager.isKeyPressed('Shift') && !inWater ? 80.0 : 75.0;
+    if (Math.abs(camera.fov - targetFov) > 0.05) {
+      camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, deltaTime * 6);
+      camera.updateProjectionMatrix();
     }
 
     if (inWater) {
@@ -99,10 +115,6 @@ export class PlayerController {
       this.oxygen = 20.0;
       this.drownTimer = 0;
     }
-
-    this.player.position.x += this.player.velocity.x * deltaTime;
-    this.player.position.y += this.player.velocity.y * deltaTime;
-    this.player.position.z += this.player.velocity.z * deltaTime;
 
     // Footstep SFX step distance calculation
     const horizontalSpeed = Math.sqrt(this.player.velocity.x * this.player.velocity.x + this.player.velocity.z * this.player.velocity.z);

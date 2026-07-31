@@ -87,7 +87,7 @@ export class ChestScreen {
     panel.appendChild(chestLabel);
 
     const chestGrid = document.createElement('div');
-    chestGrid.style.cssText = 'display: grid; grid-template-columns: repeat(9, 44px); gap: 4px;';
+    chestGrid.style.cssText = 'display: grid; grid-template-columns: repeat(9, 56px); gap: 4px;';
     for (let i = 0; i < 27; i++) {
       chestGrid.appendChild(this.makeSlot(i, 'chest'));
     }
@@ -100,12 +100,12 @@ export class ChestScreen {
 
     // Player Inventory Section
     const invLabel = document.createElement('div');
-    invLabel.style.cssText = 'font-size: 12px; color: #aaa;';
+    invLabel.style.cssText = 'font-size: 14px; color: #aaa; font-weight: bold;';
     invLabel.textContent = 'Tas Karakter & Hotbar';
     panel.appendChild(invLabel);
 
     const invGrid = document.createElement('div');
-    invGrid.style.cssText = 'display: grid; grid-template-columns: repeat(9, 44px); gap: 4px;';
+    invGrid.style.cssText = 'display: grid; grid-template-columns: repeat(9, 56px); gap: 4px;';
     for (let i = 0; i < 27; i++) {
       invGrid.appendChild(this.makeSlot(i, 'inventory'));
     }
@@ -113,7 +113,7 @@ export class ChestScreen {
 
     // Hotbar Section
     const hotbarGrid = document.createElement('div');
-    hotbarGrid.style.cssText = 'display: grid; grid-template-columns: repeat(9, 44px); gap: 4px; margin-top: 4px;';
+    hotbarGrid.style.cssText = 'display: grid; grid-template-columns: repeat(9, 56px); gap: 4px; margin-top: 4px;';
     for (let i = 0; i < 9; i++) {
       hotbarGrid.appendChild(this.makeSlot(i, 'hotbar'));
     }
@@ -126,8 +126,8 @@ export class ChestScreen {
     this.dragEl = document.createElement('div');
     this.dragEl.style.cssText = `
       position: fixed; pointer-events: none; z-index: 400; display: none;
-      width: 44px; height: 44px; background: rgba(255,255,255,0.25);
-      border: 2px solid #fff; font-family: monospace; font-size: 11px; color: #fff;
+      width: 56px; height: 56px; background: rgba(255,255,255,0.25);
+      border: 2px solid #fff; font-family: monospace; font-size: 12px; color: #fff;
       align-items: center; justify-content: center; border-radius: 6px;
     `;
     document.body.appendChild(this.dragEl);
@@ -263,16 +263,18 @@ export class ChestScreen {
   }
 
   private onMouseMove = (e: MouseEvent): void => {
+    if (!this.visible) return;
+
     if (this.dragItem && this.dragEl) {
       this.dragEl.style.display = 'flex';
-      this.dragEl.style.left = `${e.clientX - 22}px`;
-      this.dragEl.style.top = `${e.clientY - 22}px`;
+      this.dragEl.style.left = `${e.clientX - 28}px`;
+      this.dragEl.style.top = `${e.clientY - 28}px`;
       this.dragEl.textContent = '';
-      const icon = createItemIcon(this.dragItem.itemId, 28);
+      const icon = createItemIcon(this.dragItem.itemId, 38);
       this.dragEl.appendChild(icon);
       if (this.dragItem.count > 1) {
         const countSpan = document.createElement('span');
-        countSpan.style.cssText = 'position:absolute;bottom:1px;right:4px;font-size:10px;font-weight:bold;color:#fff;text-shadow:1px 1px 2px #000;';
+        countSpan.style.cssText = 'position:absolute;bottom:2px;right:4px;font-size:13px;font-weight:bold;color:#fff;text-shadow:2px 2px 0 #000;';
         countSpan.textContent = String(this.dragItem.count);
         this.dragEl.appendChild(countSpan);
       }
@@ -302,7 +304,7 @@ export class ChestScreen {
   refresh(): void {
     if (!this.container) return;
 
-    const allSlots = this.container.querySelectorAll<HTMLDivElement>('div[style*="width: 44px"]');
+    const allSlots = this.container.querySelectorAll<HTMLDivElement>('div[style*="width: 56px"]');
     if (allSlots.length < 63) return;
 
     // Chest slots (0-26)
@@ -324,14 +326,14 @@ export class ChestScreen {
     el.textContent = '';
     if (slot.itemId) {
       el.dataset.itemId = slot.itemId;
-      const icon = createItemIcon(slot.itemId, 28);
+      const icon = createItemIcon(slot.itemId, 38);
       el.appendChild(icon);
 
       if (slot.count > 1) {
-        const c = document.createElement('span');
-        c.style.cssText = 'position:absolute;bottom:1px;right:4px;font-size:10px;font-weight:bold;color:#fff;text-shadow:1px 1px 2px #000;';
-        c.textContent = String(slot.count);
-        el.appendChild(c);
+        const countSpan = document.createElement('span');
+        countSpan.style.cssText = 'position:absolute;bottom:2px;right:4px;font-size:13px;font-weight:bold;color:#fff;text-shadow:2px 2px 0 #000;';
+        countSpan.textContent = String(slot.count);
+        el.appendChild(countSpan);
       }
 
       // Durability Bar
@@ -341,8 +343,8 @@ export class ChestScreen {
         const color = ratio > 0.5 ? '#4caf50' : ratio > 0.2 ? '#ffeb3b' : '#f44336';
         const durBar = document.createElement('div');
         durBar.style.cssText = `
-          position: absolute; bottom: 2px; left: 3px; width: 38px; height: 3px;
-          background: rgba(0,0,0,0.6); border-radius: 1px; overflow: hidden;
+          position: absolute; bottom: 3px; left: 4px; width: 48px; height: 4px;
+          background: rgba(0,0,0,0.7); border-radius: 1px; overflow: hidden;
         `;
         const fill = document.createElement('div');
         fill.style.cssText = `height: 100%; width: ${ratio * 100}%; background: ${color};`;

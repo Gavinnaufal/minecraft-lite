@@ -207,7 +207,7 @@ Build: ✅ `npm run build` passes (646KB bundle, 456ms)
 - [x] CP-143: Wheat Seeds Drops, Wheat Farming & Bread Food Eating
 - [x] CP-144: Glassmorphic UI/UX Redesign & Custom SVG Vector Icons
 
-### Fase 17 — Master Polish (11/11)
+### Fase 17 — Master Polish (12/12)
 - [x] CP-145: Block Selection Outline Wireframe Box
 - [x] CP-146: Time-based Dynamic Exponential Distance Fog
 - [x] CP-147: Surface-based Footstep Audio System
@@ -219,6 +219,7 @@ Build: ✅ `npm run build` passes (646KB bundle, 456ms)
 - [x] CP-153: Authentic 16x16 Pixel Art Textures Pass
 - [x] CP-154: 3D Volumetric Voxel Clouds & Celestial System
 - [x] CP-155: Agriculture & Quiet Toast System Polish
+- [x] CP-156: Authentic AABB Sweep Physics, Dynamic Sprint FOV & Mob Knockback Polish Pass
 
 ---
 

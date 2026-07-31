@@ -65,11 +65,6 @@ function setAxis(xa: number[], ya: number[], za: number[], axis: Axis, val: numb
   za[0] = val;
 }
 
-function isSolid(blockId: number): boolean {
-  const b = getBlockById(blockId);
-  return b ? b.solid : false;
-}
-
 function isOpaque(blockId: number): boolean {
   const b = getBlockById(blockId);
   return b ? b.solid && !b.transparent : false;
@@ -163,8 +158,7 @@ function doMesh(
           setAxis(px, py, pz, fa.aAxis, a);
           const bid = blocks[blockIndex(px[0], py[0], pz[0])];
 
-          if (bid === 0 || isWater(bid)) continue;
-          if (!isSolid(bid)) continue;
+          if (bid === 0 || isWater(bid) || bid === 11 || bid === 14) continue;
 
           if (isFaceVisible(blocks, px[0], py[0], pz[0], fa.dir[0], fa.dir[1], fa.dir[2], bid, eastBorder, westBorder, northBorder, southBorder)) {
             mask[b * fa.aSize + a] = bid;
@@ -198,7 +192,11 @@ function doMesh(
 
           const ax0 = getAxisVal(bx[0], by[0], bz[0], fa.aAxis);
           const bx0 = getAxisVal(bx[0], by[0], bz[0], fa.bAxis);
-          const corners: [number, number][] = [[ax0 + w, bx0], [ax0, bx0], [ax0, bx0 + h], [ax0 + w, bx0 + h]];
+          
+          const minA = ax0, maxA = ax0 + w;
+          const minB = bx0, maxB = bx0 + h;
+
+          const corners: [number, number][] = [[maxA, minB], [minA, minB], [minA, maxB], [maxA, maxB]];
 
           const quadPositions: number[] = [];
           const quadNormals: number[] = [];
@@ -237,6 +235,38 @@ function doMesh(
             uvs: quadUVs,
             indices,
           });
+        }
+      }
+    }
+  }
+
+  // Cross-Mesh Pass for Torches (11) and Crops (14)
+  for (let y = 0; y < CHUNK_HEIGHT; y++) {
+    for (let z = 0; z < CHUNK_SIZE_Z; z++) {
+      for (let x = 0; x < CHUNK_SIZE_X; x++) {
+        const bid = blocks[blockIndex(x, y, z)];
+        if (bid === 11 || bid === 14) {
+          const x0 = x + 0.15, x1 = x + 0.85;
+          const y0 = y, y1 = y + 0.85;
+          const z0 = z + 0.15, z1 = z + 0.85;
+
+          const pos1 = [x0, y1, z0, x1, y1, z1, x1, y0, z1, x0, y0, z0];
+          const nrm1 = [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
+          const uvs1 = [0, 1, 1, 1, 1, 0, 0, 0];
+          const idx1 = [0, 1, 2, 0, 2, 3];
+
+          const pos2 = [x0, y1, z1, x1, y1, z0, x1, y0, z0, x0, y0, z1];
+          const nrm2 = [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
+          const uvs2 = [0, 1, 1, 1, 1, 0, 0, 0];
+          const idx2 = [0, 1, 2, 0, 2, 3];
+
+          const groupKey0 = `${bid}_0`;
+          if (!blockGroups.has(groupKey0)) blockGroups.set(groupKey0, []);
+          blockGroups.get(groupKey0)!.push({ positions: pos1, normals: nrm1, uvs: uvs1, indices: idx1 });
+
+          const groupKey1 = `${bid}_1`;
+          if (!blockGroups.has(groupKey1)) blockGroups.set(groupKey1, []);
+          blockGroups.get(groupKey1)!.push({ positions: pos2, normals: nrm2, uvs: uvs2, indices: idx2 });
         }
       }
     }

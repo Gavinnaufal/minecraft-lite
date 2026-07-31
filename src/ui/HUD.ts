@@ -79,27 +79,25 @@ export class HUD {
     this.deathOverlay.innerHTML = '<div style="letter-spacing:2px;">KAMU MATI!</div><div style="font-size:16px; color:#fff; margin-top:12px; font-weight:normal;">Restarting...</div>';
     document.body.appendChild(this.deathOverlay);
 
-    // Top-Left Unified Glass Status Badge (XYZ + Facing + FPS)
+    // Top-Left Status Badge (XYZ + Facing + FPS)
     this.coordsDisplay = document.createElement('div');
     this.coordsDisplay.style.cssText = `
       position: fixed; top: 12px; left: 16px; z-index: 100; pointer-events: none;
       font-family: monospace; font-size: 12px; color: #fff; line-height: 1.4;
-      background: rgba(15, 15, 25, 0.65); backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 20px;
-      padding: 6px 14px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      background: rgba(0, 0, 0, 0.5); border: 2px solid #555; border-radius: 4px;
+      padding: 6px 14px; box-shadow: 2px 2px 8px rgba(0,0,0,0.6);
       display: flex; align-items: center; gap: 8px;
     `;
     this.coordsDisplay.innerHTML = `<span>${SVG_ICONS.location} XYZ: 0.0, 60.0, 0.0</span> <span style="color:rgba(255,255,255,0.3)">|</span> <span>${SVG_ICONS.compass} South</span> <span style="color:rgba(255,255,255,0.3)">|</span> <span>${SVG_ICONS.fps} 60 FPS</span>`;
     document.body.appendChild(this.coordsDisplay);
 
-    // Top-Center Glass Time Badge (Sun/Moon + Time)
+    // Top-Center Time Badge
     this.timeDisplayContainer = document.createElement('div');
     this.timeDisplayContainer.style.cssText = `
       position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 100;
       font-family: monospace; font-size: 13px; font-weight: bold; color: #ffcc00; pointer-events: none;
-      background: rgba(15, 15, 25, 0.65); backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 20px;
-      padding: 5px 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      background: rgba(0, 0, 0, 0.5); border: 2px solid #555; border-radius: 4px;
+      padding: 5px 16px; box-shadow: 2px 2px 8px rgba(0,0,0,0.6);
       display: flex; align-items: center; gap: 6px; text-shadow: 1px 1px 2px #000;
     `;
     this.timeIcon = document.createElement('span');
@@ -109,14 +107,13 @@ export class HUD {
     this.timeDisplayContainer.appendChild(this.timeDisplay);
     document.body.appendChild(this.timeDisplayContainer);
 
-    // Top-Right Glass Controls Guide Badge
+    // Top-Right Controls Guide Badge
     this.controlsGuide = document.createElement('div');
     this.controlsGuide.style.cssText = `
       position: fixed; top: 12px; right: 16px; z-index: 100; pointer-events: none;
       font-family: monospace; font-size: 11px; color: #eee;
-      background: rgba(15, 15, 25, 0.65); backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px;
-      padding: 6px 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      background: rgba(0, 0, 0, 0.5); border: 2px solid #555; border-radius: 4px;
+      padding: 6px 12px; box-shadow: 2px 2px 8px rgba(0,0,0,0.6);
       display: flex; gap: 12px; align-items: center;
     `;
     const kStyle = 'background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); border-radius:3px; padding:1px 5px; color:#fff; font-weight:bold; font-size:10px;';
@@ -128,43 +125,50 @@ export class HUD {
     `;
     document.body.appendChild(this.controlsGuide);
 
-    // Active Item Name Popup Banner (Above Hotbar)
+    // Active Item Name Popup Banner (Above Hotbar - Minecraft Style Text)
     this.itemNameBanner = document.createElement('div');
     this.itemNameBanner.style.cssText = `
-      position: fixed; bottom: 94px; left: 50%; transform: translateX(-50%);
-      font-family: monospace; font-size: 13px; font-weight: bold; color: #ffcc00;
-      text-shadow: 1px 1px 3px #000; pointer-events: none; z-index: 100;
-      opacity: 0; transition: opacity 0.3s ease;
-      background: rgba(15, 15, 25, 0.85); backdrop-filter: blur(8px);
-      padding: 4px 16px; border-radius: 20px; border: 1px solid rgba(255, 204, 0, 0.4);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      position: fixed; bottom: 104px; left: 50%; transform: translateX(-50%);
+      font-family: monospace; font-size: 16px; font-weight: bold; color: #ffffff;
+      text-shadow: 2px 2px 0 #000; pointer-events: none; z-index: 100;
+      opacity: 0; transition: opacity 0.2s ease; text-align: center;
     `;
     document.body.appendChild(this.itemNameBanner);
 
+    // Authentic Minecraft Crosshair (+)
     this.crosshair = document.createElement('div');
     this.crosshair.style.cssText = `
       position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 4px; height: 4px; background: #fff; z-index: 100; pointer-events: none;
-      border: 1px solid #000; border-radius: 2px;
+      width: 16px; height: 16px; z-index: 100; pointer-events: none;
+    `;
+    this.crosshair.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M7 0h2v16H7zM0 7h16v2H0z" fill="#ffffff"/>
+        <path d="M6 0h1v16H6zM9 0h1v16H9zM0 6h16v1H0zM0 9h16v1H0z" fill="#000000" opacity="0.4"/>
+      </svg>
     `;
     document.body.appendChild(this.crosshair);
 
+    // Authentic Minecraft Hotbar Container (Gray GUI Bar)
     this.container = document.createElement('div');
     this.container.style.cssText = `
       position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%);
-      display: flex; gap: 3px; z-index: 100; pointer-events: none;
+      display: flex; gap: 0; z-index: 100; pointer-events: none;
+      background: #8b8b8b; border-top: 3px solid #373737; border-left: 3px solid #373737;
+      border-bottom: 3px solid #ffffff; border-right: 3px solid #ffffff;
+      padding: 3px; border-radius: 2px; box-shadow: 0 8px 24px rgba(0,0,0,0.7);
     `;
     document.body.appendChild(this.container);
 
     for (let i = 0; i < 9; i++) {
       const slot = document.createElement('div');
       slot.style.cssText = `
-        width: 44px; height: 44px; background: rgba(15, 15, 25, 0.65);
-        backdrop-filter: blur(8px); border: 2px solid rgba(255, 255, 255, 0.15);
-        border-radius: 6px; display: flex; align-items: center;
-        justify-content: center; position: relative;
-        font-family: monospace; font-size: 11px; color: #fff;
-        transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+        width: 56px; height: 56px; background: #8b8b8b;
+        border-top: 3px solid #373737; border-left: 3px solid #373737;
+        border-bottom: 3px solid #ffffff; border-right: 3px solid #ffffff;
+        display: flex; align-items: center; justify-content: center; position: relative;
+        font-family: monospace; font-size: 13px; color: #fff;
+        margin: 1px; transition: all 0.1s ease; box-sizing: border-box;
       `;
       this.container.appendChild(slot);
       this.slots.push(slot);
@@ -173,7 +177,7 @@ export class HUD {
     // Health bar visual (10 heart SVG icons = 20 HP)
     this.healthContainer = document.createElement('div');
     this.healthContainer.style.cssText = `
-      position: fixed; bottom: 62px; left: 50%; transform: translateX(-50%);
+      position: fixed; bottom: 76px; left: 50%; transform: translateX(-50%);
       display: flex; gap: 3px; z-index: 100; pointer-events: none;
     `;
     for (let i = 0; i < 10; i++) {
@@ -188,7 +192,7 @@ export class HUD {
     // Oxygen bubbles bar (10 bubble SVG icons = 20 Oxygen)
     this.oxygenContainer = document.createElement('div');
     this.oxygenContainer.style.cssText = `
-      position: fixed; bottom: 84px; left: 50%; transform: translateX(-50%);
+      position: fixed; bottom: 98px; left: 50%; transform: translateX(-50%);
       display: flex; gap: 3px; z-index: 100; pointer-events: none;
       opacity: 0; transition: opacity 0.3s ease;
     `;
@@ -256,22 +260,10 @@ export class HUD {
 
   setCrosshairState(state: 'none' | 'block' | 'mob'): void {
     if (state === 'mob') {
-      this.crosshair.style.width = '8px';
-      this.crosshair.style.height = '8px';
-      this.crosshair.style.background = '#ff3333';
-      this.crosshair.style.borderColor = '#ffffff';
-      this.crosshair.style.transform = 'translate(-50%, -50%) scale(1.2)';
+      this.crosshair.style.transform = 'translate(-50%, -50%) scale(1.3)';
     } else if (state === 'block') {
-      this.crosshair.style.width = '6px';
-      this.crosshair.style.height = '6px';
-      this.crosshair.style.background = '#ffcc00';
-      this.crosshair.style.borderColor = '#000000';
-      this.crosshair.style.transform = 'translate(-50%, -50%) scale(1.1)';
+      this.crosshair.style.transform = 'translate(-50%, -50%) scale(1.15)';
     } else {
-      this.crosshair.style.width = '4px';
-      this.crosshair.style.height = '4px';
-      this.crosshair.style.background = '#ffffff';
-      this.crosshair.style.borderColor = '#000000';
       this.crosshair.style.transform = 'translate(-50%, -50%) scale(1.0)';
     }
   }
@@ -279,7 +271,6 @@ export class HUD {
   updateHealth(health: number): void {
     const clampedHp = Math.max(0, Math.min(20, health));
 
-    // Low HP pulsing vignette warning (<= 4 HP / 2 hearts)
     if (clampedHp > 0 && clampedHp <= 4) {
       this.lowHpVignette.style.opacity = '1';
     } else {
@@ -306,7 +297,6 @@ export class HUD {
       this.updateHealth(playerHealth);
     }
 
-    // Check active item change for popup banner
     if (this.hotbar.activeSlotIndex !== this.lastActiveSlot) {
       this.lastActiveSlot = this.hotbar.activeSlotIndex;
       const activeSlot = this.hotbar.getActiveItem();
@@ -331,23 +321,29 @@ export class HUD {
       const isActive = i === this.hotbar.activeSlotIndex;
 
       if (isActive) {
-        slot.style.borderColor = '#ffcc00';
-        slot.style.boxShadow = '0 0 14px rgba(255,204,0,0.7), inset 0 0 8px rgba(255,204,0,0.3)';
-        slot.style.transform = 'scale(1.05)';
+        slot.style.borderTopColor = '#ffffff';
+        slot.style.borderLeftColor = '#ffffff';
+        slot.style.borderBottomColor = '#ffffff';
+        slot.style.borderRightColor = '#ffffff';
+        slot.style.boxShadow = '0 0 12px rgba(255,255,255,0.9), inset 0 0 6px rgba(255,255,255,0.5)';
+        slot.style.transform = 'scale(1.08)';
       } else {
-        slot.style.borderColor = 'rgba(255,255,255,0.15)';
+        slot.style.borderTopColor = '#373737';
+        slot.style.borderLeftColor = '#373737';
+        slot.style.borderBottomColor = '#ffffff';
+        slot.style.borderRightColor = '#ffffff';
         slot.style.boxShadow = 'none';
         slot.style.transform = 'scale(1.0)';
       }
 
       if (item.itemId) {
         slot.textContent = '';
-        const icon = createItemIcon(item.itemId, 28);
+        const icon = createItemIcon(item.itemId, 38);
         slot.appendChild(icon);
 
         if (item.count > 1) {
           const countEl = document.createElement('span');
-          countEl.style.cssText = 'position:absolute;bottom:1px;right:4px;font-size:10px;font-weight:bold;color:#fff;text-shadow:1px 1px 2px #000;';
+          countEl.style.cssText = 'position:absolute;bottom:2px;right:4px;font-size:13px;font-weight:bold;color:#fff;text-shadow:2px 2px 0 #000;';
           countEl.textContent = String(item.count);
           slot.appendChild(countEl);
         }
@@ -359,8 +355,8 @@ export class HUD {
           const color = ratio > 0.5 ? '#4caf50' : ratio > 0.2 ? '#ffeb3b' : '#f44336';
           const durBar = document.createElement('div');
           durBar.style.cssText = `
-            position: absolute; bottom: 2px; left: 3px; width: 38px; height: 3px;
-            background: rgba(0,0,0,0.6); border-radius: 1px; overflow: hidden;
+            position: absolute; bottom: 3px; left: 4px; width: 48px; height: 4px;
+            background: rgba(0,0,0,0.7); border-radius: 1px; overflow: hidden;
           `;
           const fill = document.createElement('div');
           fill.style.cssText = `height: 100%; width: ${ratio * 100}%; background: ${color};`;

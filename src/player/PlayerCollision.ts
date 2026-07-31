@@ -1,5 +1,6 @@
 import type { Player } from './Player';
 import type { World } from '../world/World';
+import { getBlockById } from '../world/BlockRegistry';
 
 export class PlayerCollision {
   private readonly player: Player;
@@ -10,72 +11,143 @@ export class PlayerCollision {
     this.world = world;
   }
 
-  checkAndResolve(): void {
-    const bb = this.player.getAABB();
+  /**
+   * Applies velocity * deltaTime to position using authentic Minecraft AABB sweep resolution.
+   */
+  checkAndResolve(deltaTime: number = 1 / 60): void {
+    const dt = Math.min(deltaTime, 0.05);
 
-    // Check ground
-    this.player.isGrounded = false;
-    const footY = this.player.position.y;
-    const checkX = Math.floor(this.player.position.x);
-    const checkZ = Math.floor(this.player.position.z);
+    const intendedDx = this.player.velocity.x * dt;
+    const intendedDy = this.player.velocity.y * dt;
+    const intendedDz = this.player.velocity.z * dt;
 
-    for (let dx = -1; dx <= 1; dx++) {
-      for (let dz = -1; dz <= 1; dz++) {
-        const wx = checkX + dx;
-        const wz = checkZ + dz;
-        if (this.world.getBlock(wx, Math.floor(footY - 0.01), wz) !== 0) {
-          this.player.isGrounded = true;
+    const hw = this.player.width / 2;
+    const height = this.player.height;
+
+    // Player current AABB
+    let pMinX = this.player.position.x - hw;
+    let pMaxX = this.player.position.x + hw;
+    let pMinY = this.player.position.y;
+    let pMaxY = this.player.position.y + height;
+    let pMinZ = this.player.position.z - hw;
+    let pMaxZ = this.player.position.z + hw;
+
+    // Extended search region for candidate blocks
+    const sMinX = Math.floor(Math.min(pMinX, pMinX + intendedDx) - 1);
+    const sMaxX = Math.floor(Math.max(pMaxX, pMaxX + intendedDx) + 1);
+    const sMinY = Math.floor(Math.min(pMinY, pMinY + intendedDy) - 1);
+    const sMaxY = Math.floor(Math.max(pMaxY, pMaxY + intendedDy) + 1);
+    const sMinZ = Math.floor(Math.min(pMinZ, pMinZ + intendedDz) - 1);
+    const sMaxZ = Math.floor(Math.max(pMaxZ, pMaxZ + intendedDz) + 1);
+
+    // Collect candidate solid block AABBs
+    const blocks: { minX: number; maxX: number; minY: number; maxY: number; minZ: number; maxZ: number }[] = [];
+    for (let y = sMinY; y <= sMaxY; y++) {
+      for (let x = sMinX; x <= sMaxX; x++) {
+        for (let z = sMinZ; z <= sMaxZ; z++) {
+          const blockId = this.world.getBlock(x, y, z);
+          const blockDef = getBlockById(blockId);
+          if (blockId !== 0 && blockDef?.solid) { // Only collide with solid blocks
+            blocks.push({
+              minX: x,
+              maxX: x + 1,
+              minY: y,
+              maxY: y + 1,
+              minZ: z,
+              maxZ: z + 1,
+            });
+          }
         }
       }
     }
 
-    // Resolve Y (vertical)
-    this.resolveAxis('y', bb);
+    let adjustedDy = intendedDy;
 
-    // Resolve X
-    this.resolveAxis('x', bb);
-
-    // Resolve Z
-    this.resolveAxis('z', bb);
-  }
-
-  private resolveAxis(axis: 'x' | 'y' | 'z', _bb: ReturnType<Player['getAABB']>): void {
-    const bb = this.player.getAABB();
-
-    const minCheck = axis === 'y' ? Math.floor(bb.minY) : axis === 'x' ? Math.floor(bb.minX) : Math.floor(bb.minZ);
-    const maxCheck = axis === 'y' ? Math.ceil(bb.maxY) : axis === 'x' ? Math.ceil(bb.maxX) : Math.ceil(bb.maxZ);
-
-    for (let c = minCheck; c <= maxCheck; c++) {
-      const push = this.checkBlock(bb, c, axis);
-      if (push !== 0) {
-        if (axis === 'x') this.player.position.x += push;
-        else if (axis === 'y') { this.player.position.y += push; if (push > 0) this.player.velocity.y = 0; }
-        else this.player.position.z += push;
-        return;
+    // 1. Resolve Y Axis
+    for (const b of blocks) {
+      if (pMaxX > b.minX && pMinX < b.maxX && pMaxZ > b.minZ && pMinZ < b.maxZ) {
+        if (adjustedDy > 0 && pMaxY <= b.minY) {
+          const maxMove = b.minY - pMaxY;
+          if (maxMove < adjustedDy) adjustedDy = Math.max(0, maxMove);
+        } else if (adjustedDy < 0 && pMinY >= b.maxY) {
+          const maxMove = b.maxY - pMinY;
+          if (maxMove > adjustedDy) adjustedDy = Math.min(0, maxMove);
+        }
       }
+    }
+
+    pMinY += adjustedDy;
+    pMaxY += adjustedDy;
+
+    let adjustedDx = intendedDx;
+
+    // 2. Resolve X Axis
+    for (const b of blocks) {
+      if (pMaxY > b.minY && pMinY < b.maxY && pMaxZ > b.minZ && pMinZ < b.maxZ) {
+        if (adjustedDx > 0 && pMaxX <= b.minX) {
+          const maxMove = b.minX - pMaxX;
+          if (maxMove < adjustedDx) adjustedDx = Math.max(0, maxMove);
+        } else if (adjustedDx < 0 && pMinX >= b.maxX) {
+          const maxMove = b.maxX - pMinX;
+          if (maxMove > adjustedDx) adjustedDx = Math.min(0, maxMove);
+        }
+      }
+    }
+
+    pMinX += adjustedDx;
+    pMaxX += adjustedDx;
+
+    let adjustedDz = intendedDz;
+
+    // 3. Resolve Z Axis
+    for (const b of blocks) {
+      if (pMaxX > b.minX && pMinX < b.maxX && pMaxY > b.minY && pMinY < b.maxY) {
+        if (adjustedDz > 0 && pMaxZ <= b.minZ) {
+          const maxMove = b.minZ - pMaxZ;
+          if (maxMove < adjustedDz) adjustedDz = Math.max(0, maxMove);
+        } else if (adjustedDz < 0 && pMinZ >= b.maxZ) {
+          const maxMove = b.maxZ - pMinZ;
+          if (maxMove > adjustedDz) adjustedDz = Math.min(0, maxMove);
+        }
+      }
+    }
+
+    // Apply resolved movements
+    this.player.position.x += adjustedDx;
+    this.player.position.y += adjustedDy;
+    this.player.position.z += adjustedDz;
+
+    // Update grounded state & zero velocities on collision
+    if (intendedDy < 0 && adjustedDy > intendedDy) {
+      this.player.isGrounded = true;
+      this.player.velocity.y = 0;
+    } else if (intendedDy > 0 && adjustedDy < intendedDy) {
+      this.player.velocity.y = 0;
+    } else {
+      this.player.isGrounded = this.checkGrounded(hw);
+    }
+
+    if (Math.abs(adjustedDx - intendedDx) > 0.00001) {
+      this.player.velocity.x = 0;
+    }
+    if (Math.abs(adjustedDz - intendedDz) > 0.00001) {
+      this.player.velocity.z = 0;
     }
   }
 
-  private checkBlock(bb: ReturnType<Player['getAABB']>, coord: number, axis: 'x' | 'y' | 'z'): number {
-    const bx = axis === 'x' ? coord : Math.floor(this.player.position.x);
-    const by = axis === 'y' ? coord : Math.floor(bb.minY);
-    const bz = axis === 'z' ? coord : Math.floor(this.player.position.z);
+  private checkGrounded(hw: number): boolean {
+    const footY = Math.floor(this.player.position.y - 0.05);
+    const minX = Math.floor(this.player.position.x - hw + 0.05);
+    const maxX = Math.floor(this.player.position.x + hw - 0.05);
+    const minZ = Math.floor(this.player.position.z - hw + 0.05);
+    const maxZ = Math.floor(this.player.position.z + hw - 0.05);
 
-    const blockId = this.world.getBlock(bx, by, bz);
-    if (blockId === 0 || blockId === 7) return 0;
-
-    const blockMinX = bx, blockMaxX = bx + 1;
-    const blockMinY = by, blockMaxY = by + 1;
-    const blockMinZ = bz, blockMaxZ = bz + 1;
-
-    // Check overlap
-    if (bb.maxX <= blockMinX || bb.minX >= blockMaxX) return 0;
-    if (bb.maxY <= blockMinY || bb.minY >= blockMaxY) return 0;
-    if (bb.maxZ <= blockMinZ || bb.minZ >= blockMaxZ) return 0;
-
-    // Push out
-    if (axis === 'x') return bb.maxX - blockMinX < blockMaxX - bb.minX ? blockMinX - bb.maxX : blockMaxX - bb.minX;
-    if (axis === 'y') return bb.maxY - blockMinY < blockMaxY - bb.minY ? blockMinY - bb.maxY : blockMaxY - bb.minY;
-    return bb.maxZ - blockMinZ < blockMaxZ - bb.minZ ? blockMinZ - bb.maxZ : blockMaxZ - bb.minZ;
+    for (let x = minX; x <= maxX; x++) {
+      for (let z = minZ; z <= maxZ; z++) {
+        const b = this.world.getBlock(x, footY, z);
+        if (b !== 0 && b !== 7) return true;
+      }
+    }
+    return false;
   }
 }

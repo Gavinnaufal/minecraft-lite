@@ -21,6 +21,15 @@ const ITEM_COLORS: Record<string, number> = {
   crafting_table: 0x8d6e63,
   sandstone: 0xe0d6b8,
   stick: 0x8d6e63,
+  beef: 0xb71c1c,
+  rotten_flesh: 0x2e7d32,
+  bread: 0xd84315,
+  wheat: 0xfbc02d,
+  wheat_seeds: 0x81c784,
+  chest: 0x8d6e63,
+  coal: 0x212121,
+  iron_ingot: 0xcfd8dc,
+  gold_ingot: 0xffd54f,
 };
 
 export class ItemDropManager {
@@ -69,15 +78,17 @@ export class ItemDropManager {
 
       // Magnet check towards player
       const dist = drop.position.distanceTo(playerPos);
-      if (drop.age > 0.4 && dist < 2.8) {
-        // Accelerate magnet pull towards player
+      if (drop.age > 0.35 && dist < 3.2) {
+        // Accelerate magnet swoop pull towards player
         const dir = new THREE.Vector3().subVectors(playerPos, drop.position).normalize();
-        drop.velocity.lerp(dir.multiplyScalar(6.0), deltaTime * 6.0);
+        const swoopSpeed = 8.0 + (3.2 - dist) * 4.0;
+        drop.velocity.lerp(dir.multiplyScalar(swoopSpeed), deltaTime * 10.0);
+        drop.mesh.scale.multiplyScalar(0.95);
 
-        if (dist < 0.8) {
+        if (dist < 0.85) {
           // Pickup
           onPickup(drop.itemId, drop.count);
-          AudioManager.getInstance().playSFX('place');
+          AudioManager.getInstance().playSFX('pop');
           this.scene.remove(drop.mesh);
           drop.mesh.geometry.dispose();
           this.drops.splice(i, 1);

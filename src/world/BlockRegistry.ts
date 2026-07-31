@@ -119,7 +119,7 @@ export function createBlockMaterial(blockId: number): THREE.Material | THREE.Mat
   const texture = loadBlockTexture(block.name);
   const material = new THREE.MeshStandardMaterial({ map: texture });
 
-  if (block.name === 'leaves') {
+  if (block.name === 'leaves' || block.name === 'torch' || block.name === 'wheat_crop') {
     material.transparent = false;
     material.alphaTest = 0.5;
     material.depthWrite = true;

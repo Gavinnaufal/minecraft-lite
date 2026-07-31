@@ -1,5 +1,6 @@
 import type { SaveManager } from '../save/SaveManager';
 import type { SettingsMenu } from './SettingsMenu';
+import { AudioManager } from '../audio/AudioManager';
 
 export class PauseMenu {
   private container: HTMLDivElement | null = null;
@@ -19,89 +20,87 @@ export class PauseMenu {
     this.container = document.createElement('div');
     this.container.style.cssText = `
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.75); z-index: 250;
+      background: rgba(0, 0, 0, 0.65); z-index: 250;
       justify-content: center; align-items: center; flex-direction: column;
-      font-family: monospace; color: #fff;
-    `;
-
-    const menuBox = document.createElement('div');
-    menuBox.style.cssText = `
-      background: #333; border: 3px solid #555; padding: 24px 32px;
-      border-radius: 8px; display: flex; flex-direction: column; gap: 12px;
-      min-width: 220px; align-items: center; box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+      font-family: monospace; color: #fff; user-select: none;
     `;
 
     const title = document.createElement('h2');
-    title.textContent = 'GAME PAUSED';
-    title.style.cssText = 'margin: 0 0 12px 0; font-size: 20px; color: #ffcc00; letter-spacing: 1px;';
-    menuBox.appendChild(title);
+    title.textContent = 'Game Menu';
+    title.style.cssText = 'margin: 0 0 16px 0; font-size: 26px; color: #ffcc00; font-weight: bold; text-shadow: 2px 2px 0 #000; text-transform: uppercase; letter-spacing: 2px;';
+    this.container.appendChild(title);
 
     this.statusText = document.createElement('div');
-    this.statusText.style.cssText = 'height: 18px; font-size: 12px; color: #4caf50; font-weight: bold; margin-bottom: 4px;';
-    menuBox.appendChild(this.statusText);
+    this.statusText.style.cssText = 'height: 20px; font-size: 14px; color: #4caf50; font-weight: bold; margin-bottom: 12px; text-shadow: 1px 1px 0 #000;';
+    this.container.appendChild(this.statusText);
 
-    const btnStyle = `
-      width: 100%; padding: 10px; background: #555; border: 2px solid #777;
-      color: #fff; font-family: monospace; font-size: 14px; font-weight: bold;
-      cursor: pointer; border-radius: 4px; transition: background 0.15s;
-    `;
+    const btnBox = document.createElement('div');
+    btnBox.style.cssText = 'display: flex; flex-direction: column; gap: 12px; align-items: center; width: 320px;';
 
-    // 1. Resume Button
-    const btnResume = document.createElement('button');
-    btnResume.style.cssText = btnStyle;
-    btnResume.textContent = 'Resume Game';
-    btnResume.onclick = () => this.hide();
+    const makeMcBtn = (label: string, onClick: () => void) => {
+      const btn = document.createElement('button');
+      btn.style.cssText = `
+        width: 100%; padding: 12px 16px; font-family: monospace; font-size: 15px; font-weight: bold;
+        color: #e0e0e0; background: #707070;
+        border-top: 3px solid #9e9e9e; border-left: 3px solid #9e9e9e;
+        border-bottom: 3px solid #3a3a3a; border-right: 3px solid #3a3a3a;
+        cursor: pointer; text-shadow: 2px 2px 0 #000; text-align: center; border-radius: 2px;
+        transition: background 0.1s, border-color 0.1s, color 0.1s;
+      `;
+      btn.textContent = label;
+      btn.addEventListener('mouseenter', () => {
+        btn.style.background = '#808080';
+        btn.style.color = '#ffffa0';
+        btn.style.borderTopColor = '#ffffa0';
+        btn.style.borderLeftColor = '#ffffa0';
+        btn.style.borderBottomColor = '#555500';
+        btn.style.borderRightColor = '#555500';
+        AudioManager.getInstance().playSFX('footstep');
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.background = '#707070';
+        btn.style.color = '#e0e0e0';
+        btn.style.borderTopColor = '#9e9e9e';
+        btn.style.borderLeftColor = '#9e9e9e';
+        btn.style.borderBottomColor = '#3a3a3a';
+        btn.style.borderRightColor = '#3a3a3a';
+      });
+      btn.addEventListener('click', () => {
+        AudioManager.getInstance().playSFX('place');
+        onClick();
+      });
+      return btn;
+    };
 
-    // 2. Save Game Button
-    const btnSave = document.createElement('button');
-    btnSave.style.cssText = btnStyle;
-    btnSave.textContent = 'Save Game';
-    btnSave.onclick = async () => {
+    // 1. Back to Game
+    const btnResume = makeMcBtn('Back to Game', () => this.hide());
+
+    // 2. Save Game
+    const btnSave = makeMcBtn('Save World', async () => {
       try {
         await this.saveManager.save();
-        this.setStatus('Game Saved Successfully!');
+        this.setStatus('Dunia Berhasil Disimpan!');
       } catch (err) {
-        this.setStatus('Failed to Save Game', true);
+        this.setStatus('Gagal Menyimpan Dunia', true);
       }
-    };
+    });
 
-    // 3. Load Game Button
-    const btnLoad = document.createElement('button');
-    btnLoad.style.cssText = btnStyle;
-    btnLoad.textContent = 'Load Game';
-    btnLoad.onclick = async () => {
-      try {
-        const seed = await this.saveManager.load();
-        if (seed !== null) {
-          this.setStatus('Game Loaded Successfully!');
-        } else {
-          this.setStatus('No Save File Found', true);
-        }
-      } catch (err) {
-        this.setStatus('Failed to Load Game', true);
-      }
-    };
-
-    // 4. Settings Button
-    const btnSettings = document.createElement('button');
-    btnSettings.style.cssText = btnStyle;
-    btnSettings.textContent = 'Settings';
-    btnSettings.onclick = () => {
+    // 3. Options / Settings
+    const btnSettings = makeMcBtn('Options & Settings...', () => {
       this.settingsMenu.toggle();
-    };
+    });
 
-    menuBox.appendChild(btnResume);
-    menuBox.appendChild(btnSave);
-    menuBox.appendChild(btnLoad);
-    menuBox.appendChild(btnSettings);
+    btnBox.appendChild(btnResume);
+    btnBox.appendChild(btnSave);
+    btnBox.appendChild(btnSettings);
 
-    this.container.appendChild(menuBox);
+    this.container.appendChild(btnBox);
     document.body.appendChild(this.container);
   }
 
   private setStatus(msg: string, isError = false): void {
     if (!this.statusText) return;
-    this.statusText.style.color = isError ? '#ff5555' : '#4caf50';
+    this.statusText.style.color = isError ? '#ff5555' : '#55ff55';
     this.statusText.textContent = msg;
     setTimeout(() => {
       if (this.statusText && this.statusText.textContent === msg) {

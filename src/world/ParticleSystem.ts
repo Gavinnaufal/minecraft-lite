@@ -43,6 +43,87 @@ export class ParticleSystem {
     }
   }
 
+  spawnBlockPlaceParticles(position: THREE.Vector3, colorHex = 0xdddddd): void {
+    const mat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.8 });
+
+    for (let i = 0; i < 8; i++) {
+      const mesh = new THREE.Mesh(this.particleGeo, mat);
+      mesh.position.set(
+        position.x + (Math.random() - 0.5) * 0.8,
+        position.y + 0.1 + Math.random() * 0.8,
+        position.z + (Math.random() - 0.5) * 0.8,
+      );
+
+      const velocity = new THREE.Vector3(
+        (Math.random() - 0.5) * 2.0,
+        1.0 + Math.random() * 1.5,
+        (Math.random() - 0.5) * 2.0,
+      );
+
+      this.scene.add(mesh);
+      this.particles.push({
+        mesh,
+        velocity,
+        life: 0.3 + Math.random() * 0.2,
+        maxLife: 0.5,
+      });
+    }
+  }
+
+  spawnDeathParticles(position: THREE.Vector3): void {
+    const mat = new THREE.MeshBasicMaterial({ color: 0xeeeeee, transparent: true, opacity: 0.9 });
+
+    for (let i = 0; i < 20; i++) {
+      const mesh = new THREE.Mesh(this.particleGeo, mat);
+      mesh.position.set(
+        position.x + (Math.random() - 0.5) * 0.6,
+        position.y + 0.5 + (Math.random() - 0.5) * 0.8,
+        position.z + (Math.random() - 0.5) * 0.6,
+      );
+
+      const velocity = new THREE.Vector3(
+        (Math.random() - 0.5) * 3.5,
+        1.5 + Math.random() * 3.5,
+        (Math.random() - 0.5) * 3.5,
+      );
+
+      this.scene.add(mesh);
+      this.particles.push({
+        mesh,
+        velocity,
+        life: 0.4 + Math.random() * 0.4,
+        maxLife: 0.8,
+      });
+    }
+  }
+
+  spawnWaterSplashParticles(position: THREE.Vector3): void {
+    const mat = new THREE.MeshBasicMaterial({ color: 0x4fc3f7, transparent: true, opacity: 0.85 });
+
+    for (let i = 0; i < 14; i++) {
+      const mesh = new THREE.Mesh(this.particleGeo, mat);
+      mesh.position.set(
+        position.x + (Math.random() - 0.5) * 0.5,
+        position.y + 0.2,
+        position.z + (Math.random() - 0.5) * 0.5,
+      );
+
+      const velocity = new THREE.Vector3(
+        (Math.random() - 0.5) * 3.0,
+        3.0 + Math.random() * 2.5,
+        (Math.random() - 0.5) * 3.0,
+      );
+
+      this.scene.add(mesh);
+      this.particles.push({
+        mesh,
+        velocity,
+        life: 0.4 + Math.random() * 0.3,
+        maxLife: 0.7,
+      });
+    }
+  }
+
   update(deltaTime: number): void {
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];

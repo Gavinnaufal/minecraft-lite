@@ -11,26 +11,28 @@ export class ChatBox {
     // Chat Container (Bottom-left overlay)
     this.container = document.createElement('div');
     this.container.style.cssText = `
-      position: fixed; bottom: 65px; left: 16px; width: 320px;
-      z-index: 400; font-family: 'Courier New', monospace; font-size: 13px; color: #fff;
-      pointer-events: auto; display: flex; flex-direction: column; gap: 6px;
+      position: fixed; bottom: 80px; left: 16px; width: 340px;
+      z-index: 400; font-family: monospace; font-size: 14px; color: #fff;
+      pointer-events: auto; display: flex; flex-direction: column; gap: 4px;
+      user-select: none;
     `;
 
     this.messageList = document.createElement('div');
     this.messageList.style.cssText = `
-      max-height: 140px; overflow-y: auto; display: none; flex-direction: column; gap: 4px;
-      background: rgba(15, 15, 25, 0.65); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.15);
-      padding: 8px; border-radius: 6px; text-shadow: 1px 1px 2px #000;
+      max-height: 160px; overflow-y: auto; display: none; flex-direction: column; gap: 4px;
+      background: rgba(0, 0, 0, 0.45); padding: 8px; border-radius: 2px;
+      text-shadow: 2px 2px 0 #000;
     `;
     this.container.appendChild(this.messageList);
 
     this.inputEl = document.createElement('input');
     this.inputEl.type = 'text';
-    this.inputEl.placeholder = 'Tekan Enter untuk kirim...';
+    this.inputEl.placeholder = 'Ketik pesan dan tekan Enter...';
     this.inputEl.style.cssText = `
-      width: 100%; padding: 6px 10px; font-family: inherit; font-size: 13px;
-      color: #fff; background: rgba(0, 0, 0, 0.75); border: 1px solid #777;
-      border-radius: 4px; outline: none; box-sizing: border-box; display: none;
+      width: 100%; padding: 8px 12px; font-family: inherit; font-size: 14px;
+      color: #fff; background: rgba(0, 0, 0, 0.75); border: 2px solid #555;
+      border-radius: 2px; outline: none; box-sizing: border-box; display: none;
+      text-shadow: 1px 1px 0 #000;
     `;
     this.container.appendChild(this.inputEl);
 
@@ -62,6 +64,7 @@ export class ChatBox {
     this.inputEl.style.display = 'block';
     this.inputEl.value = '';
     this.inputEl.focus();
+    if (document.pointerLockElement) document.exitPointerLock();
   }
 
   close(): void {
@@ -73,8 +76,8 @@ export class ChatBox {
   addMessage(author: string, text: string): void {
     this.messageList.style.display = 'flex';
     const msg = document.createElement('div');
-    msg.style.cssText = 'word-break: break-word;';
-    msg.innerHTML = `<span style="color: #ffcc00; font-weight: bold;">[${author}]</span> ${text}`;
+    msg.style.cssText = 'word-break: break-word; font-size: 14px; line-height: 1.3;';
+    msg.innerHTML = `<span style="color: #ffff55; font-weight: bold;">&lt;${author}&gt;</span> ${text}`;
     this.messageList.appendChild(msg);
     this.messageList.scrollTop = this.messageList.scrollHeight;
   }

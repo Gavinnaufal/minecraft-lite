@@ -25,6 +25,7 @@ import { HandModel } from './ui/HandModel';
 import { ParticleSystem } from './world/ParticleSystem';
 import { ItemDropManager } from './world/ItemDropManager';
 import { ChatBox } from './multiplayer/ChatBox';
+import { TorchLightManager } from './world/TorchLightManager';
 import { NoiseGenerator, seedFromString } from './world/terrain/NoiseGenerator';
 import { HeightMap } from './world/terrain/HeightMap';
 import { BiomeGenerator, BiomeType } from './world/terrain/BiomeGenerator';
@@ -200,6 +201,7 @@ const playerCamera = new PlayerCamera(camera);
 // Interaction & Polish
 const particleSystem = new ParticleSystem(scene);
 const itemDropManager = new ItemDropManager(scene);
+const torchLightManager = new TorchLightManager(scene);
 const blockBreaker = new BlockBreaker(scene, world);
 const blockPlacer = new BlockPlacer(world);
 const blockHighlight = new BlockHighlight(scene);
@@ -444,7 +446,7 @@ engine.setUpdateCallback((deltaTime) => {
   AudioManager.getInstance().updateAmbience(dayNight.timeOfDay, deltaTime);
   playerCamera.update();
   playerController.update(deltaTime, camera);
-  playerCollision.checkAndResolve();
+  playerCollision.checkAndResolve(deltaTime);
   networkManager.sendPosition(player.position.x, player.position.y, player.position.z, deltaTime);
 
   const isWalking = inputManager.isKeyPressed('w') || inputManager.isKeyPressed('a') || inputManager.isKeyPressed('s') || inputManager.isKeyPressed('d');
@@ -515,7 +517,9 @@ engine.setUpdateCallback((deltaTime) => {
   sky.position.copy(camera.position);
   sky.position.y = 0;
 
-  // Held Torch Dynamic Lighting (Flickering Fire Glow)
+  // Placed Torch Dynamic Lighting & Held Torch Light
+  torchLightManager.update(world, new THREE.Vector3(player.position.x, player.position.y, player.position.z));
+
   const currentActiveItem = hotbar.getActiveItem();
   if (currentActiveItem.itemId === 'torch') {
     playerTorchLight.position.copy(camera.position);
@@ -584,11 +588,14 @@ engine.setUpdateCallback((deltaTime) => {
       crosshairState = 'mob';
     }
   }
-
   if (crosshairState === 'none' && blockBreaker.getTarget(camera)) {
     crosshairState = 'block';
   }
   hud.setCrosshairState(crosshairState);
+  playerController.onWaterSplash = (pos) => {
+    particleSystem.spawnWaterSplashParticles(pos);
+    AudioManager.getInstance().playSFX('footstep_water');
+  };
 
   // Left click mob attack hit
   if (inputManager.isLeftMouseDown && !wasLeftDown && hitMobIdx >= 0) {
@@ -613,12 +620,20 @@ engine.setUpdateCallback((deltaTime) => {
     }
 
     const targetMob = mobManager.mobs[hitMobIdx];
+    if (targetMob) {
+      const knockDir = targetMob.position.clone().sub(player.position).normalize();
+      targetMob.applyKnockback(knockDir, 6.5);
+    }
+
     const deadMob = mobManager.damageMob(hitMobIdx, damage, new THREE.Vector3(player.position.x, player.position.y, player.position.z));
     networkManager.sendMobDamage(hitMobIdx, damage);
 
     if (deadMob) {
       const dropPos = targetMob ? targetMob.position.clone() : new THREE.Vector3(player.position.x, player.position.y, player.position.z);
       dropPos.y += 0.5;
+      particleSystem.spawnDeathParticles(dropPos);
+      AudioManager.getInstance().playSFX('break');
+
       if (deadMob instanceof Cow) {
         itemDropManager.spawnDrop(dropPos, 'beef', Math.floor(Math.random() * 2) + 1);
       } else if (deadMob instanceof Zombie) {
@@ -636,11 +651,15 @@ engine.setUpdateCallback((deltaTime) => {
   if (inputManager.isRightMouseDown && !wasRightDown) {
     const targetHit = blockBreaker.getTarget(camera);
 
-    // Right-click Chest block (12) to open storage screen!
+    // Right-click Chest block (12) or Crafting Table (9) in the world!
     if (targetHit) {
       const hitBlockId = world.getBlock(targetHit.blockX, targetHit.blockY, targetHit.blockZ);
       if (hitBlockId === 12) {
         chestScreen.openChest(targetHit.blockX, targetHit.blockY, targetHit.blockZ);
+        wasRightDown = inputManager.isRightMouseDown;
+        return;
+      } else if (hitBlockId === 9) {
+        inventoryScreen.open();
         wasRightDown = inputManager.isRightMouseDown;
         return;
       }
@@ -656,6 +675,9 @@ engine.setUpdateCallback((deltaTime) => {
           handModel.triggerSwing();
           AudioManager.getInstance().playSFX('footstep');
           hud.update(player.health);
+          toastSystem.show(`Memakan ${getItemById(activeItem.itemId)?.name} (+${healAmount} HP)`, 'success');
+        } else {
+          toastSystem.show('Darah sudah penuh! (20/20 HP)', 'info');
         }
       } else if (activeItem.itemId.includes('hoe') && targetHit) {
         // Till Grass (1) or Dirt (2) into Farmland (13)!
@@ -705,6 +727,9 @@ engine.setUpdateCallback((deltaTime) => {
               networkManager.sendBlockChange(targetHit.blockX + targetHit.normalX, targetHit.blockY + targetHit.normalY, targetHit.blockZ + targetHit.normalZ, blockIdToPlace);
             }
           }
+        } else if (activeItem.itemId === 'stick' || activeItem.itemId === 'wheat') {
+          const itemDef = getItemById(activeItem.itemId);
+          toastSystem.show(`${itemDef?.name || activeItem.itemId} digunakan untuk resep crafting! Tekan [E] untuk craft.`, 'info');
         }
       }
     }

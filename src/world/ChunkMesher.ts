@@ -34,8 +34,8 @@ interface FaceAxis {
 const FACE_AXES: FaceAxis[] = [
   { dir: [ 0,  1,  0], planeAxis: 'y', aAxis: 'x', bAxis: 'z', planeSize: CHUNK_HEIGHT, aSize: CHUNK_SIZE_X, bSize: CHUNK_SIZE_Z, quadFacePos: 1 },
   { dir: [ 0, -1,  0], planeAxis: 'y', aAxis: 'x', bAxis: 'z', planeSize: CHUNK_HEIGHT, aSize: CHUNK_SIZE_X, bSize: CHUNK_SIZE_Z, quadFacePos: 0 },
-  { dir: [ 1,  0,  0], planeAxis: 'x', aAxis: 'z', bAxis: 'y', planeSize: CHUNK_SIZE_X, aSize: CHUNK_SIZE_Z, bSize: CHUNK_HEIGHT, quadFacePos: 1 },
-  { dir: [-1,  0,  0], planeAxis: 'x', aAxis: 'z', bAxis: 'y', planeSize: CHUNK_SIZE_X, aSize: CHUNK_SIZE_Z, bSize: CHUNK_HEIGHT, quadFacePos: 0 },
+  { dir: [ 1,  0,  0], planeAxis: 'x', aAxis: 'y', bAxis: 'z', planeSize: CHUNK_SIZE_X, aSize: CHUNK_HEIGHT, bSize: CHUNK_SIZE_Z, quadFacePos: 1 },
+  { dir: [-1,  0,  0], planeAxis: 'x', aAxis: 'y', bAxis: 'z', planeSize: CHUNK_SIZE_X, aSize: CHUNK_HEIGHT, bSize: CHUNK_SIZE_Z, quadFacePos: 0 },
   { dir: [ 0,  0,  1], planeAxis: 'z', aAxis: 'x', bAxis: 'y', planeSize: CHUNK_SIZE_Z, aSize: CHUNK_SIZE_X, bSize: CHUNK_HEIGHT, quadFacePos: 1 },
   { dir: [ 0,  0, -1], planeAxis: 'z', aAxis: 'x', bAxis: 'y', planeSize: CHUNK_SIZE_Z, aSize: CHUNK_SIZE_X, bSize: CHUNK_HEIGHT, quadFacePos: 0 },
 ];
@@ -216,7 +216,13 @@ function doMesh(
 
             quadPositions.push(cp[0], cp[1], cp[2]);
             quadNormals.push(fa.dir[0], fa.dir[1], fa.dir[2]);
-            quadUVs.push(v === 0 || v === 3 ? w : 0, v < 2 ? 0 : h);
+            if (faIdx === 2 || faIdx === 3) {
+              const uTex = v === 2 || v === 3 ? h : 0;
+              const vTex = v === 0 || v === 3 ? w : 0;
+              quadUVs.push(uTex, vTex);
+            } else {
+              quadUVs.push(v === 0 || v === 3 ? w : 0, v < 2 ? 0 : h);
+            }
           }
 
           const indices = getFaceIndices(faIdx);
@@ -356,7 +362,13 @@ function doWaterMesh(
 
             quadPositions.push(cp[0], cp[1], cp[2]);
             quadNormals.push(fa.dir[0], fa.dir[1], fa.dir[2]);
-            quadUVs.push(v === 0 || v === 3 ? w : 0, v < 2 ? 0 : h);
+            if (faIdx === 2 || faIdx === 3) {
+              const uTex = v === 2 || v === 3 ? h : 0;
+              const vTex = v === 0 || v === 3 ? w : 0;
+              quadUVs.push(uTex, vTex);
+            } else {
+              quadUVs.push(v === 0 || v === 3 ? w : 0, v < 2 ? 0 : h);
+            }
           }
 
           const indices = getFaceIndices(faIdx);

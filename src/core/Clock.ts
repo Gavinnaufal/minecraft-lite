@@ -5,23 +5,7 @@ export class Clock {
   private static readonly SAMPLE_COUNT = 30;
 
   createDisplay(): void {
-    if (this.displayEl) return;
-
-    this.displayEl = document.createElement('div');
-    this.displayEl.style.cssText = `
-      position: fixed;
-      top: 8px;
-      left: 8px;
-      z-index: 100;
-      font-family: monospace;
-      font-size: 14px;
-      color: #fff;
-      background: rgba(0,0,0,0.5);
-      padding: 4px 8px;
-      border-radius: 4px;
-      pointer-events: none;
-    `;
-    document.body.appendChild(this.displayEl);
+    // Integrated into HUD status badge to prevent text collision
   }
 
   update(deltaTime: number): void {

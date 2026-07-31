@@ -19,10 +19,10 @@
 | Fase 13 — Audio | 116–120 | 5 | 100% |
 | Fase 14 — Multiplayer | 121–125 | 5 | 100% |
 | Fase 15 — Polish & Release | 126–130 | 5 | 100% |
-| Fase 16 — Feature Expansion | 131–138 | 8 | 100% |
-| **TOTAL** | | **138** | **100%** |
+| Fase 16 — Feature Expansion | 131–144 | 14 | 100% |
+| **TOTAL** | | **144** | **100%** |
 
-Build: ✅ `npm run build` passes (568KB bundle, 765ms)
+Build: ✅ `npm run build` passes (646KB bundle, 456ms)
 
 ---
 
@@ -199,6 +199,12 @@ Build: ✅ `npm run build` passes (568KB bundle, 765ms)
 - [x] CP-136: Floating 3D Item Drops & Magnet Pickup
 - [x] CP-137: Tool Durability Bar & Mining Efficiency
 - [x] CP-138: In-Game Multiplayer Chat Box ('T') & Name Tags
+- [x] CP-139: Dynamic Held Torch Lighting & Water Texture Flow Animation
+- [x] CP-140: 3D Camera Pitch Diving, Oxygen Bubbles Bar & Drowning Damage
+- [x] CP-141: Storage Chest Block (27-slot Storage Modal & Item Persistence)
+- [x] CP-142: Wooden/Stone Hoe Crafting & Farmland Tilling System
+- [x] CP-143: Wheat Seeds Drops, Wheat Farming & Bread Food Eating
+- [x] CP-144: Glassmorphic UI/UX Redesign & Custom SVG Vector Icons
 
 ---
 

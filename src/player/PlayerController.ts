@@ -9,6 +9,7 @@ import type { World } from '../world/World';
 const _forward = new THREE.Vector3();
 const _right = new THREE.Vector3();
 const _up = new THREE.Vector3(0, 1, 0);
+const _lookDir = new THREE.Vector3();
 
 export class PlayerController {
   private readonly player: Player;
@@ -16,6 +17,9 @@ export class PlayerController {
   private stepTimer = 0;
   private wasGroundedLastFrame = false;
   private prevVelocityY = 0;
+  public oxygen = 20.0;
+  public isSubmerged = false;
+  private drownTimer = 0;
 
   constructor(player: Player, world?: World) {
     this.player = player;
@@ -23,7 +27,8 @@ export class PlayerController {
   }
 
   update(deltaTime: number, camera: THREE.PerspectiveCamera): void {
-    camera.getWorldDirection(_forward);
+    camera.getWorldDirection(_lookDir);
+    _forward.copy(_lookDir);
     _forward.y = 0;
     _forward.normalize();
     _right.crossVectors(_forward, _up).normalize();
@@ -36,16 +41,18 @@ export class PlayerController {
     if (inputManager.isKeyPressed('a')) { moveX -= _right.x; moveZ -= _right.z; }
     if (inputManager.isKeyPressed('d')) { moveX += _right.x; moveZ += _right.z; }
 
-    // Swimming check
+    // Swimming & Submerged check
     const px = Math.floor(this.player.position.x);
     const py = Math.floor(this.player.position.y);
+    const headY = Math.floor(this.player.position.y + this.player.eyeHeight);
     const pz = Math.floor(this.player.position.z);
     const inWater = this.world?.getBlock(px, py, pz) === 7 || this.world?.getBlock(px, py + 1, pz) === 7;
+    this.isSubmerged = this.world?.getBlock(px, headY, pz) === 7;
 
     const len = Math.sqrt(moveX * moveX + moveZ * moveZ);
     if (len > 0) {
-      let speed = PLAYER_SPEED * (inputManager.isKeyPressed('Shift') ? 0.5 : 1);
-      if (inWater) speed *= 0.75;
+      let speed = PLAYER_SPEED * (inputManager.isKeyPressed('Shift') && !inWater ? 0.5 : 1);
+      if (inWater) speed *= 0.8;
       this.player.velocity.x = (moveX / len) * speed;
       this.player.velocity.z = (moveZ / len) * speed;
     } else {
@@ -54,10 +61,18 @@ export class PlayerController {
     }
 
     if (inWater) {
-      this.player.velocity.y *= 0.85;
-      this.player.velocity.y += -4.0 * deltaTime;
+      this.player.velocity.y *= 0.88;
+
+      // Pitch-based 3D diving when moving forward/backward underwater
+      if (inputManager.isKeyPressed('w')) {
+        this.player.velocity.y += _lookDir.y * 3.5 * deltaTime;
+      }
+
+      // Explicit Swim UP (Space) & Dive DOWN (Shift / C)
       if (inputManager.isKeyPressed(' ')) {
         this.player.velocity.y = 3.5;
+      } else if (inputManager.isKeyPressed('Shift') || inputManager.isKeyPressed('c') || inputManager.isKeyPressed('C')) {
+        this.player.velocity.y = -3.5;
       }
     } else {
       this.player.velocity.y += GRAVITY * deltaTime;
@@ -65,6 +80,24 @@ export class PlayerController {
         this.player.velocity.y = PLAYER_JUMP_FORCE;
         this.player.isGrounded = false;
       }
+    }
+
+    // Oxygen & Drowning Mechanics
+    if (this.isSubmerged) {
+      this.oxygen = Math.max(0, this.oxygen - deltaTime * 1.25);
+      if (this.oxygen <= 0) {
+        this.drownTimer += deltaTime;
+        if (this.drownTimer >= 1.5) {
+          this.drownTimer = 0;
+          this.player.health = Math.max(0, this.player.health - 2);
+          AudioManager.getInstance().playSFX('hit');
+        }
+      } else {
+        this.drownTimer = 0;
+      }
+    } else {
+      this.oxygen = 20.0;
+      this.drownTimer = 0;
     }
 
     this.player.position.x += this.player.velocity.x * deltaTime;
@@ -98,12 +131,7 @@ export class PlayerController {
     this.prevVelocityY = this.player.velocity.y;
 
     if (this.player.position.y < -20) {
-      this.player.position.x = 0;
-      this.player.position.y = 64;
-      this.player.position.z = 0;
-      this.player.velocity.x = 0;
-      this.player.velocity.y = 0;
-      this.player.velocity.z = 0;
+      this.player.health = 0;
     }
   }
 }

@@ -48,14 +48,26 @@ export class MobManager {
     }
   }
 
-  damageMob(index: number, damage: number): void {
+  damageMob(index: number, damage: number, attackerPos?: THREE.Vector3): Mob | null {
     const mob = this.mobs[index];
     if (mob) {
+      if (attackerPos) {
+        const knockDir = new THREE.Vector3().subVectors(mob.position, attackerPos);
+        knockDir.y = 0;
+        if (knockDir.lengthSq() > 0.001) {
+          knockDir.normalize();
+          mob.velocity.x += knockDir.x * 6;
+          mob.velocity.y += 3.5;
+          mob.velocity.z += knockDir.z * 6;
+        }
+      }
       const dead = mob.takeDamage(damage);
       if (dead) {
         this.despawn(mob);
+        return mob;
       }
     }
+    return null;
   }
 
   update(deltaTime: number, playerPos?: THREE.Vector3, player?: Player): void {

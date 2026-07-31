@@ -3,9 +3,11 @@ import { Mob } from '../Mob';
 import { StateMachine, State } from '../ai/StateMachine';
 import type { Player } from '../../player/Player';
 import type { World } from '../../world/World';
+import { AudioManager } from '../../audio/AudioManager';
 
 const CHASE_SPEED = 2.5;     // unit/detik
-const ATTACK_RANGE = 1.5;    // unit — jarak untuk mulai menyerang
+const ATTACK_RANGE_HORIZ = 1.8; // horizontal attack range
+const ATTACK_RANGE_VERT = 2.5;  // vertical attack range
 const ATTACK_DAMAGE = 2;     // HP yang dikurangi per serangan
 const ATTACK_COOLDOWN = 1.0;  // detik antar serangan
 
@@ -83,40 +85,44 @@ export class Zombie extends Mob {
     let isMoving = false;
 
     if (playerPos) {
-      const dist = this.position.distanceTo(playerPos);
-      const state = this.stateMachine.update(deltaTime, dist);
+      const dx = playerPos.x - this.position.x;
+      const dz = playerPos.z - this.position.z;
+      const dy = Math.abs(playerPos.y - this.position.y);
+      const horizDist = Math.sqrt(dx * dx + dz * dz);
+      const dist3D = this.position.distanceTo(playerPos);
 
-      if (state === State.Chase) {
-        const dir = new THREE.Vector3()
-          .subVectors(playerPos, this.position);
-        dir.y = 0;
-        if (dir.lengthSq() > 0.001) {
-          dir.normalize();
-          this.position.x += dir.x * CHASE_SPEED * deltaTime;
-          this.position.z += dir.z * CHASE_SPEED * deltaTime;
-          this.mesh.rotation.y = Math.atan2(dir.x, dir.z);
-          isMoving = true;
-        }
-        this.attackTimer = ATTACK_COOLDOWN;
+      const state = this.stateMachine.update(deltaTime, dist3D);
 
-      } else if (state === State.Attack) {
-        this.attackTimer += deltaTime;
+      this.attackTimer += deltaTime;
+
+      if (horizDist < ATTACK_RANGE_HORIZ && dy < ATTACK_RANGE_VERT) {
+        // Face player while attacking
+        this.mesh.rotation.y = Math.atan2(dx, dz);
         if (this.attackTimer >= ATTACK_COOLDOWN) {
           this.attackTimer = 0;
-          if (player && dist < ATTACK_RANGE) {
+          if (player && player.health > 0) {
             player.health = Math.max(0, player.health - ATTACK_DAMAGE);
+            AudioManager.getInstance().playSFX('hit');
           }
         }
-
+      } else if (state === State.Chase || horizDist < 16) {
+        if (horizDist > 0.001) {
+          const nx = dx / horizDist;
+          const nz = dz / horizDist;
+          this.position.x += nx * CHASE_SPEED * deltaTime;
+          this.position.z += nz * CHASE_SPEED * deltaTime;
+          this.mesh.rotation.y = Math.atan2(dx, dz);
+          isMoving = true;
+        }
       } else if (state === State.Wander) {
-        const dx = (Math.random() - 0.5) * 1.5 * deltaTime;
-        const dz = (Math.random() - 0.5) * 1.5 * deltaTime;
-        this.position.x += dx;
-        this.position.z += dz;
-        isMoving = Math.abs(dx) > 0.001 || Math.abs(dz) > 0.001;
+        const wanderDx = (Math.random() - 0.5) * 1.5 * deltaTime;
+        const wanderDz = (Math.random() - 0.5) * 1.5 * deltaTime;
+        this.position.x += wanderDx;
+        this.position.z += wanderDz;
+        isMoving = Math.abs(wanderDx) > 0.001 || Math.abs(wanderDz) > 0.001;
 
         if (isMoving) {
-          this.mesh.rotation.y = Math.atan2(dx, dz);
+          this.mesh.rotation.y = Math.atan2(wanderDx, wanderDz);
         }
       }
     }

@@ -32,7 +32,8 @@ import { BlockBreaker } from './interaction/BlockBreaker';
 import { BlockPlacer } from './interaction/BlockPlacer';
 import { Inventory } from './inventory/Inventory';
 import { Hotbar } from './inventory/Hotbar';
-import { blockIdToItemId, itemIdToBlockId } from './inventory/ItemRegistry';
+import { blockIdToItemId, itemIdToBlockId, getItemById } from './inventory/ItemRegistry';
+import { loadBlockTexture } from './world/BlockRegistry';
 import { SaveManager } from './save/SaveManager';
 import { MobManager } from './mobs/MobManager';
 import { Cow } from './mobs/passive/Cow';
@@ -45,6 +46,11 @@ const canvas = document.getElementById('game') as HTMLCanvasElement;
 if (!canvas) throw new Error('Canvas element #game not found');
 
 console.log('Mini Minecraft initialized');
+
+// Dynamic PointLight for Held Torch
+const playerTorchLight = new THREE.PointLight(0xffaa44, 0, 20);
+scene.add(playerTorchLight);
+const waterTexture = loadBlockTexture('water');
 
 // World gen
 let worldSeed = Date.now();
@@ -146,12 +152,24 @@ camera.position.set(player.position.x, player.position.y + player.eyeHeight, pla
 chunkManager.update(player.position.x, player.position.z, gameSettings.renderDistance);
 console.log(`[World] Loading terrain around (${player.position.x.toFixed(0)}, ${player.position.z.toFixed(0)})...`);
 
-// Spawn initial mobs
-for (let i = 0; i < 3; i++) {
-  mobManager.spawn(
-    new THREE.Vector3(player.position.x + (Math.random() - 0.5) * 30, 60, player.position.z + (Math.random() - 0.5) * 30),
-    new Cow(new THREE.Vector3()),
-  );
+// Spawn initial mobs on solid land
+function getLandSpawnPos(originX: number, originZ: number, radius: number): THREE.Vector3 | null {
+  for (let attempt = 0; attempt < 15; attempt++) {
+    const rx = originX + (Math.random() - 0.5) * radius;
+    const rz = originZ + (Math.random() - 0.5) * radius;
+    const h = heightMap.getHeight(rx, rz);
+    if (h > WATER_LEVEL + 1) {
+      return new THREE.Vector3(rx, h + 1, rz);
+    }
+  }
+  return null;
+}
+
+for (let i = 0; i < 4; i++) {
+  const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 40);
+  if (spawnPos) {
+    mobManager.spawn(spawnPos, new Cow(spawnPos));
+  }
 }
 
 // Save/Load (async, non-blocking)
@@ -181,17 +199,53 @@ const itemDropManager = new ItemDropManager(scene);
 const blockBreaker = new BlockBreaker(scene, world);
 const blockPlacer = new BlockPlacer(world);
 
+import { ChestScreen } from './ui/ChestScreen';
+import { ChestManager } from './inventory/ChestManager';
+
 const BLOCK_PARTICLE_COLORS: Record<number, number> = {
-  1: 0x55aa33, 2: 0x795548, 3: 0x9e9e9e, 4: 0xe4c875, 5: 0x5d4037, 6: 0x2e7d32, 8: 0xb18c5d, 9: 0x8d6e63, 10: 0xe0d6b8
+  1: 0x55aa33, 2: 0x795548, 3: 0x9e9e9e, 4: 0xe4c875, 5: 0x5d4037, 6: 0x2e7d32, 8: 0xb18c5d, 9: 0x8d6e63, 10: 0xe0d6b8, 11: 0xffaa00, 12: 0x8b5a2b, 13: 0x4e3629, 14: 0x88bb33
 };
 
 blockBreaker.setOnBlockBroken((x, y, z, blockId) => {
   particleSystem.spawnBlockBreakParticles(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), BLOCK_PARTICLE_COLORS[blockId] ?? 0x8d6e63);
-  const itemId = blockIdToItemId(blockId);
-  if (itemId) {
-    itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), itemId, 1);
+
+  if (blockId === 1) {
+    // Grass block drops 1 Grass + 35% chance Wheat Seeds
+    itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), 'grass', 1);
+    if (Math.random() < 0.35) {
+      itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), 'wheat_seeds', 1);
+    }
+  } else if (blockId === 12) {
+    // Chest block drops chest item + stored slots contents
+    itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), 'chest', 1);
+    const chestContents = ChestManager.getInstance().removeChest(x, y, z);
+    for (const slot of chestContents) {
+      if (slot.itemId && slot.count > 0) {
+        itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), slot.itemId, slot.count);
+      }
+    }
+  } else if (blockId === 14) {
+    // Wheat Crop drops 1 Wheat + 1-2 Seeds
+    itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), 'wheat', 1);
+    itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), 'wheat_seeds', Math.floor(Math.random() * 2) + 1);
+  } else {
+    const itemId = blockIdToItemId(blockId);
+    if (itemId) {
+      itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), itemId, 1);
+    }
   }
+
   networkManager.sendBlockChange(x, y, z, 0);
+
+  // Reduce active tool durability
+  const activeTool = hotbar.getActiveItem();
+  if (activeTool.itemId && activeTool.durability !== undefined) {
+    activeTool.durability--;
+    if (activeTool.durability <= 0) {
+      hotbar.removeItem(activeTool.itemId, 1);
+      AudioManager.getInstance().playSFX('break');
+    }
+  }
 });
 
 // UI
@@ -205,6 +259,9 @@ const handModel = new HandModel(camera, hotbar);
 
 const inventoryScreen = new InventoryScreen(inventory, hotbar);
 inventoryScreen.create();
+
+const chestScreen = new ChestScreen(inventory, hotbar);
+chestScreen.create();
 
 const pauseMenu = new PauseMenu(saveManager, settingsMenu, () => {
   inputManager.requestPointerLock();
@@ -224,7 +281,7 @@ const mainMenu = new MainMenu(settingsMenu, (isLoad) => {
 mainMenu.create();
 
 canvas.addEventListener('click', () => {
-  if (!mainMenu.isOpen && !pauseMenu.isOpen && !inventoryScreen.isOpen) {
+  if (!mainMenu.isOpen && !pauseMenu.isOpen && !inventoryScreen.isOpen && !chestScreen.isOpen) {
     inputManager.requestPointerLock();
   }
 });
@@ -233,7 +290,9 @@ window.addEventListener('contextmenu', (e) => e.preventDefault());
 // Hotbar switching & Menu toggling
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    if (inventoryScreen.isOpen) {
+    if (chestScreen.isOpen) {
+      chestScreen.closeChest();
+    } else if (inventoryScreen.isOpen) {
       inventoryScreen.toggle();
     } else {
       pauseMenu.toggle();
@@ -242,7 +301,11 @@ window.addEventListener('keydown', (e) => {
   }
   if (pauseMenu.isOpen) return;
   if (e.key === 'o' || e.key === 'O') { settingsMenu.toggle(); return; }
-  if (e.key === 'e' || e.key === 'E') { inventoryScreen.toggle(); return; }
+  if (e.key === 'e' || e.key === 'E') {
+    if (chestScreen.isOpen) chestScreen.closeChest();
+    else inventoryScreen.toggle();
+    return;
+  }
   const num = parseInt(e.key);
   if (num >= 1 && num <= 9) hotbar.activeSlotIndex = num - 1;
 });
@@ -290,12 +353,52 @@ networkManager.setOnChatMessage((author, text) => {
 let previousChunkX = 0, previousChunkZ = 0;
 let wasRightDown = false;
 let wasLeftDown = false;
+let lastPlayerHealth = player.health;
 const engine = new Engine();
 
+function restartPlayer() {
+  player.health = 20;
+  lastPlayerHealth = 20;
+  const spawnY = heightMap.getHeight(0, 0) + 2;
+  player.position.x = 0;
+  player.position.y = spawnY;
+  player.position.z = 0;
+  player.velocity.x = 0;
+  player.velocity.y = 0;
+  player.velocity.z = 0;
+  camera.position.set(0, spawnY + player.eyeHeight, 0);
+  chunkManager.update(0, 0, gameSettings.renderDistance);
+  hud.update(player.health);
+  hud.showDeathMessage();
+  AudioManager.getInstance().playSFX('hit');
+}
+
+function findMobIndexFromHitObject(hitObject: THREE.Object3D): number {
+  for (let i = 0; i < mobManager.mobs.length; i++) {
+    const mobMesh = mobManager.mobs[i].mesh;
+    let curr: THREE.Object3D | null = hitObject;
+    while (curr) {
+      if (curr === mobMesh) return i;
+      curr = curr.parent;
+    }
+  }
+  return -1;
+}
+
 engine.setUpdateCallback((deltaTime) => {
-  if (mainMenu.isOpen || pauseMenu.isOpen || inventoryScreen.isOpen || chatBox.visible) {
+  if (mainMenu.isOpen || pauseMenu.isOpen || inventoryScreen.isOpen || chestScreen.isOpen || chatBox.visible) {
     return;
   }
+
+  if (player.health <= 0 || player.position.y < -20) {
+    restartPlayer();
+  }
+
+  if (player.health < lastPlayerHealth) {
+    hud.triggerDamageFlash();
+  }
+  lastPlayerHealth = player.health;
+
   dayNight.update(deltaTime);
   AudioManager.getInstance().updateAmbience(dayNight.timeOfDay, deltaTime);
   playerCamera.update();
@@ -304,7 +407,7 @@ engine.setUpdateCallback((deltaTime) => {
   networkManager.sendPosition(player.position.x, player.position.y, player.position.z, deltaTime);
 
   const isWalking = inputManager.isKeyPressed('w') || inputManager.isKeyPressed('a') || inputManager.isKeyPressed('s') || inputManager.isKeyPressed('d');
-  handModel.update(deltaTime, isWalking);
+  handModel.update(deltaTime, isWalking, inputManager.isLeftMouseDown);
   particleSystem.update(deltaTime);
   itemDropManager.update(deltaTime, new THREE.Vector3(player.position.x, player.position.y, player.position.z), (itemId, count) => {
     const rem = hotbar.addItem(itemId, count);
@@ -324,10 +427,33 @@ engine.setUpdateCallback((deltaTime) => {
   sky.position.copy(camera.position);
   sky.position.y = 0;
 
-  // Day/night lighting & sky colors
+  // Held Torch Dynamic Lighting (Flickering Fire Glow)
+  const currentActiveItem = hotbar.getActiveItem();
+  if (currentActiveItem.itemId === 'torch') {
+    playerTorchLight.position.copy(camera.position);
+    playerTorchLight.intensity = 3.2 + Math.sin(Date.now() * 0.014) * 0.4 + Math.cos(Date.now() * 0.028) * 0.2;
+  } else {
+    playerTorchLight.intensity = 0;
+  }
+
+  // Dynamic Water Surface Ripple Animation
+  if (waterTexture) {
+    waterTexture.offset.x = (waterTexture.offset.x + deltaTime * 0.03) % 1;
+    waterTexture.offset.y = (waterTexture.offset.y + deltaTime * 0.02) % 1;
+  }
+
+  // Day/night & Underwater fog styling
   const skyColors = dayNight.skyColor;
   if (scene.background) (scene.background as THREE.Color).set(skyColors.top);
-  if (scene.fog) scene.fog.color.set(skyColors.bottom);
+  if (scene.fog) {
+    if (playerController.isSubmerged) {
+      scene.fog.color.setHex(0x003366);
+      if (scene.fog instanceof THREE.FogExp2) scene.fog.density = 0.08;
+    } else {
+      scene.fog.color.set(skyColors.bottom);
+      if (scene.fog instanceof THREE.FogExp2) scene.fog.density = 0.015;
+    }
+  }
 
   const sunAngle = dayNight.timeOfDay * Math.PI * 2;
   const sunDist = 50;
@@ -339,16 +465,12 @@ engine.setUpdateCallback((deltaTime) => {
   lights.directional.intensity = dayNight.lightIntensity;
   lights.ambient.intensity = Math.max(0.1, dayNight.lightIntensity * 0.3);
 
-  // Spawn hostile zombies at night
+  // Spawn hostile zombies at night on solid land
   if (dayNight.isNight && mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.005) {
-    mobManager.spawn(
-      new THREE.Vector3(
-        player.position.x + (Math.random() - 0.5) * 40,
-        60,
-        player.position.z + (Math.random() - 0.5) * 40
-      ),
-      new Zombie(new THREE.Vector3())
-    );
+    const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 40);
+    if (spawnPos) {
+      mobManager.spawn(spawnPos, new Zombie(spawnPos));
+    }
   }
 
   mobManager.update(deltaTime, new THREE.Vector3(player.position.x, player.position.y, player.position.z), player);
@@ -360,24 +482,56 @@ engine.setUpdateCallback((deltaTime) => {
   const crosshairRay = new THREE.Raycaster();
   crosshairRay.setFromCamera(new THREE.Vector2(0, 0), camera);
   crosshairRay.far = 5.0;
+
   const mobMeshes = mobManager.mobs.map((m) => m.mesh);
-  if (mobMeshes.length > 0 && crosshairRay.intersectObjects(mobMeshes, false).length > 0) {
-    crosshairState = 'mob';
-  } else if (blockBreaker.getTarget(camera)) {
+  const mobHits = mobMeshes.length > 0 ? crosshairRay.intersectObjects(mobMeshes, true) : [];
+
+  let hitMobIdx = -1;
+  if (mobHits.length > 0) {
+    hitMobIdx = findMobIndexFromHitObject(mobHits[0].object);
+    if (hitMobIdx >= 0) {
+      crosshairState = 'mob';
+    }
+  }
+
+  if (crosshairState === 'none' && blockBreaker.getTarget(camera)) {
     crosshairState = 'block';
   }
   hud.setCrosshairState(crosshairState);
 
   // Left click mob attack hit
-  if (inputManager.isLeftMouseDown && !wasLeftDown && crosshairState === 'mob') {
-    const attackHits = crosshairRay.intersectObjects(mobMeshes, false);
-    if (attackHits.length > 0) {
-      const hitMesh = attackHits[0].object;
-      const mobIdx = mobManager.mobs.findIndex((m) => m.mesh === hitMesh);
-      if (mobIdx >= 0) {
-        AudioManager.getInstance().playSFX('hit');
-        mobManager.damageMob(mobIdx, 4);
-        networkManager.sendMobDamage(mobIdx, 4);
+  if (inputManager.isLeftMouseDown && !wasLeftDown && hitMobIdx >= 0) {
+    handModel.triggerSwing();
+    AudioManager.getInstance().playSFX('hit');
+
+    let damage = 4;
+    const activeTool = hotbar.getActiveItem();
+    if (activeTool?.itemId) {
+      const itemDef = getItemById(activeTool.itemId);
+      if (itemDef?.toolType === 'sword') damage = 8;
+      else if (itemDef?.toolType) damage = 6;
+
+      // Tool durability reduction on hit
+      if (activeTool.durability !== undefined) {
+        activeTool.durability--;
+        if (activeTool.durability <= 0) {
+          hotbar.removeItem(activeTool.itemId, 1);
+          AudioManager.getInstance().playSFX('break');
+        }
+      }
+    }
+
+    const targetMob = mobManager.mobs[hitMobIdx];
+    const deadMob = mobManager.damageMob(hitMobIdx, damage, new THREE.Vector3(player.position.x, player.position.y, player.position.z));
+    networkManager.sendMobDamage(hitMobIdx, damage);
+
+    if (deadMob) {
+      const dropPos = targetMob ? targetMob.position.clone() : new THREE.Vector3(player.position.x, player.position.y, player.position.z);
+      dropPos.y += 0.5;
+      if (deadMob instanceof Cow) {
+        itemDropManager.spawnDrop(dropPos, 'beef', Math.floor(Math.random() * 2) + 1);
+      } else if (deadMob instanceof Zombie) {
+        itemDropManager.spawnDrop(dropPos, 'rotten_flesh', Math.floor(Math.random() * 2) + 1);
       }
     }
   }
@@ -389,15 +543,64 @@ engine.setUpdateCallback((deltaTime) => {
 
   const activeItem = hotbar.getActiveItem();
   if (inputManager.isRightMouseDown && !wasRightDown) {
+    const targetHit = blockBreaker.getTarget(camera);
+
+    // Right-click Chest block (12) to open storage screen!
+    if (targetHit) {
+      const hitBlockId = world.getBlock(targetHit.blockX, targetHit.blockY, targetHit.blockZ);
+      if (hitBlockId === 12) {
+        chestScreen.openChest(targetHit.blockX, targetHit.blockY, targetHit.blockZ);
+        wasRightDown = inputManager.isRightMouseDown;
+        return;
+      }
+    }
+
     if (activeItem.itemId && activeItem.count > 0) {
-      const blockIdToPlace = itemIdToBlockId(activeItem.itemId);
-      if (blockIdToPlace) {
-        const targetHit = blockBreaker.getTarget(camera);
-        const placed = blockPlacer.place(camera, blockIdToPlace, player.position.x, player.position.y, player.position.z);
-        if (placed) {
+      if (activeItem.itemId === 'beef' || activeItem.itemId === 'rotten_flesh' || activeItem.itemId === 'bread') {
+        // Eat food to restore HP!
+        if (player.health < 20) {
+          const healAmount = activeItem.itemId === 'bread' ? 5 : activeItem.itemId === 'beef' ? 4 : 2;
+          player.health = Math.min(20, player.health + healAmount);
           hotbar.removeItem(activeItem.itemId, 1);
-          if (targetHit) {
-            networkManager.sendBlockChange(targetHit.blockX + targetHit.normalX, targetHit.blockY + targetHit.normalY, targetHit.blockZ + targetHit.normalZ, blockIdToPlace);
+          handModel.triggerSwing();
+          AudioManager.getInstance().playSFX('footstep');
+          hud.update(player.health);
+        }
+      } else if (activeItem.itemId.includes('hoe') && targetHit) {
+        // Till Grass (1) or Dirt (2) into Farmland (13)!
+        const hitBlockId = world.getBlock(targetHit.blockX, targetHit.blockY, targetHit.blockZ);
+        if (hitBlockId === 1 || hitBlockId === 2) {
+          world.setBlock(targetHit.blockX, targetHit.blockY, targetHit.blockZ, 13);
+          networkManager.sendBlockChange(targetHit.blockX, targetHit.blockY, targetHit.blockZ, 13);
+          handModel.triggerSwing();
+          AudioManager.getInstance().playSFX('footstep');
+          if (activeItem.durability !== undefined) {
+            activeItem.durability--;
+            if (activeItem.durability <= 0) {
+              hotbar.removeItem(activeItem.itemId, 1);
+              AudioManager.getInstance().playSFX('break');
+            }
+          }
+        }
+      } else if (activeItem.itemId === 'wheat_seeds' && targetHit) {
+        // Plant Wheat Seeds (14) on top of Farmland (13)!
+        const hitBlockId = world.getBlock(targetHit.blockX, targetHit.blockY, targetHit.blockZ);
+        if (hitBlockId === 13 && world.getBlock(targetHit.blockX, targetHit.blockY + 1, targetHit.blockZ) === 0) {
+          world.setBlock(targetHit.blockX, targetHit.blockY + 1, targetHit.blockZ, 14);
+          networkManager.sendBlockChange(targetHit.blockX, targetHit.blockY + 1, targetHit.blockZ, 14);
+          hotbar.removeItem('wheat_seeds', 1);
+          handModel.triggerSwing();
+          AudioManager.getInstance().playSFX('footstep');
+        }
+      } else {
+        const blockIdToPlace = itemIdToBlockId(activeItem.itemId);
+        if (blockIdToPlace) {
+          const placed = blockPlacer.place(camera, blockIdToPlace, player.position.x, player.position.y, player.position.z);
+          if (placed) {
+            hotbar.removeItem(activeItem.itemId, 1);
+            if (targetHit) {
+              networkManager.sendBlockChange(targetHit.blockX + targetHit.normalX, targetHit.blockY + targetHit.normalY, targetHit.blockZ + targetHit.normalZ, blockIdToPlace);
+            }
           }
         }
       }
@@ -417,6 +620,8 @@ engine.setUpdateCallback((deltaTime) => {
   renderer.render(scene, camera);
   inputManager.resetMouseDelta();
   clock.update(deltaTime);
+  hud.updatePlayerPos(player.position.x, player.position.y, player.position.z, camera.rotation.y, clock.getFPS());
+  hud.setSubmergedState(playerController.isSubmerged, playerController.oxygen);
   hud.update(player.health);
   hud.setTime(dayNight.timeOfDay);
 });

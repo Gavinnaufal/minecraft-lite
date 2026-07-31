@@ -94,12 +94,19 @@ export class Cow extends Mob {
       if (state === State.Wander) {
         const dx = (Math.random() - 0.5) * 2 * deltaTime;
         const dz = (Math.random() - 0.5) * 2 * deltaTime;
-        this.position.x += dx;
-        this.position.z += dz;
-        isMoving = Math.abs(dx) > 0.001 || Math.abs(dz) > 0.001;
+        const nextX = this.position.x + dx;
+        const nextZ = this.position.z + dz;
 
-        if (isMoving) {
-          this.mesh.rotation.y = Math.atan2(dx, dz);
+        // Water avoidance
+        const nextBlock = world?.getBlock(Math.floor(nextX), Math.floor(this.position.y), Math.floor(nextZ));
+        if (nextBlock !== 7) {
+          this.position.x = nextX;
+          this.position.z = nextZ;
+          isMoving = Math.abs(dx) > 0.001 || Math.abs(dz) > 0.001;
+
+          if (isMoving) {
+            this.mesh.rotation.y = Math.atan2(dx, dz);
+          }
         }
       }
     }

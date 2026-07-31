@@ -9,7 +9,8 @@ const BLOCK_COLORS: Record<string, { top: string; left: string; right: string }>
   leaves: { top: '#388e3c', left: '#2e7d32', right: '#1b5e20' },
   plank: { top: '#b18c5d', left: '#997343', right: '#825e31' },
   crafting_table: { top: '#8d6e63', left: '#6d4c41', right: '#4e342e' },
-  sandstone: { top: '#e0d6b8', left: '#c8bfa0', right: '#b0a788' },
+  chest: { top: '#b17036', left: '#8b5a2b', right: '#73471e' },
+  farmland: { top: '#4e3629', left: '#3b281e', right: '#291b13' },
 };
 
 export function createItemIcon(itemId: string, size = 28): HTMLElement {
@@ -80,6 +81,43 @@ export function createItemIcon(itemId: string, size = 28): HTMLElement {
     svg.innerHTML = `
       <line x1="8" y1="24" x2="22" y2="10" stroke="#6d4c41" stroke-width="3" stroke-linecap="round"/>
       <path d="M 18,6 L 26,8 L 24,18 L 18,12 Z" fill="${headColor}" stroke="#333" stroke-width="0.5"/>
+    `;
+  } else if (itemId === 'beef') {
+    svg.innerHTML = `<path d="M 8,14 Q 16,6 24,14 Q 22,24 10,22 Z" fill="#b71c1c" stroke="#333" stroke-width="0.5"/><circle cx="14" cy="14" r="3" fill="#ef9a9a"/>`;
+  } else if (itemId === 'rotten_flesh') {
+    svg.innerHTML = `<path d="M 8,14 Q 16,6 24,14 Q 22,24 10,22 Z" fill="#33691e" stroke="#333" stroke-width="0.5"/><circle cx="14" cy="14" r="3" fill="#81c784"/>`;
+  } else if (itemId.includes('hoe')) {
+    const isStone = itemId.includes('stone');
+    const headColor = isStone ? '#9e9e9e' : '#b18c5d';
+    svg.innerHTML = `
+      <line x1="8" y1="24" x2="22" y2="10" stroke="#6d4c41" stroke-width="3" stroke-linecap="round"/>
+      <path d="M 18,6 L 28,6 L 24,12 L 18,10 Z" fill="${headColor}" stroke="#333" stroke-width="0.5"/>
+    `;
+  } else if (itemId === 'wheat_seeds') {
+    svg.innerHTML = `
+      <circle cx="12" cy="18" r="2.5" fill="#81c784"/>
+      <circle cx="18" cy="14" r="2.5" fill="#a5d6a7"/>
+      <circle cx="16" cy="20" r="2" fill="#66bb6a"/>
+    `;
+  } else if (itemId === 'wheat') {
+    svg.innerHTML = `
+      <path d="M 10,24 Q 16,14 22,6" stroke="#fbc02d" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <circle cx="20" cy="8" r="2.5" fill="#ffee58"/>
+      <circle cx="16" cy="12" r="2.5" fill="#fdd835"/>
+      <circle cx="12" cy="16" r="2.5" fill="#fbc02d"/>
+    `;
+  } else if (itemId === 'bread') {
+    svg.innerHTML = `
+      <ellipse cx="16" cy="16" rx="10" ry="6" fill="#d7ccc8" stroke="#5d4037" stroke-width="1"/>
+      <path d="M 8,14 Q 16,10 24,14" fill="#a1887f"/>
+      <line x1="12" y1="13" x2="14" y2="17" stroke="#795548" stroke-width="1.5"/>
+      <line x1="18" y1="13" x2="20" y2="17" stroke="#795548" stroke-width="1.5"/>
+    `;
+  } else if (itemId === 'torch') {
+    svg.innerHTML = `
+      <line x1="10" y1="26" x2="20" y2="12" stroke="#6d4c41" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="21" cy="10" r="4.5" fill="#ff9800"/>
+      <circle cx="21" cy="10" r="2.5" fill="#ffeb3b"/>
     `;
   } else {
     svg.innerHTML = `<rect x="6" y="6" width="20" height="20" fill="#9e9e9e" rx="3"/>`;

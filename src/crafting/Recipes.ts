@@ -24,4 +24,15 @@ export const recipes: Recipe[] = [
   { pattern: [['stone'], ['stone'], ['stick']], result: { itemId: 'stone_sword', count: 1 } },
   // 10. Sand to Sandstone
   { pattern: [['sand', 'sand'], ['sand', 'sand']], result: { itemId: 'sandstone', count: 1 } },
+  // 11. Stick + Plank to Torch
+  { pattern: [['plank'], ['stick']], result: { itemId: 'torch', count: 4 } },
+  { pattern: [['wood_log'], ['stick']], result: { itemId: 'torch', count: 4 } },
+  // 12. 8 Planks to Chest
+  { pattern: [['plank', 'plank', 'plank'], ['plank', null, 'plank'], ['plank', 'plank', 'plank']], result: { itemId: 'chest', count: 1 } },
+  // 13. Wooden Hoe
+  { pattern: [['plank', 'plank'], [null, 'stick'], [null, 'stick']], result: { itemId: 'wooden_hoe', count: 1 } },
+  // 14. Stone Hoe
+  { pattern: [['stone', 'stone'], [null, 'stick'], [null, 'stick']], result: { itemId: 'stone_hoe', count: 1 } },
+  // 15. Wheat to Bread
+  { pattern: [['wheat', 'wheat', 'wheat']], result: { itemId: 'bread', count: 1 } },
 ];

@@ -54,6 +54,10 @@ const blockTypes: BlockType[] = [
     textureSide: 'crafting_table_side',
   },
   { id: 10, name: 'sandstone', color: 0xd2b48c, solid: true, transparent: false, hardness: 1.5 },
+  { id: 11, name: 'torch', color: 0xffaa00, solid: false, transparent: true, hardness: 0.1 },
+  { id: 12, name: 'chest', color: 0x8b5a2b, solid: true, transparent: false, hardness: 2.5 },
+  { id: 13, name: 'farmland', color: 0x4e3629, solid: true, transparent: false, hardness: 0.6 },
+  { id: 14, name: 'wheat_crop', color: 0x88bb33, solid: false, transparent: true, hardness: 0.1 },
 ];
 
 const byId = new Map<number, BlockType>();
@@ -120,6 +124,11 @@ export function createBlockMaterial(blockId: number): THREE.Material | THREE.Mat
     material.alphaTest = 0.5;
     material.depthWrite = true;
     material.side = THREE.DoubleSide;
+  } else if (block.name === 'water') {
+    material.transparent = true;
+    material.opacity = 0.65;
+    material.depthWrite = false;
+    material.color.setHex(0x3399ff);
   } else if (block.transparent) {
     material.transparent = true;
     material.opacity = 0.6;

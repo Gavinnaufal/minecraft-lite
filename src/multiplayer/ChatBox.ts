@@ -18,8 +18,9 @@ export class ChatBox {
 
     this.messageList = document.createElement('div');
     this.messageList.style.cssText = `
-      max-height: 140px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
-      background: rgba(0, 0, 0, 0.4); padding: 8px; border-radius: 4px; text-shadow: 1px 1px 2px #000;
+      max-height: 140px; overflow-y: auto; display: none; flex-direction: column; gap: 4px;
+      background: rgba(15, 15, 25, 0.65); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.15);
+      padding: 8px; border-radius: 6px; text-shadow: 1px 1px 2px #000;
     `;
     this.container.appendChild(this.messageList);
 
@@ -70,6 +71,7 @@ export class ChatBox {
   }
 
   addMessage(author: string, text: string): void {
+    this.messageList.style.display = 'flex';
     const msg = document.createElement('div');
     msg.style.cssText = 'word-break: break-word;';
     msg.innerHTML = `<span style="color: #ffcc00; font-weight: bold;">[${author}]</span> ${text}`;

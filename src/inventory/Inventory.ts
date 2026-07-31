@@ -3,6 +3,7 @@ import { getItemById } from './ItemRegistry';
 export interface Slot {
   itemId: string | null;
   count: number;
+  durability?: number;
 }
 
 export class Inventory {
@@ -14,7 +15,7 @@ export class Inventory {
     }
   }
 
-  addItem(itemId: string, count: number): number {
+  addItem(itemId: string, count: number, durability?: number): number {
     const item = getItemById(itemId);
     if (!item) return count;
 
@@ -22,7 +23,7 @@ export class Inventory {
 
     // Stack into existing slots
     for (const slot of this.slots) {
-      if (slot.itemId === itemId && slot.count < item.maxStack) {
+      if (slot.itemId === itemId && slot.count < item.maxStack && !item.toolType) {
         const space = item.maxStack - slot.count;
         const add = Math.min(space, remaining);
         slot.count += add;
@@ -37,6 +38,7 @@ export class Inventory {
         const add = Math.min(item.maxStack, remaining);
         slot.itemId = itemId;
         slot.count = add;
+        slot.durability = durability ?? item.maxDurability;
         remaining -= add;
         if (remaining <= 0) return 0;
       }

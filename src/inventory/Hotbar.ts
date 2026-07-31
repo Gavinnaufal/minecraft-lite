@@ -15,14 +15,14 @@ export class Hotbar {
     return this.slots[this.activeSlotIndex];
   }
 
-  addItem(itemId: string, count: number): number {
+  addItem(itemId: string, count: number, durability?: number): number {
     const item = getItemById(itemId);
     if (!item) return count;
 
     let remaining = count;
     for (let i = 0; i < 9; i++) {
       const slot = this.slots[i];
-      if (slot.itemId === itemId && slot.count < item.maxStack) {
+      if (slot.itemId === itemId && slot.count < item.maxStack && !item.toolType) {
         const space = item.maxStack - slot.count;
         const add = Math.min(space, remaining);
         slot.count += add;
@@ -36,6 +36,7 @@ export class Hotbar {
         const add = Math.min(item.maxStack, remaining);
         slot.itemId = itemId;
         slot.count = add;
+        slot.durability = durability ?? item.maxDurability;
         remaining -= add;
         if (remaining <= 0) return 0;
       }

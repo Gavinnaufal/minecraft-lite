@@ -1,12 +1,14 @@
 import * as THREE from 'three';
 import { Hotbar } from '../inventory/Hotbar';
+import { createBlockMaterial } from '../world/BlockRegistry';
+import { itemIdToBlockId } from '../inventory/ItemRegistry';
 
 export class HandModel {
   private camera: THREE.PerspectiveCamera;
   private hotbar: Hotbar;
   private handGroup: THREE.Group;
   private armMesh: THREE.Mesh;
-  private itemMesh: THREE.Mesh | null = null;
+  private itemMesh: THREE.Object3D | null = null;
   private isSwinging = false;
   private swingProgress = 0;
   private currentItemId: string | null = null;
@@ -38,11 +40,17 @@ export class HandModel {
     }
   }
 
-  update(deltaTime: number, isWalking: boolean): void {
+  update(deltaTime: number, isWalking: boolean, isHitting: boolean = false): void {
     const activeItem = this.hotbar.getActiveItem();
     if (activeItem.itemId !== this.currentItemId) {
       this.currentItemId = activeItem.itemId;
       this.updateItemMesh(activeItem.itemId);
+    }
+
+    // Continuous swing when holding left click / hitting
+    if (isHitting && !this.isSwinging) {
+      this.isSwinging = true;
+      this.swingProgress = 0;
     }
 
     // Walking idle bobbing animation
@@ -56,10 +64,14 @@ export class HandModel {
 
     // Swing animation handling
     if (this.isSwinging) {
-      this.swingProgress += deltaTime * 5.0; // 0.2s duration
+      this.swingProgress += deltaTime * 6.0;
       if (this.swingProgress >= 1.0) {
-        this.swingProgress = 0;
-        this.isSwinging = false;
+        if (isHitting) {
+          this.swingProgress = 0;
+        } else {
+          this.swingProgress = 0;
+          this.isSwinging = false;
+        }
       }
     }
 
@@ -78,7 +90,15 @@ export class HandModel {
 
     if (!itemId) return;
 
-    if (itemId.includes('pickaxe')) {
+    const blockId = itemIdToBlockId(itemId);
+    if (blockId) {
+      // Held Block Mini Cube using exact block texture/material
+      const blockGeo = new THREE.BoxGeometry(0.18, 0.18, 0.18);
+      const blockMat = createBlockMaterial(blockId);
+      this.itemMesh = new THREE.Mesh(blockGeo, blockMat);
+      this.itemMesh.position.set(0, 0.08, -0.12);
+      this.handGroup.add(this.itemMesh);
+    } else if (itemId.includes('pickaxe')) {
       const isStone = itemId.includes('stone');
       const pickGeo = new THREE.BoxGeometry(0.06, 0.45, 0.25);
       const pickMat = new THREE.MeshStandardMaterial({ color: isStone ? 0x9e9e9e : 0x8d6e63 });
@@ -93,11 +113,43 @@ export class HandModel {
       this.itemMesh = new THREE.Mesh(swordGeo, swordMat);
       this.itemMesh.position.set(0, 0.15, -0.15);
       this.handGroup.add(this.itemMesh);
+    } else if (itemId.includes('axe') || itemId.includes('shovel') || itemId.includes('hoe')) {
+      const isStone = itemId.includes('stone');
+      const toolGeo = new THREE.BoxGeometry(0.05, 0.48, 0.12);
+      const toolMat = new THREE.MeshStandardMaterial({ color: isStone ? 0x9e9e9e : 0x8d6e63 });
+      this.itemMesh = new THREE.Mesh(toolGeo, toolMat);
+      this.itemMesh.position.set(0, 0.1, -0.15);
+      this.itemMesh.rotation.set(-0.3, 0, 0);
+      this.handGroup.add(this.itemMesh);
+    } else if (itemId === 'torch') {
+      const torchGroup = new THREE.Group();
+      const stickGeo = new THREE.BoxGeometry(0.04, 0.35, 0.04);
+      const stickMat = new THREE.MeshStandardMaterial({ color: 0x6d4c41 });
+      const stickMesh = new THREE.Mesh(stickGeo, stickMat);
+      stickMesh.position.y = 0.15;
+
+      const flameGeo = new THREE.BoxGeometry(0.06, 0.08, 0.06);
+      const flameMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+      const flameMesh = new THREE.Mesh(flameGeo, flameMat);
+      flameMesh.position.y = 0.34;
+
+      torchGroup.add(stickMesh);
+      torchGroup.add(flameMesh);
+      torchGroup.position.set(0, 0.05, -0.12);
+      torchGroup.rotation.set(-0.2, 0, 0);
+      this.itemMesh = torchGroup;
+      this.handGroup.add(this.itemMesh);
+    } else if (itemId === 'stick') {
+      const stickGeo = new THREE.BoxGeometry(0.03, 0.4, 0.03);
+      const stickMat = new THREE.MeshStandardMaterial({ color: 0x6d4c41 });
+      this.itemMesh = new THREE.Mesh(stickGeo, stickMat);
+      this.itemMesh.position.set(0, 0.1, -0.12);
+      this.itemMesh.rotation.set(-0.3, 0, 0);
+      this.handGroup.add(this.itemMesh);
     } else {
-      // Held Block Mini Cube
-      const blockGeo = new THREE.BoxGeometry(0.18, 0.18, 0.18);
-      const blockMat = new THREE.MeshStandardMaterial({ color: 0x8d6e63 });
-      this.itemMesh = new THREE.Mesh(blockGeo, blockMat);
+      const genericGeo = new THREE.BoxGeometry(0.15, 0.15, 0.15);
+      const genericMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
+      this.itemMesh = new THREE.Mesh(genericGeo, genericMat);
       this.itemMesh.position.set(0, 0.08, -0.12);
       this.handGroup.add(this.itemMesh);
     }

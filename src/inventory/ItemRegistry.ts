@@ -4,7 +4,7 @@ export interface ItemType {
   maxStack: number;
   isBlock: boolean;
   blockId?: number;
-  toolType?: 'pickaxe' | 'axe' | 'shovel' | 'sword';
+  toolType?: 'pickaxe' | 'axe' | 'shovel' | 'sword' | 'hoe';
   maxDurability?: number;
   speedMultiplier?: number;
 }
@@ -24,9 +24,18 @@ const items: ItemType[] = [
   { id: 'wooden_sword', name: 'Wooden Sword', maxStack: 1, isBlock: false, toolType: 'sword', maxDurability: 60, speedMultiplier: 1.5 },
   { id: 'wooden_shovel', name: 'Wooden Shovel', maxStack: 1, isBlock: false, toolType: 'shovel', maxDurability: 60, speedMultiplier: 2.5 },
   { id: 'wooden_axe', name: 'Wooden Axe', maxStack: 1, isBlock: false, toolType: 'axe', maxDurability: 60, speedMultiplier: 2.5 },
+  { id: 'wooden_hoe', name: 'Wooden Hoe', maxStack: 1, isBlock: false, toolType: 'hoe', maxDurability: 60, speedMultiplier: 1.5 },
   { id: 'stone_pickaxe', name: 'Stone Pickaxe', maxStack: 1, isBlock: false, toolType: 'pickaxe', maxDurability: 130, speedMultiplier: 4.5 },
   { id: 'stone_sword', name: 'Stone Sword', maxStack: 1, isBlock: false, toolType: 'sword', maxDurability: 130, speedMultiplier: 2.5 },
+  { id: 'stone_hoe', name: 'Stone Hoe', maxStack: 1, isBlock: false, toolType: 'hoe', maxDurability: 130, speedMultiplier: 2.5 },
   { id: 'sandstone', name: 'Sandstone', maxStack: 64, isBlock: true, blockId: 10 },
+  { id: 'beef', name: 'Raw Beef', maxStack: 64, isBlock: false },
+  { id: 'rotten_flesh', name: 'Rotten Flesh', maxStack: 64, isBlock: false },
+  { id: 'torch', name: 'Torch', maxStack: 64, isBlock: true, blockId: 11 },
+  { id: 'chest', name: 'Chest', maxStack: 64, isBlock: true, blockId: 12 },
+  { id: 'wheat_seeds', name: 'Wheat Seeds', maxStack: 64, isBlock: false },
+  { id: 'wheat', name: 'Wheat', maxStack: 64, isBlock: false },
+  { id: 'bread', name: 'Bread', maxStack: 64, isBlock: false },
 ];
 
 const byId = new Map<string, ItemType>();

@@ -10,6 +10,8 @@ export class Mob {
   isGrounded = false;
   readonly width = 0.8;
   readonly height = 1.4;
+  private hitFlashTimer = 0;
+  private originalMaterials = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>();
 
   constructor(position: THREE.Vector3, color: number) {
     this.position = position.clone();
@@ -29,6 +31,12 @@ export class Mob {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   update(deltaTime: number, world?: World, _playerPos?: THREE.Vector3, _player?: Player): void {
+    if (this.hitFlashTimer > 0) {
+      this.hitFlashTimer -= deltaTime;
+      if (this.hitFlashTimer <= 0) {
+        this.resetMaterials();
+      }
+    }
     this.updatePhysics(deltaTime, world);
   }
 
@@ -39,22 +47,36 @@ export class Mob {
       return;
     }
 
-    // Gravity
-    this.velocity.y += -29.4 * deltaTime;
-    this.position.y += this.velocity.y * deltaTime;
-
-    // Terrain ground collision
-    const footY = this.position.y;
     const bx = Math.floor(this.position.x);
     const bz = Math.floor(this.position.z);
-    const by = Math.floor(footY);
+    const footY = Math.floor(this.position.y);
+    const bodyY = Math.floor(this.position.y + 0.5);
 
-    const blockAtFoot = world.getBlock(bx, by, bz);
+    const inWater = world.getBlock(bx, footY, bz) === 7 || world.getBlock(bx, bodyY, bz) === 7;
+
+    if (inWater) {
+      // Floating / Buoyancy in water
+      this.velocity.y = Math.min(this.velocity.y + 25 * deltaTime, 3.0);
+      this.isGrounded = false;
+    } else {
+      // Gravity
+      this.velocity.y += -29.4 * deltaTime;
+    }
+
+    this.position.x += this.velocity.x * deltaTime;
+    this.position.y += this.velocity.y * deltaTime;
+    this.position.z += this.velocity.z * deltaTime;
+
+    this.velocity.x *= 0.85;
+    this.velocity.z *= 0.85;
+
+    // Terrain ground collision
+    const blockAtFoot = world.getBlock(bx, footY, bz);
     if (blockAtFoot !== 0 && blockAtFoot !== 7) {
-      this.position.y = by + 1;
+      this.position.y = footY + 1;
       this.velocity.y = 0;
       this.isGrounded = true;
-    } else {
+    } else if (!inWater) {
       this.isGrounded = false;
     }
 
@@ -71,6 +93,29 @@ export class Mob {
 
   takeDamage(amount: number): boolean {
     this.health -= amount;
+    this.triggerRedFlash();
     return this.health <= 0;
+  }
+
+  private triggerRedFlash(): void {
+    if (this.hitFlashTimer <= 0) {
+      this.originalMaterials.clear();
+      this.mesh.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          this.originalMaterials.set(child, child.material);
+          child.material = new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0xaa0000 });
+        }
+      });
+    }
+    this.hitFlashTimer = 0.2;
+  }
+
+  private resetMaterials(): void {
+    this.mesh.traverse((child) => {
+      if (child instanceof THREE.Mesh && this.originalMaterials.has(child)) {
+        child.material = this.originalMaterials.get(child)!;
+      }
+    });
+    this.originalMaterials.clear();
   }
 }

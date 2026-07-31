@@ -3,6 +3,7 @@ import { Mob } from '../Mob';
 import { StateMachine, State } from '../ai/StateMachine';
 import type { World } from '../../world/World';
 import type { Player } from '../../player/Player';
+import { AudioManager } from '../../audio/AudioManager';
 
 export class Cow extends Mob {
   private stateMachine = new StateMachine();
@@ -11,6 +12,7 @@ export class Cow extends Mob {
   private legBL: THREE.Mesh;
   private legBR: THREE.Mesh;
   private animTimer = 0;
+  private mooTimer = 5 + Math.random() * 10;
 
   constructor(position: THREE.Vector3) {
     super(position, 0x6d4c41);
@@ -129,6 +131,17 @@ export class Cow extends Mob {
       this.legBR.rotation.x = 0;
     }
 
+    this.mooTimer -= deltaTime;
+    if (this.mooTimer <= 0) {
+      this.mooTimer = 10 + Math.random() * 15;
+      AudioManager.getInstance().playSFX('cow_moo');
+    }
+
     this.updatePhysics(deltaTime, world);
+  }
+  
+  override takeDamage(amount: number): boolean {
+    AudioManager.getInstance().playSFX('cow_moo');
+    return super.takeDamage(amount);
   }
 }

@@ -15,6 +15,7 @@ export class Zombie extends Mob {
   private stateMachine = new StateMachine();
   private attackTimer = 0;
   private animTimer = 0;
+  private groanTimer = 4 + Math.random() * 8;
 
   private headMesh: THREE.Mesh;
   private armL: THREE.Mesh;
@@ -79,6 +80,7 @@ export class Zombie extends Mob {
     super.reset(position, 20);
     this.attackTimer = 0;
     this.animTimer = 0;
+    this.groanTimer = 4 + Math.random() * 8;
   }
 
   update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, player?: Player): void {
@@ -144,6 +146,17 @@ export class Zombie extends Mob {
       this.armR.rotation.x = Math.PI / 2;
     }
 
+    this.groanTimer -= deltaTime;
+    if (this.groanTimer <= 0) {
+      this.groanTimer = 8 + Math.random() * 12;
+      AudioManager.getInstance().playSFX('zombie_groan');
+    }
+
     this.updatePhysics(deltaTime, world);
+  }
+
+  override takeDamage(amount: number): boolean {
+    AudioManager.getInstance().playSFX('zombie_groan');
+    return super.takeDamage(amount);
   }
 }

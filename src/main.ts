@@ -673,7 +673,7 @@ engine.setUpdateCallback((deltaTime) => {
           player.health = Math.min(20, player.health + healAmount);
           hotbar.removeItem(activeItem.itemId, 1);
           handModel.triggerSwing();
-          AudioManager.getInstance().playSFX('footstep');
+          AudioManager.getInstance().playSFX('eat');
           hud.update(player.health);
           toastSystem.show(`Memakan ${getItemById(activeItem.itemId)?.name} (+${healAmount} HP)`, 'success');
         } else {

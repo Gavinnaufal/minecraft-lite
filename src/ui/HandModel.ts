@@ -53,13 +53,18 @@ export class HandModel {
       this.swingProgress = 0;
     }
 
+    // Idle breathing animation (subtle motion when standing still)
+    const time = performance.now() * 0.003;
+    const breatheY = Math.sin(time) * 0.006;
+    const breatheX = Math.cos(time * 0.5) * 0.003;
+
     // Walking idle bobbing animation
-    let bobX = 0;
-    let bobY = 0;
+    let bobX = breatheX;
+    let bobY = breatheY;
     if (isWalking) {
-      const time = performance.now() * 0.008;
-      bobX = Math.sin(time) * 0.02;
-      bobY = Math.abs(Math.cos(time)) * 0.02;
+      const walkTime = performance.now() * 0.008;
+      bobX += Math.sin(walkTime) * 0.02;
+      bobY += Math.abs(Math.cos(walkTime)) * 0.02;
     }
 
     // Swing animation handling

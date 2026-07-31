@@ -65,6 +65,18 @@ export class AudioManager {
       gain.connect(masterGain);
       osc.start(now);
       osc.stop(now + 0.08);
+    } else if (name === 'click') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, now);
+      osc.frequency.exponentialRampToValueAtTime(300, now + 0.04);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.04);
     } else if (name.startsWith('footstep')) {
       const surface = name.split('_')[1] || 'dirt';
       const osc = ctx.createOscillator();
@@ -171,6 +183,69 @@ export class AudioManager {
       gain.connect(masterGain);
       osc.start(now);
       osc.stop(now + 0.06);
+    } else if (name === 'eat') {
+      // Crunchy Munching Sound Effect
+      for (let b = 0; b < 3; b++) {
+        const offset = b * 0.08;
+        const bufSize = Math.floor(ctx.sampleRate * 0.05);
+        const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufSize * 0.25));
+        const noise = ctx.createBufferSource();
+        noise.buffer = buf;
+
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(1400 + b * 200, now + offset);
+        filter.Q.setValueAtTime(4, now + offset);
+
+        noise.connect(filter);
+        filter.connect(masterGain);
+        noise.start(now + offset);
+      }
+    } else if (name === 'cow_moo') {
+      // Deep Cow Mooing Vibrato
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(130, now);
+      osc.frequency.linearRampToValueAtTime(160, now + 0.3);
+      osc.frequency.exponentialRampToValueAtTime(110, now + 0.75);
+
+      gain.gain.setValueAtTime(0.35, now);
+      gain.gain.linearRampToValueAtTime(0.45, now + 0.3);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.75);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(450, now);
+
+      osc.connect(filter);
+      filter.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.75);
+    } else if (name === 'zombie_groan') {
+      // Creepy Low Zombie Groan
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(75, now);
+      osc.frequency.linearRampToValueAtTime(95, now + 0.4);
+      osc.frequency.exponentialRampToValueAtTime(45, now + 0.9);
+
+      gain.gain.setValueAtTime(0.4, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.9);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(320, now);
+
+      osc.connect(filter);
+      filter.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.9);
     }
   }
 

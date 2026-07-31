@@ -12,7 +12,6 @@ export class Cow extends Mob {
   private legBL: THREE.Mesh;
   private legBR: THREE.Mesh;
   private animTimer = 0;
-  private mooTimer = 5 + Math.random() * 10;
 
   constructor(position: THREE.Vector3) {
     super(position, 0x6d4c41);
@@ -129,12 +128,6 @@ export class Cow extends Mob {
       this.legFR.rotation.x = 0;
       this.legBL.rotation.x = 0;
       this.legBR.rotation.x = 0;
-    }
-
-    this.mooTimer -= deltaTime;
-    if (this.mooTimer <= 0) {
-      this.mooTimer = 10 + Math.random() * 15;
-      AudioManager.getInstance().playSFX('cow_moo');
     }
 
     this.updatePhysics(deltaTime, world);

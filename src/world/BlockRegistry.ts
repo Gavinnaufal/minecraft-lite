@@ -23,7 +23,7 @@ const blockTypes: BlockType[] = [
     hardness: 0.8,
     textureTop: 'grass_top',
     textureBottom: 'dirt',
-    textureSide: 'dirt',
+    textureSide: 'grass_side',
   },
   { id: 2, name: 'dirt', color: 0x8b5e3c, solid: true, transparent: false, hardness: 0.5 },
   { id: 3, name: 'stone', color: 0x808080, solid: true, transparent: false, hardness: 1.5 },

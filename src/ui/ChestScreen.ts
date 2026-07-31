@@ -68,10 +68,10 @@ export class ChestScreen {
     // Header
     const header = document.createElement('div');
     header.style.cssText = 'display: flex; justify-content: space-between; align-items: center;';
-    header.innerHTML = '<span style="font-size: 16px; font-weight: bold; color: #ffcc00;">📦 Peti Penyimpanan (Chest)</span>';
+    header.innerHTML = '<span style="font-size: 16px; font-weight: bold; color: #ffcc00;"><svg width="16" height="16" viewBox="0 0 24 24" fill="#ffcc00" style="vertical-align:middle;margin-right:6px;"><path d="M20 6h-8l-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2zm-6 10H6v-2h8v2zm4-4H6V10h12v2z"/></svg>Peti Penyimpanan (Chest)</span>';
 
     const closeBtn = document.createElement('button');
-    closeBtn.textContent = '✕';
+    closeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" style="vertical-align:middle;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
     closeBtn.style.cssText = `
       background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
       color: #fff; border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size: 14px;

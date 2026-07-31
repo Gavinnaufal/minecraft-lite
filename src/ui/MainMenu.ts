@@ -64,7 +64,7 @@ export class MainMenu {
         border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
         box-shadow: 0 4px 14px rgba(0,0,0,0.4); text-align: center; letter-spacing: 1px;
       `;
-      btn.textContent = text;
+      btn.innerHTML = text;
       btn.addEventListener('mouseenter', () => {
         btn.style.transform = 'translateY(-2px) scale(1.02)';
         btn.style.borderColor = hoverBorder;
@@ -79,21 +79,24 @@ export class MainMenu {
       return btn;
     };
 
-    const newGameBtn = makeBtn('▶  SINGLEPLAYER (NEW)', 'linear-gradient(135deg, #2e7d32, #1b5e20)', '#4caf50', () => {
+    const playSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" style="vertical-align:middle;margin-right:6px;"><path d="M8 5v14l11-7z"/></svg>';
+    const newGameBtn = makeBtn(playSvg + 'SINGLEPLAYER (NEW)', 'linear-gradient(135deg, #2e7d32, #1b5e20)', '#4caf50', () => {
       this.hide();
       AudioManager.getInstance().playSFX('place');
       AudioManager.getInstance().startMusic();
       this.onStartGame?.(false);
     });
 
-    const loadGameBtn = makeBtn('💾  LOAD SAVED WORLD', 'linear-gradient(135deg, #1565c0, #0d47a1)', '#42a5f5', () => {
+    const saveSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" style="vertical-align:middle;margin-right:6px;"><path d="M17 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V7l-4-4zm-5 16a3 3 0 110-6 3 3 0 010 6zm3-10H5V5h10v4z"/></svg>';
+    const loadGameBtn = makeBtn(saveSvg + 'LOAD SAVED WORLD', 'linear-gradient(135deg, #1565c0, #0d47a1)', '#42a5f5', () => {
       this.hide();
       AudioManager.getInstance().playSFX('place');
       AudioManager.getInstance().startMusic();
       this.onStartGame?.(true);
     });
 
-    const settingsBtn = makeBtn('⚙️  SETTINGS', 'rgba(255, 255, 255, 0.08)', '#ffcc00', () => {
+    const gearSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" style="vertical-align:middle;margin-right:6px;"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96a7.04 7.04 0 00-1.62-.94l-.36-2.54A.48.48 0 0013.9 2h-3.8a.48.48 0 00-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.75 8.87a.48.48 0 00.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.49.37 1.03.7 1.62.94l.36 2.54c.05.24.26.41.47.41h3.8c.21 0 .42-.17.47-.41l.36-2.54c.59-.24 1.13-.57 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 00-.12-.61l-2.03-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.6 3.6 0 0112 15.6z"/></svg>';
+    const settingsBtn = makeBtn(gearSvg + 'SETTINGS', 'rgba(255, 255, 255, 0.08)', '#ffcc00', () => {
       this.settingsMenu.toggle();
     });
 

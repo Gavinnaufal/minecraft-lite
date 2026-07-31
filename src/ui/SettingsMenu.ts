@@ -36,7 +36,8 @@ export class SettingsMenu {
 
     const title = document.createElement('div');
     title.style.cssText = 'font-weight: bold; font-size: 16px; margin-bottom: 16px; color: #ffcc00; text-align: center; letter-spacing: 1px;';
-    title.textContent = '⚙️ SETTINGS & GAME OPTIONS';
+    const gearIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="#ffcc00" style="vertical-align:middle;margin-right:6px;"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96a7.04 7.04 0 00-1.62-.94l-.36-2.54A.48.48 0 0013.9 2h-3.8a.48.48 0 00-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.75 8.87a.48.48 0 00.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.49.37 1.03.7 1.62.94l.36 2.54c.05.24.26.41.47.41h3.8c.21 0 .42-.17.47-.41l.36-2.54c.59-.24 1.13-.57 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 00-.12-.61l-2.03-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.6 3.6 0 0112 15.6z"/></svg>';
+    title.innerHTML = gearIcon + 'SETTINGS & GAME OPTIONS';
     this.container.appendChild(title);
 
     // Render Distance
@@ -118,7 +119,7 @@ export class SettingsMenu {
     btnBox.style.cssText = 'display: flex; flex-direction: column; gap: 8px; margin-top: 8px;';
 
     const resetBtn = document.createElement('button');
-    resetBtn.textContent = '🔄  RESET WORLD (NEW SEED)';
+    resetBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="#fff" style="vertical-align:middle;margin-right:6px;"><path d="M17.65 6.35A7.96 7.96 0 0012 4a8 8 0 108 8h-2a6 6 0 11-1.76-4.24L14 10h7V3l-3.35 3.35z"/></svg>RESET WORLD (NEW SEED)';
     resetBtn.style.cssText = `
       padding: 10px; font-family: inherit; font-size: 12px; font-weight: bold;
       color: #fff; background: linear-gradient(135deg, #d32f2f, #b71c1c);
@@ -134,7 +135,7 @@ export class SettingsMenu {
     });
 
     const quitBtn = document.createElement('button');
-    quitBtn.textContent = '🚪  EXIT TO MAIN MENU';
+    quitBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="#fff" style="vertical-align:middle;margin-right:6px;"><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5a2 2 0 00-2 2v4h2V5h14v14H5v-4H3v4a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"/></svg>EXIT TO MAIN MENU';
     quitBtn.style.cssText = `
       padding: 10px; font-family: inherit; font-size: 12px; font-weight: bold;
       color: #fff; background: rgba(255,255,255,0.12);
@@ -149,7 +150,7 @@ export class SettingsMenu {
     });
 
     const closeBtn = document.createElement('button');
-    closeBtn.textContent = '✕ CLOSE SETTINGS';
+    closeBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="#aaa" style="vertical-align:middle;margin-right:4px;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>CLOSE SETTINGS';
     closeBtn.style.cssText = `
       padding: 8px; font-family: inherit; font-size: 11px; font-weight: bold;
       color: #aaa; background: transparent; border: 1px solid rgba(255,255,255,0.15);

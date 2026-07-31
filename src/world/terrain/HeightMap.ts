@@ -1,5 +1,5 @@
 import { NoiseGenerator } from './NoiseGenerator';
-import { CHUNK_HEIGHT } from '../../utils/constants';
+import { CHUNK_HEIGHT, WATER_LEVEL } from '../../utils/constants';
 
 export class HeightMap {
   private readonly noise: NoiseGenerator;
@@ -13,9 +13,9 @@ export class HeightMap {
 
   constructor(
     noise: NoiseGenerator,
-    scale = 80,
+    scale = 120,
     octaves = 4,
-    persistence = 0.5,
+    persistence = 0.38,
     lacunarity = 2.0,
   ) {
     this.noise = noise;
@@ -48,7 +48,11 @@ export class HeightMap {
       amplitude *= this.persistence;
     }
 
+    // Normalize to [-1, 1] then map to gentle terrain around WATER_LEVEL
     const normalized = value / this.maxAmplitude;
-    return Math.round(Math.min(CHUNK_HEIGHT - 1, Math.max(0, normalized * CHUNK_HEIGHT)));
+    // Max hill height ~22 blocks above water, min valley ~6 blocks below water
+    const height = WATER_LEVEL + normalized * 22;
+    return Math.round(Math.min(CHUNK_HEIGHT - 1, Math.max(1, height)));
   }
 }
+

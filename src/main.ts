@@ -448,9 +448,12 @@ engine.setUpdateCallback((deltaTime) => {
   const isWalking = inputManager.isKeyPressed('w') || inputManager.isKeyPressed('a') || inputManager.isKeyPressed('s') || inputManager.isKeyPressed('d');
   handModel.update(deltaTime, isWalking, inputManager.isLeftMouseDown);
   particleSystem.update(deltaTime);
+  const QUIET_ITEMS = new Set(['grass', 'dirt', 'stone', 'sand', 'leaves']);
   itemDropManager.update(deltaTime, new THREE.Vector3(player.position.x, player.position.y, player.position.z), (itemId, count) => {
-    const itemMeta = getItemById(itemId);
-    toastSystem.show(`+${count} ${itemMeta ? itemMeta.name : itemId}`, 'info');
+    if (!QUIET_ITEMS.has(itemId)) {
+      const itemMeta = getItemById(itemId);
+      toastSystem.show(`+${count} ${itemMeta ? itemMeta.name : itemId}`, 'info');
+    }
     const rem = hotbar.addItem(itemId, count);
     if (rem > 0) inventory.addItem(itemId, rem);
   });
@@ -666,14 +669,26 @@ engine.setUpdateCallback((deltaTime) => {
           }
         }
       } else if (activeItem.itemId === 'wheat_seeds' && targetHit) {
-        // Plant Wheat Seeds (14) on top of Farmland (13)!
+        // Plant Wheat Seeds (14) on top of Farmland (13), Grass (1), or Dirt (2)!
         const hitBlockId = world.getBlock(targetHit.blockX, targetHit.blockY, targetHit.blockZ);
-        if (hitBlockId === 13 && world.getBlock(targetHit.blockX, targetHit.blockY + 1, targetHit.blockZ) === 0) {
-          world.setBlock(targetHit.blockX, targetHit.blockY + 1, targetHit.blockZ, 14);
-          networkManager.sendBlockChange(targetHit.blockX, targetHit.blockY + 1, targetHit.blockZ, 14);
-          hotbar.removeItem('wheat_seeds', 1);
-          handModel.triggerSwing();
-          AudioManager.getInstance().playSFX('footstep');
+        if (hitBlockId === 13 || hitBlockId === 1 || hitBlockId === 2) {
+          const plantY = targetHit.normalY > 0 ? targetHit.blockY + 1 : targetHit.blockY;
+          const soilY = targetHit.normalY > 0 ? targetHit.blockY : targetHit.blockY - 1;
+          const currentSoil = world.getBlock(targetHit.blockX, soilY, targetHit.blockZ);
+
+          if (currentSoil === 1 || currentSoil === 2) {
+            world.setBlock(targetHit.blockX, soilY, targetHit.blockZ, 13); // Auto-till soil into farmland
+            networkManager.sendBlockChange(targetHit.blockX, soilY, targetHit.blockZ, 13);
+          }
+
+          if (world.getBlock(targetHit.blockX, plantY, targetHit.blockZ) === 0) {
+            world.setBlock(targetHit.blockX, plantY, targetHit.blockZ, 14); // Plant wheat crop
+            networkManager.sendBlockChange(targetHit.blockX, plantY, targetHit.blockZ, 14);
+            hotbar.removeItem('wheat_seeds', 1);
+            handModel.triggerSwing();
+            AudioManager.getInstance().playSFX('place');
+            toastSystem.show('Wheat Seeds Planted! 🌱', 'success');
+          }
         }
       } else {
         const blockIdToPlace = itemIdToBlockId(activeItem.itemId);

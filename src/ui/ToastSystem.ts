@@ -6,10 +6,10 @@ export class ToastSystem {
     this.container = document.createElement('div');
     this.container.id = 'toast-container';
     this.container.style.position = 'fixed';
-    this.container.style.top = '20px';
-    this.container.style.right = '20px';
+    this.container.style.bottom = '90px';
+    this.container.style.right = '24px';
     this.container.style.display = 'flex';
-    this.container.style.flexDirection = 'column';
+    this.container.style.flexDirection = 'column-reverse';
     this.container.style.gap = '8px';
     this.container.style.zIndex = '999999';
     this.container.style.pointerEvents = 'none';

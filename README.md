@@ -6,13 +6,18 @@ Mini Minecraft adalah game sandbox voxel 3D berbasis **Three.js**, **TypeScript*
 
 ## 🚀 Fitur Utama
 
-- 🌍 **Procedural Voxel World Generation**: Simplex Noise terrain dengan bioma beragam (Plains, Forest, Desert, Mountains), struktur pohon, gua, serta perairan cair.
+- 🌍 **Procedural Voxel World Generation**: Simplex Noise terrain dengan bioma beragam (Plains, Forest, Desert, Mountains), struktur pohon, gua, perairan cair, serta air mengalir dinamis.
+- 🤿 **3D Ocean Diving & Oxygen System**: Fitur berenang dan menyelam bawah air (*camera pitch diving*), filter transparan laut dalam (*blue aquatic tint & deep fog*), serta bar gelembung nafas (*Oxygen Bubbles UI*) dan damage tenggelam (*drowning damage*).
+- 📦 **Peti Penyimpanan (Storage Chest System)**: Blok peti 27-slot interaktif untuk menyimpan item berlebih secara permanen per koordinat lokasi dunia, lengkap dengan fitur Shift-click transfer instan.
+- 🌾 **Sistem Pertanian & Cangkul (Farming & Agriculture)**: Cangkul (*Wooden/Stone Hoe*) untuk mencangkul rumput/tanah menjadi *Farmland*, menanam *Wheat Seeds*, memanen *Wheat*, dan membuat *Bread* (+5 HP).
+- 💡 **Dynamic Held Torch Lighting**: Obor di tangan (*Held Torch*) memberikan pancaran cahaya api melayang (*flickering pointlight*) secara real-time saat menjelajahi gua atau malam hari.
+- 💎 **Glassmorphic UI/UX & Custom SVG Icons**: Antarmuka modern berefek *backdrop blur*, lencana status *XYZ + Compass + FPS*, bar ketahanan alat (*Tool Durability Bars*), indikator HP kritis (*Low HP Red Vignette*), serta ikon vektor SVG khusus.
+- ⚔️ **Combat & Mob AI System**: Mob Pasif (Sapi) dan Hostile (Zombie) dengan *damage*, *knockback*, *drop loot* (Daging Sapi & Rotten Flesh), serta sistem makan (*right-click to eat*) untuk memulihkan HP.
 - ⚡ **Web Worker Mesh Generation**: Multithreaded chunk meshing tanpa alokasi memori berlebih (*Zero-copy Transferable ArrayBuffers*).
-- 🛠️ **System Crafting & Inventory**: Grid crafting 3x3, hotbar 9 slot, drag-and-drop UI, serta tooltip nama item otomatis.
+- 🛠️ **System Crafting & Inventory**: Grid crafting 3x3, hotbar 9 slot, drag-and-drop UI, split stack / drop 1 item, serta tooltip nama item otomatis.
 - ☀️ **Dynamic Day/Night Cycle**: Siklus siang dan malam dengan perubahan warna langit (*Skybox*) dan pencahayaan matahari secara dinamis.
-- 👾 **Mob AI & Terrain Collision**: Mob Pasif (Sapi) dan Mob Hostile (Zombie) dengan kecerdasan buatan (*AI Pathfinding / Wandering*) dan fisik gravitasi/obstacle jumping.
 - 🎵 **Web Audio API Sound Synthesizer**: Suara hancur/pasang blok, langkah kaki (*footstep*), deru angin, jangkrik malam (*cricket chirps*), dan musik latar (*background music*) prosedural tanpa file media eksternal.
-- 🌐 **Real-time WebSocket Multiplayer**: Multiplayer 2-player client sync untuk posisi avatar 3D, modifikasi blok, dan damage mob secara realtime.
+- 🌐 **Real-time WebSocket Multiplayer & Chat**: Multiplayer 2-player client sync untuk posisi avatar 3D, modifikasi blok, damage mob, serta kotak chat *in-game* (`[T]`).
 - 💾 **IndexedDB Auto Save System**: Menyimpan posisi pemain, waktu dunia, isi inventory, dan perubahan blok secara otomatis ke penyimpanan browser.
 
 ---
@@ -21,15 +26,16 @@ Mini Minecraft adalah game sandbox voxel 3D berbasis **Three.js**, **TypeScript*
 
 | Tombol | Fungsi |
 |---|---|
-| **W, A, S, D** | Bergerak (Maju, Kiri, Mundur, Kanan) |
-| **Spacebar** | Melompat (*Jump*) |
-| **Shift** | Berjalan Pelan (*Sneak*) |
-| **Klik Kiri Mouse** | Memecahkan / Menghancurkan Blok |
-| **Klik Kanan Mouse** | Memasang / Meletakkan Blok di Hotbar |
+| **W, A, S, D** | Bergerak (Maju, Kiri, Mundur, Kanan) / Berenang mengarah ke sudut pandang kamera |
+| **Spacebar** | Melompat (*Jump*) / Berenang naik ke atas permukaan air (*Swim Up*) |
+| **Shift / C** | Berjalan Pelan (*Sneak*) / Menyelam turun ke dasar laut (*Dive Down*) |
+| **Klik Kiri Mouse** | Memecahkan / Menghancurkan Blok / Menyerang Mob |
+| **Klik Kanan Mouse** | Memasang Blok / Membuka Peti / Mencangkul / Menanam Seeds / Memakan Makanan |
 | **Scroll Mouse / Angka 1-9** | Mengganti Slot Active Hotbar |
-| **E** | Membuka / Menutup Layar Inventory & Crafting |
+| **E** | Membuka / Menutup Layar Inventory & Crafting Grid (3x3) |
+| **T** | Membuka Kotak Chat Multiplayer (*In-Game Chat Box*) |
 | **O** | Membuka / Menutup Settings Menu (Render Distance & Volume) |
-| **Escape (ESC)** | Membuka / Menutup Pause Menu |
+| **Escape (ESC)** | Membuka / Menutup Pause Menu / Menutup Peti & Inventaris |
 
 ---
 

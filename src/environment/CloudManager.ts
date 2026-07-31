@@ -18,10 +18,12 @@ export class CloudManager {
     // 1. Cloud Material
     this.cloudMaterial = new THREE.MeshStandardMaterial({
       color: 0xffffff,
+      emissive: 0xeeeeff,
+      emissiveIntensity: 0.15,
       transparent: true,
-      opacity: 0.85,
-      roughness: 0.8,
-      metalness: 0.1,
+      opacity: 0.95,
+      roughness: 1.0,
+      metalness: 0.0,
       flatShading: true,
     });
 
@@ -153,16 +155,19 @@ export class CloudManager {
     const isSunset = (timeOfDay >= 0.22 && timeOfDay <= 0.3) || (timeOfDay >= 0.7 && timeOfDay <= 0.78);
 
     if (isNight) {
-      this.cloudMaterial.color.setHex(0x334466); // Dark blue night clouds
-      this.cloudMaterial.opacity = 0.6;
+      this.cloudMaterial.color.setHex(0x556688); // Soft blue night clouds
+      this.cloudMaterial.opacity = 0.75;
+      this.cloudMaterial.emissiveIntensity = 0.05;
       this.starsMaterial.opacity = 0.9;
     } else if (isSunset) {
-      this.cloudMaterial.color.setHex(0xffaa66); // Sunset golden clouds
-      this.cloudMaterial.opacity = 0.85;
+      this.cloudMaterial.color.setHex(0xffcc88); // Sunset warm clouds
+      this.cloudMaterial.opacity = 0.95;
+      this.cloudMaterial.emissiveIntensity = 0.25;
       this.starsMaterial.opacity = 0.4;
     } else {
-      this.cloudMaterial.color.setHex(0xffffff); // Bright white day clouds
-      this.cloudMaterial.opacity = 0.85;
+      this.cloudMaterial.color.setHex(0xffffff); // Bright solid white day clouds
+      this.cloudMaterial.opacity = 0.95;
+      this.cloudMaterial.emissiveIntensity = 0.15;
       this.starsMaterial.opacity = 0;
     }
   }

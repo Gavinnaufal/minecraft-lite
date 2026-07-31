@@ -80,11 +80,11 @@ export class Mob {
       this.isGrounded = false;
     }
 
-    // Step-up / obstacle jump
+    // Step-up / obstacle jump (max 1 block height)
     const headY = Math.floor(this.position.y + 0.5);
     const blockAtBody = world.getBlock(bx, headY, bz);
     if (blockAtBody !== 0 && blockAtBody !== 7 && this.isGrounded) {
-      this.velocity.y = 7.0;
+      this.velocity.y = 5.0;
       this.isGrounded = false;
     }
 

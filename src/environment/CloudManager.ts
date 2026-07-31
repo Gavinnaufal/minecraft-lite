@@ -68,21 +68,42 @@ export class CloudManager {
   }
 
   private createCloudLayer(): void {
-    const cloudBoxGeo = new THREE.BoxGeometry(12, 4, 12);
-    const cloudPositions: { x: number; y: number; z: number }[] = [];
+    const blockSize = 6; // Each cloud voxel is 6x3x6 (small blocks)
+    const cloudBoxGeo = new THREE.BoxGeometry(blockSize, 3, blockSize);
+    const cloudPositions: { x: number; y: number; z: number; sx: number; sy: number; sz: number }[] = [];
 
-    const areaSize = 40; // 40x40 cloud grid
-    for (let x = -areaSize / 2; x < areaSize / 2; x++) {
-      for (let z = -areaSize / 2; z < areaSize / 2; z++) {
-        const val = this.noise.noise2D(x * 0.08, z * 0.08);
-        if (val > 0.35) {
-          const heightOffset = Math.sin(x * 0.2 + z * 0.3) > 0.5 ? 4 : 0;
-          cloudPositions.push({
-            x: x * 12,
-            y: 110 + heightOffset,
-            z: z * 12,
-          });
-        }
+    // Generate many small scattered cloud patches across a wide area
+    const cloudCount = 60; // Number of separate cloud patches
+    const spreadArea = 600; // Total spread radius in world units
+    const cloudY = 120; // Base cloud altitude
+
+    // Use noise to seed cloud center positions for natural distribution
+    for (let i = 0; i < cloudCount; i++) {
+      // Scatter cloud centers across the sky using golden-ratio-based distribution
+      const angle = i * 2.399963; // Golden angle in radians
+      const radius = Math.sqrt(i / cloudCount) * spreadArea;
+      const centerX = Math.cos(angle) * radius;
+      const centerZ = Math.sin(angle) * radius;
+
+      // Each cloud patch is a small cluster of 3-8 blocks
+      const patchSize = 3 + Math.floor(this.noise.noise2D(i * 0.7, i * 1.3) * 3 + 3); // 3-8 blocks
+
+      for (let b = 0; b < patchSize; b++) {
+        // Spread blocks within the patch in a rough ellipse shape
+        const localAngle = (b / patchSize) * Math.PI * 2 + this.noise.noise2D(i + b, b) * 1.2;
+        const localRadius = blockSize * (0.5 + Math.abs(this.noise.noise2D(b * 0.5, i * 0.5)) * 1.5);
+        const bx = centerX + Math.cos(localAngle) * localRadius;
+        const bz = centerZ + Math.sin(localAngle) * localRadius;
+        const by = cloudY + (this.noise.noise2D(bx * 0.01, bz * 0.01)) * 3; // Slight height variation
+
+        // Random slight scale variation for organic feel
+        const scaleX = 0.8 + Math.abs(this.noise.noise2D(bx, bz)) * 0.6;
+        const scaleZ = 0.8 + Math.abs(this.noise.noise2D(bz, bx)) * 0.6;
+
+        cloudPositions.push({
+          x: bx, y: by, z: bz,
+          sx: scaleX, sy: 0.6 + Math.random() * 0.4, sz: scaleZ,
+        });
       }
     }
 
@@ -90,7 +111,9 @@ export class CloudManager {
       this.instancedMesh = new THREE.InstancedMesh(cloudBoxGeo, this.cloudMaterial, cloudPositions.length);
       const dummy = new THREE.Object3D();
       for (let i = 0; i < cloudPositions.length; i++) {
-        dummy.position.set(cloudPositions[i].x, cloudPositions[i].y, cloudPositions[i].z);
+        const p = cloudPositions[i];
+        dummy.position.set(p.x, p.y, p.z);
+        dummy.scale.set(p.sx, p.sy, p.sz);
         dummy.updateMatrix();
         this.instancedMesh.setMatrixAt(i, dummy.matrix);
       }
@@ -100,9 +123,10 @@ export class CloudManager {
   }
 
   public update(_deltaTime: number, timeOfDay: number, playerPos: THREE.Vector3): void {
-    // 1. Cloud drifting wind
-    this.cloudGroup.position.x = playerPos.x + ((Date.now() * 0.003) % 480) - 240;
-    this.cloudGroup.position.z = playerPos.z + ((Date.now() * 0.002) % 480) - 240;
+    // 1. Clouds follow player with gentle wind drift
+    const windTime = Date.now() * 0.0005;
+    this.cloudGroup.position.x = playerPos.x + Math.sin(windTime) * 30;
+    this.cloudGroup.position.z = playerPos.z + Math.cos(windTime * 0.7) * 20;
 
     // 2. Sun & Moon Orbit
     const angle = timeOfDay * Math.PI * 2;

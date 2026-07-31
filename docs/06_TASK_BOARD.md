@@ -20,8 +20,8 @@
 | Fase 14 — Multiplayer | 121–125 | 5 | 100% |
 | Fase 15 — Polish & Release | 126–130 | 5 | 100% |
 | Fase 16 — Feature Expansion | 131–144 | 14 | 100% |
-| Fase 17 — Master Polish | 145–152 | 8 | 100% |
-| **TOTAL** | | **152** | **100%** |
+| Fase 17 — Master Polish | 145–155 | 11 | 100% |
+| **TOTAL** | | **155** | **100%** |
 
 Build: ✅ `npm run build` passes (646KB bundle, 456ms)
 
@@ -207,7 +207,7 @@ Build: ✅ `npm run build` passes (646KB bundle, 456ms)
 - [x] CP-143: Wheat Seeds Drops, Wheat Farming & Bread Food Eating
 - [x] CP-144: Glassmorphic UI/UX Redesign & Custom SVG Vector Icons
 
-### Fase 17 — Master Polish (8/8)
+### Fase 17 — Master Polish (11/11)
 - [x] CP-145: Block Selection Outline Wireframe Box
 - [x] CP-146: Time-based Dynamic Exponential Distance Fog
 - [x] CP-147: Surface-based Footstep Audio System
@@ -216,6 +216,9 @@ Build: ✅ `npm run build` passes (646KB bundle, 456ms)
 - [x] CP-150: Floating Toast Notification Banner System
 - [x] CP-151: Mob Hit Visual Flash & Knockback Particles
 - [x] CP-152: Submerged Water Fog & Ambient Particle Splash
+- [x] CP-153: Authentic 16x16 Pixel Art Textures Pass
+- [x] CP-154: 3D Volumetric Voxel Clouds & Celestial System
+- [x] CP-155: Agriculture & Quiet Toast System Polish
 
 ---
 

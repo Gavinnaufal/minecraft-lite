@@ -240,15 +240,18 @@ Setiap checkpoint (CP) dirancang untuk **1 sesi vibe coding** (1 prompt DeepSeek
 | 150 | Floating Toast Notification Banner System | Non-intrusive UI toasts for items collected, tool breakage, and game auto-save |
 | 151 | Mob Hit Visual Flash & Knockback Particles | Red flash overlay & directional impact burst particles on mob damage |
 | 152 | Submerged Water Fog & Ambient Particle Splash | Underwater blue tint fog effect and water surface entry splash particles |
+| 153 | Authentic 16x16 Pixel Art Textures Pass | Custom 16x16 pixel-art PNG textures for all blocks & proper UV face mapping |
+| 154 | 3D Volumetric Voxel Clouds & Celestial System | Scattered 3D voxel clouds, orbiting Sun/Moon, starfield, & ACES tone-mapped lighting |
+| 155 | Agriculture & Quiet Toast System Polish | Intuitive wheat seeds planting/auto-tilling & bottom-right clutter-free toast notifications |
 
 ---
 
 ## RINGKASAN
 
-- **Total checkpoint: 152** (130 checkpoint inti + 14 feature expansion + 8 polish CP145-CP152)
+- **Total checkpoint: 155** (130 checkpoint inti + 14 feature expansion + 11 polish CP145-CP155)
 - MVP inti selesai di **CP102** (save/load) — dari titik ini game sudah "playable end-to-end".
 - CP103–115 = polish & optimasi wajib.
 - CP116–130 = audio, multiplayer & release.
 - CP131–144 = feature expansion.
-- CP145–152 = comprehensive gameplay, audio & visual polish pass.
+- CP145–155 = comprehensive gameplay, audio, visual & environment polish pass.
 

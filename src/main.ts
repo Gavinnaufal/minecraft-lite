@@ -38,6 +38,9 @@ import { SaveManager } from './save/SaveManager';
 import { MobManager } from './mobs/MobManager';
 import { Cow } from './mobs/passive/Cow';
 import { Zombie } from './mobs/hostile/Zombie';
+import { BlockHighlight } from './interaction/BlockHighlight';
+import { DebugScreen } from './ui/DebugScreen';
+import { ToastSystem } from './ui/ToastSystem';
 import * as THREE from 'three';
 import { CHUNK_SIZE_X, CHUNK_SIZE_Z, CHUNK_HEIGHT, WATER_LEVEL } from './utils/constants';
 import type { Chunk } from './world/Chunk';
@@ -193,11 +196,14 @@ saveManager.init().then(() => saveManager.load()).then((savedSeed) => {
 
 const playerCamera = new PlayerCamera(camera);
 
-// Interaction
+// Interaction & Polish
 const particleSystem = new ParticleSystem(scene);
 const itemDropManager = new ItemDropManager(scene);
 const blockBreaker = new BlockBreaker(scene, world);
 const blockPlacer = new BlockPlacer(world);
+const blockHighlight = new BlockHighlight(scene);
+const debugScreen = new DebugScreen();
+const toastSystem = ToastSystem.getInstance();
 
 import { ChestScreen } from './ui/ChestScreen';
 import { ChestManager } from './inventory/ChestManager';
@@ -242,6 +248,8 @@ blockBreaker.setOnBlockBroken((x, y, z, blockId) => {
   if (activeTool.itemId && activeTool.durability !== undefined) {
     activeTool.durability--;
     if (activeTool.durability <= 0) {
+      const toolMeta = getItemById(activeTool.itemId);
+      toastSystem.show(`${toolMeta ? toolMeta.name : activeTool.itemId} Broke!`, 'warning');
       hotbar.removeItem(activeTool.itemId, 1);
       AudioManager.getInstance().playSFX('break');
     }
@@ -367,11 +375,24 @@ networkManager.setOnChatMessage((author, text) => {
   chatBox.addMessage(author, text);
 });
 
-// Engine
+// Engine & Polish State
 let previousChunkX = 0, previousChunkZ = 0;
 let wasRightDown = false;
 let wasLeftDown = false;
 let lastPlayerHealth = player.health;
+let footstepTimer = 0;
+let bobbingTimer = 0;
+
+function getFacingDirection(cam: THREE.PerspectiveCamera): string {
+  const dir = new THREE.Vector3();
+  cam.getWorldDirection(dir);
+  if (Math.abs(dir.x) > Math.abs(dir.z)) {
+    return dir.x > 0 ? 'East (+X)' : 'West (-X)';
+  } else {
+    return dir.z > 0 ? 'South (+Z)' : 'North (-Z)';
+  }
+}
+
 const engine = new Engine();
 
 function restartPlayer() {
@@ -428,6 +449,8 @@ engine.setUpdateCallback((deltaTime) => {
   handModel.update(deltaTime, isWalking, inputManager.isLeftMouseDown);
   particleSystem.update(deltaTime);
   itemDropManager.update(deltaTime, new THREE.Vector3(player.position.x, player.position.y, player.position.z), (itemId, count) => {
+    const itemMeta = getItemById(itemId);
+    toastSystem.show(`+${count} ${itemMeta ? itemMeta.name : itemId}`, 'info');
     const rem = hotbar.addItem(itemId, count);
     if (rem > 0) inventory.addItem(itemId, rem);
   });
@@ -441,6 +464,48 @@ engine.setUpdateCallback((deltaTime) => {
     player.position.y + player.eyeHeight,
     player.position.z,
   );
+
+  // Surface Footsteps & View Bobbing
+  if (isWalking && player.isGrounded) {
+    footstepTimer += deltaTime;
+    const blockBelow = world.getBlock(Math.floor(player.position.x), Math.floor(player.position.y - 0.2), Math.floor(player.position.z));
+    let surface = 'dirt';
+    if (blockBelow === 1) surface = 'grass';
+    else if (blockBelow === 3 || blockBelow === 10) surface = 'stone';
+    else if (blockBelow === 4) surface = 'sand';
+    else if (blockBelow === 5 || blockBelow === 8 || blockBelow === 9 || blockBelow === 12) surface = 'wood';
+    else if (blockBelow === 7) surface = 'water';
+
+    if (footstepTimer >= 0.35) {
+      footstepTimer = 0;
+      AudioManager.getInstance().playSFX(`footstep_${surface}`);
+    }
+
+    bobbingTimer += deltaTime * 12;
+    camera.position.y += Math.sin(bobbingTimer) * 0.035;
+    camera.position.x += Math.cos(bobbingTimer * 0.5) * 0.018;
+  } else {
+    footstepTimer = 0;
+  }
+
+  // 3D Block Selection Outline Box
+  blockHighlight.update(world, camera);
+
+  // F3 Debug Screen Update
+  const facingDir = getFacingDirection(camera);
+  const currentBiome = biomeGen.getBiome(Math.floor(player.position.x), Math.floor(player.position.z));
+  const biomeName = currentBiome ? (currentBiome.charAt(0).toUpperCase() + currentBiome.slice(1)) : 'Plains';
+  debugScreen.update({
+    fps: clock.getFPS(),
+    posX: player.position.x,
+    posY: player.position.y,
+    posZ: player.position.z,
+    chunkX: Math.floor(player.position.x / CHUNK_SIZE_X),
+    chunkZ: Math.floor(player.position.z / CHUNK_SIZE_Z),
+    facing: facingDir,
+    biome: biomeName,
+    mobsCount: mobManager.mobs.length,
+  });
 
   sky.position.copy(camera.position);
   sky.position.y = 0;

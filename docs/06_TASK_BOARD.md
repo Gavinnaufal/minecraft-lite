@@ -20,7 +20,8 @@
 | Fase 14 — Multiplayer | 121–125 | 5 | 100% |
 | Fase 15 — Polish & Release | 126–130 | 5 | 100% |
 | Fase 16 — Feature Expansion | 131–144 | 14 | 100% |
-| **TOTAL** | | **144** | **100%** |
+| Fase 17 — Master Polish | 145–152 | 8 | 100% |
+| **TOTAL** | | **152** | **100%** |
 
 Build: ✅ `npm run build` passes (646KB bundle, 456ms)
 
@@ -205,6 +206,16 @@ Build: ✅ `npm run build` passes (646KB bundle, 456ms)
 - [x] CP-142: Wooden/Stone Hoe Crafting & Farmland Tilling System
 - [x] CP-143: Wheat Seeds Drops, Wheat Farming & Bread Food Eating
 - [x] CP-144: Glassmorphic UI/UX Redesign & Custom SVG Vector Icons
+
+### Fase 17 — Master Polish (8/8)
+- [x] CP-145: Block Selection Outline Wireframe Box
+- [x] CP-146: Time-based Dynamic Exponential Distance Fog
+- [x] CP-147: Surface-based Footstep Audio System
+- [x] CP-148: View Bobbing & Camera Impact Shake
+- [x] CP-149: F3 Debug Overlay Screen
+- [x] CP-150: Floating Toast Notification Banner System
+- [x] CP-151: Mob Hit Visual Flash & Knockback Particles
+- [x] CP-152: Submerged Water Fog & Ambient Particle Splash
 
 ---
 

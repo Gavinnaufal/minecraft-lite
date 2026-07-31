@@ -228,13 +228,27 @@ Setiap checkpoint (CP) dirancang untuk **1 sesi vibe coding** (1 prompt DeepSeek
 | 137 | Tool Durability Bar & Mining Efficiency | Pickaxe/Axe memiliki durabilitas & kecepatan menggali bertingkat |
 | 138 | In-Game Multiplayer Chat Box ('T') & Name Tags | Chat box dan name tag melayang di atas player multiplayer |
 
+## FASE 17 — COMPREHENSIVE POLISH (CP145–CP152)
+
+| CP | Checkpoint | Output |
+|---|---|---|
+| 145 | Block Selection Outline Wireframe Box | Translucent 3D wireframe box highlighting targeted voxel block |
+| 146 | Time-based Dynamic Exponential Distance Fog | Dynamic fog blending scene edges seamlessly with skybox colors |
+| 147 | Surface-based Footstep Audio System | Audio footsteps reflecting block surfaces (Grass, Dirt, Stone, Sand, Wood, Water) |
+| 148 | View Bobbing & Camera Impact Shake | Smooth rhythmic walking camera motion & camera impact tilt on damage/land |
+| 149 | F3 Debug Overlay Screen | Toggleable debug screen showing FPS, Player XYZ coordinates, Biome, and Facing direction |
+| 150 | Floating Toast Notification Banner System | Non-intrusive UI toasts for items collected, tool breakage, and game auto-save |
+| 151 | Mob Hit Visual Flash & Knockback Particles | Red flash overlay & directional impact burst particles on mob damage |
+| 152 | Submerged Water Fog & Ambient Particle Splash | Underwater blue tint fog effect and water surface entry splash particles |
+
 ---
 
 ## RINGKASAN
 
-- **Total checkpoint: 138** (130 checkpoint inti + 8 feature expansion CP131-CP138)
+- **Total checkpoint: 152** (130 checkpoint inti + 14 feature expansion + 8 polish CP145-CP152)
 - MVP inti selesai di **CP102** (save/load) — dari titik ini game sudah "playable end-to-end".
 - CP103–115 = polish & optimasi wajib.
 - CP116–130 = audio, multiplayer & release.
-- CP131–138 = feature expansion (3D Mob Anatomy, Fall Damage, Hand Model, Particles, Floating Drops, Durability, Chat).
+- CP131–144 = feature expansion.
+- CP145–152 = comprehensive gameplay, audio & visual polish pass.
 

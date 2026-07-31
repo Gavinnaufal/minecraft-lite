@@ -9,6 +9,7 @@ import { PlayerController } from './player/PlayerController';
 import { PlayerCollision } from './player/PlayerCollision';
 import { createSky } from './environment/Skybox';
 import { DayNightCycle } from './environment/DayNightCycle';
+import { CloudManager } from './environment/CloudManager';
 import { ChunkManager } from './world/ChunkManager';
 import { World } from './world/World';
 import { AudioManager } from './audio/AudioManager';
@@ -341,9 +342,10 @@ window.addEventListener('wheel', (e) => {
   else hotbar.activeSlotIndex = (hotbar.activeSlotIndex + 8) % 9;
 });
 
-// Sky
+// Sky & 3D Voxel Clouds System
 const sky = createSky();
 scene.add(sky);
+const cloudManager = new CloudManager(scene);
 
 // Break progress bar
 const progressBar = document.createElement('div');
@@ -541,6 +543,8 @@ engine.setUpdateCallback((deltaTime) => {
     }
   }
 
+  cloudManager.update(deltaTime, dayNight.timeOfDay, camera.position);
+
   const sunAngle = dayNight.timeOfDay * Math.PI * 2;
   const sunDist = 50;
   lights.directional.position.set(
@@ -548,8 +552,9 @@ engine.setUpdateCallback((deltaTime) => {
     Math.sin(sunAngle) * sunDist,
     10,
   );
-  lights.directional.intensity = dayNight.lightIntensity;
-  lights.ambient.intensity = Math.max(0.1, dayNight.lightIntensity * 0.3);
+  lights.directional.intensity = Math.max(0.2, dayNight.lightIntensity * 1.35);
+  lights.ambient.intensity = Math.max(0.25, dayNight.lightIntensity * 0.55);
+  if (lights.hemi) lights.hemi.intensity = Math.max(0.2, dayNight.lightIntensity * 0.5);
 
   // Spawn hostile zombies at night on solid land
   if (dayNight.isNight && mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.005) {

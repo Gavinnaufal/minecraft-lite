@@ -36,4 +36,14 @@ export class StorageAdapter {
       req.onerror = () => reject(req.error);
     });
   }
+
+  async clearData(key: string): Promise<void> {
+    if (!this.db) return;
+    return new Promise((resolve, reject) => {
+      const tx = this.db!.transaction(this.storeName, 'readwrite');
+      tx.objectStore(this.storeName).delete(key);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
 }

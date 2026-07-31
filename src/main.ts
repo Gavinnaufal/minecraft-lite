@@ -250,9 +250,37 @@ blockBreaker.setOnBlockBroken((x, y, z, blockId) => {
 
 // UI
 const settingsMenu = new SettingsMenu();
-settingsMenu.create(() => {
-  chunkManager.forceReload(gameSettings.renderDistance, camera.position.x, camera.position.z);
+
+const mainMenu = new MainMenu(settingsMenu, (isLoad) => {
+  if (isLoad) {
+    saveManager.load().then((savedSeed) => {
+      if (savedSeed !== null) {
+        camera.position.set(player.position.x, player.position.y + player.eyeHeight, player.position.z);
+      }
+    }).catch(() => {});
+  }
+  inputManager.requestPointerLock();
 });
+
+settingsMenu.create(
+  () => {
+    chunkManager.forceReload(gameSettings.renderDistance, camera.position.x, camera.position.z);
+  },
+  () => {
+    // Reset World: clear saved data and reload the page for a fresh new seed
+    saveManager.clearSave().then(() => {
+      window.location.reload();
+    }).catch(() => {
+      window.location.reload();
+    });
+  },
+  () => {
+    // Quit to Main Menu: stop music, show main menu
+    AudioManager.getInstance().stopMusic();
+    mainMenu.show();
+  },
+);
+
 const hud = new HUD(hotbar);
 scene.add(camera);
 const handModel = new HandModel(camera, hotbar);
@@ -268,16 +296,6 @@ const pauseMenu = new PauseMenu(saveManager, settingsMenu, () => {
 });
 pauseMenu.create();
 
-const mainMenu = new MainMenu(settingsMenu, (isLoad) => {
-  if (isLoad) {
-    saveManager.load().then((savedSeed) => {
-      if (savedSeed !== null) {
-        camera.position.set(player.position.x, player.position.y + player.eyeHeight, player.position.z);
-      }
-    }).catch(() => {});
-  }
-  inputManager.requestPointerLock();
-});
 mainMenu.create();
 
 canvas.addEventListener('click', () => {

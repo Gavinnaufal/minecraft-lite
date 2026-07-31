@@ -106,4 +106,8 @@ export class SaveManager {
       this.autoSaveInterval = null;
     }
   }
+
+  async clearSave(): Promise<void> {
+    await this.storage.clearData('world');
+  }
 }

@@ -11,8 +11,8 @@ export class Mob {
   velocity = new THREE.Vector3();
   isGrounded = false;
   isHostile = false;
-  readonly width = 0.8;
-  readonly height = 1.4;
+  width = 0.8;
+  height = 1.4;
   private hitFlashTimer = 0;
   private originalMaterials = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>();
 

@@ -26,6 +26,7 @@ export class Zombie extends Mob {
   constructor(position: THREE.Vector3) {
     super(position, 0x2d5a27);
     this.health = 20;
+    this.isHostile = true;
 
     // Create 3D Compound Group Mesh for Zombie
     const zombieGroup = new THREE.Group();

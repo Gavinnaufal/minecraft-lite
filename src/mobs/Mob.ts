@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { World } from '../world/World';
 import type { Player } from '../player/Player';
+import type { MobManager } from './MobManager';
 import { getBlockById } from '../world/BlockRegistry';
 
 export class Mob {
@@ -9,6 +10,7 @@ export class Mob {
   position: THREE.Vector3;
   velocity = new THREE.Vector3();
   isGrounded = false;
+  isHostile = false;
   readonly width = 0.8;
   readonly height = 1.4;
   private hitFlashTimer = 0;
@@ -31,7 +33,7 @@ export class Mob {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  update(deltaTime: number, world?: World, _playerPos?: THREE.Vector3, _player?: Player): void {
+  update(deltaTime: number, world?: World, _playerPos?: THREE.Vector3, _player?: Player, _mobManager?: MobManager): void {
     if (this.hitFlashTimer > 0) {
       this.hitFlashTimer -= deltaTime;
       if (this.hitFlashTimer <= 0) {

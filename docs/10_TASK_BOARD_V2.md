@@ -7,12 +7,12 @@
 | Fase 18 — River & Water Polish | 157–164 | 8 | 100% |
 | Fase 19 — Cave Expansion & Ravines | 165–168 | 4 | 100% |
 | Fase 20 — Village Generation & Prefabs | 173–181 | 9 | 100% |
-| Fase 21 — Villager NPC & Iron Golem | 182–189 | 5 | 63% |
+| Fase 21 — Villager NPC & Iron Golem | 182–189 | 6 | 75% |
 | Fase 22 — Hostile Mobs (Skeleton, Spider, Enderman) | 190–204 | 0 | 0% |
 | Fase 23 — Passive Animals & Food | 205–212 | 0 | 0% |
 | Fase 24 — Nether Portal & Dimension | 213–226 | 0 | 0% |
 | Fase 25 — Master Integration & Polish | 227–238 | 0 | 0% |
-| **TOTAL EXPANSION (v2.0)** | | **26** | **31%** |
+| **TOTAL EXPANSION (v2.0)** | | **27** | **32%** |
 
 ---
 
@@ -45,13 +45,13 @@
 - [x] CP-180: Village chest loot generation
 - [x] CP-181: Structure saving & persistence in SaveManager
 
-### Fase 21 — Villager NPC & Iron Golem (5/8)
+### Fase 21 — Villager NPC & Iron Golem (6/8)
 - [x] CP-182: Villager NPC base class & 3D voxel mesh
 - [x] CP-183: Villager wander state & village pathfinding AI
 - [x] CP-184: Villager idle & greeting sound effects
 - [x] CP-185: Iron Golem base class & 3D voxel mesh
 - [x] CP-186: Iron Golem village patrol state machine
-- [ ] CP-187: Iron Golem attack state & hostile mob targeting
+- [x] CP-187: Iron Golem attack state & hostile mob targeting
 - [ ] CP-188: Iron Golem knockback attack animation
 - [ ] CP-189: Iron Golem spawn in villages & iron ingot drops
 

@@ -3,6 +3,7 @@ import { Mob } from '../Mob';
 import { StateMachine, State } from '../ai/StateMachine';
 import type { World } from '../../world/World';
 import type { Player } from '../../player/Player';
+import type { MobManager } from '../MobManager';
 
 export class IronGolem extends Mob {
   private stateMachine = new StateMachine();
@@ -104,11 +105,65 @@ export class IronGolem extends Mob {
     this.patrolWaitTimer = 0;
   }
 
-  update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, _player?: Player): void {
+  private targetMob: Mob | null = null;
+  private attackCooldown = 0;
+
+  update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, _player?: Player, mobManager?: MobManager): void {
     let isMoving = false;
 
-    // Handle Patrol logic if villageCenter is set
-    if (this.patrolWaypoints.length > 0) {
+    if (this.attackCooldown > 0) {
+      this.attackCooldown -= deltaTime;
+    }
+
+    // 1. Scan for nearby hostile mobs within 12 blocks
+    if (mobManager) {
+      let closestHostile: Mob | null = null;
+      let minDistance = 12.0;
+
+      for (const mob of mobManager.mobs) {
+        if (mob.isHostile && mob.health > 0) {
+          const d = this.position.distanceTo(mob.position);
+          if (d < minDistance) {
+            minDistance = d;
+            closestHostile = mob;
+          }
+        }
+      }
+
+      this.targetMob = closestHostile;
+    }
+
+    // 2. Attack state if hostile mob target found
+    if (this.targetMob && this.targetMob.health > 0) {
+      const distToTarget = this.position.distanceTo(this.targetMob.position);
+      const attackDir = new THREE.Vector3().subVectors(this.targetMob.position, this.position).normalize();
+
+      if (distToTarget <= 2.2) {
+        // Perform attack
+        this.velocity.x = 0;
+        this.velocity.z = 0;
+        if (this.attackCooldown <= 0) {
+          this.targetMob.takeDamage(15);
+          this.targetMob.applyKnockback(attackDir, 8.0);
+          this.attackCooldown = 1.2; // Attack cooldown 1.2s
+        }
+      } else {
+        // Chase hostile target
+        const chaseSpeed = 3.2;
+        const nextX = this.position.x + attackDir.x * chaseSpeed * deltaTime;
+        const nextZ = this.position.z + attackDir.z * chaseSpeed * deltaTime;
+
+        const nextBlock = world?.getBlock(Math.floor(nextX), Math.floor(this.position.y), Math.floor(nextZ));
+        if (nextBlock !== 7) {
+          this.velocity.x = attackDir.x * chaseSpeed;
+          this.velocity.z = attackDir.z * chaseSpeed;
+          isMoving = true;
+          this.mesh.rotation.y = Math.atan2(attackDir.x, attackDir.z);
+        }
+      }
+    }
+    // 3. Handle Patrol logic if villageCenter is set and no hostile mob targeted
+    else if (this.patrolWaypoints.length > 0) {
       if (this.patrolWaitTimer > 0) {
         this.patrolWaitTimer -= deltaTime;
         this.velocity.x = 0;

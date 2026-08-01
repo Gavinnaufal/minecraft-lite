@@ -85,7 +85,7 @@ export class MobManager {
 
   update(deltaTime: number, playerPos?: THREE.Vector3, player?: Player): void {
     for (const mob of this.mobs) {
-      mob.update(deltaTime, this.world, playerPos, player);
+      mob.update(deltaTime, this.world, playerPos, player, this);
     }
   }
 }

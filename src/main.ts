@@ -800,14 +800,37 @@ engine.setUpdateCallback((deltaTime) => {
         inventoryScreen.open();
         wasRightDown = inputManager.isRightMouseDown;
         return;
+      } else if (hitBlockId === 10) { // Furnace block
+        if (activeItem.itemId && (activeItem.itemId.startsWith('raw_') || activeItem.itemId === 'mutton')) {
+          const cookedId = activeItem.itemId === 'mutton' ? 'cooked_mutton' : activeItem.itemId.replace('raw_', 'cooked_');
+          hotbar.removeItem(activeItem.itemId, 1);
+          hotbar.addItem(cookedId, 1);
+          AudioManager.getInstance().playSFX('break');
+          toastSystem.show(`Memanggang ${getItemById(activeItem.itemId)?.name} menjadi ${getItemById(cookedId)?.name}!`, 'success');
+          wasRightDown = inputManager.isRightMouseDown;
+          return;
+        }
       }
     }
 
     if (activeItem.itemId && activeItem.count > 0) {
-      if (activeItem.itemId === 'beef' || activeItem.itemId === 'rotten_flesh' || activeItem.itemId === 'bread') {
+      const isFoodItem = [
+        'raw_beef', 'cooked_beef',
+        'raw_porkchop', 'cooked_porkchop',
+        'raw_chicken', 'cooked_chicken',
+        'mutton', 'cooked_mutton',
+        'bread', 'rotten_flesh', 'beef'
+      ].includes(activeItem.itemId);
+
+      if (isFoodItem) {
         // Eat food to restore HP!
         if (player.health < 20) {
-          const healAmount = activeItem.itemId === 'bread' ? 5 : activeItem.itemId === 'beef' ? 4 : 2;
+          let healAmount = 3;
+          if (activeItem.itemId.startsWith('cooked_')) healAmount = 8;
+          else if (activeItem.itemId === 'bread') healAmount = 5;
+          else if (activeItem.itemId === 'rotten_flesh') healAmount = 2;
+          else healAmount = 3; // raw meats
+
           player.health = Math.min(20, player.health + healAmount);
           hotbar.removeItem(activeItem.itemId, 1);
           handModel.triggerSwing();

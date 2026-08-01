@@ -63,6 +63,9 @@ const items: ItemType[] = [
   { id: 'netherrack', name: 'Netherrack', maxStack: 64, isBlock: true, blockId: 16 },
   { id: 'glowstone', name: 'Glowstone', maxStack: 64, isBlock: true, blockId: 17 },
   { id: 'soul_sand', name: 'Soul Sand', maxStack: 64, isBlock: true, blockId: 20 },
+  { id: 'raw_iron', name: 'Raw Iron', maxStack: 64, isBlock: false },
+  { id: 'coal_ore', name: 'Coal Ore', maxStack: 64, isBlock: true, blockId: 21 },
+  { id: 'iron_ore', name: 'Iron Ore', maxStack: 64, isBlock: true, blockId: 22 },
 ];
 
 const byId = new Map<string, ItemType>();

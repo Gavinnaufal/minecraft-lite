@@ -64,6 +64,8 @@ const blockTypes: BlockType[] = [
   { id: 18, name: 'nether_portal', color: 0x8e24aa, solid: false, transparent: true, hardness: -1 },
   { id: 19, name: 'lava', color: 0xd32f2f, solid: false, transparent: true, hardness: -1 },
   { id: 20, name: 'soul_sand', color: 0x4e3629, solid: true, transparent: false, hardness: 0.6 },
+  { id: 21, name: 'coal_ore', color: 0x424242, solid: true, transparent: false, hardness: 2.2 },
+  { id: 22, name: 'iron_ore', color: 0xb0bec5, solid: true, transparent: false, hardness: 3.2 },
 ];
 
 const byId = new Map<number, BlockType>();

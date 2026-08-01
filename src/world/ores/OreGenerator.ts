@@ -2,12 +2,23 @@ import { NoiseGenerator } from '../terrain/NoiseGenerator';
 import type { Chunk } from '../Chunk';
 import { CHUNK_SIZE_X, CHUNK_SIZE_Z } from '../../utils/constants';
 
+/**
+ * OreGenerator (CP-240 & CP-241 Fine-Tuned Cluster Noise Generator)
+ * Controls 3D vein clustering for Coal Ore & Iron Ore underneath surface terrain.
+ */
 export class OreGenerator {
   private coalNoise: NoiseGenerator;
   private ironNoise: NoiseGenerator;
 
+  // Fine-tuned 3D noise scaling and threshold constants (CP-241)
+  private readonly COAL_SCALE = 14.0;
+  private readonly COAL_THRESHOLD = 0.72; // ~4% of subterranean stone Y 5..60
+
+  private readonly IRON_SCALE = 10.0;
+  private readonly IRON_THRESHOLD = 0.77; // ~1.8% of subterranean stone Y 5..40
+
   constructor(seed: number) {
-    // Offset seeds to produce independent 3D noise fields
+    // Offset seeds to produce independent, non-overlapping 3D noise fields
     this.coalNoise = new NoiseGenerator(seed + 101);
     this.ironNoise = new NoiseGenerator(seed + 202);
   }
@@ -27,17 +38,17 @@ export class OreGenerator {
           // Ores only replace solid stone (Block ID 3)
           if (currentBlock !== 3) continue;
 
-          // Coal Ore Cluster Generation (Y: 5..60, tight threshold > 0.73)
-          const coalVal = this.coalNoise.noise3D(wx / 12, y / 12, wz / 12);
-          if (coalVal > 0.73) {
+          // Coal Ore Cluster Generation (Y: 5..60, vein size ~3-8 blocks)
+          const coalVal = this.coalNoise.noise3D(wx / this.COAL_SCALE, y / this.COAL_SCALE, wz / this.COAL_SCALE);
+          if (coalVal > this.COAL_THRESHOLD) {
             chunk.setBlock(lx, y, lz, 21); // Block ID 21 = coal_ore
             continue;
           }
 
-          // Iron Ore Cluster Generation (Y: 5..40, tight threshold > 0.78 for rarity)
+          // Iron Ore Cluster Generation (Y: 5..40, vein size ~2-5 blocks)
           if (y <= 40) {
-            const ironVal = this.ironNoise.noise3D(wx / 10, y / 10, wz / 10);
-            if (ironVal > 0.78) {
+            const ironVal = this.ironNoise.noise3D(wx / this.IRON_SCALE, y / this.IRON_SCALE, wz / this.IRON_SCALE);
+            if (ironVal > this.IRON_THRESHOLD) {
               chunk.setBlock(lx, y, lz, 22); // Block ID 22 = iron_ore
             }
           }

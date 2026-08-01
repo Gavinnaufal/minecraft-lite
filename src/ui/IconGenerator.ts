@@ -181,6 +181,12 @@ export function createItemIcon(itemId: string, size = 28): HTMLElement {
       <polygon points="6,12 22,8 26,16 10,20" fill="#cfd8dc" stroke="#90a4ae" stroke-width="0.5"/>
       <polygon points="6,12 10,20 10,24 6,16" fill="#b0bec5"/>
     `;
+  } else if (itemId === 'raw_iron') {
+    svg.innerHTML = `
+      <path d="M 8,14 Q 14,6 22,10 Q 26,18 18,24 Q 10,22 8,14 Z" fill="#b0bec5" stroke="#78909c" stroke-width="0.5"/>
+      <circle cx="14" cy="14" r="3" fill="#cfd8dc"/>
+      <circle cx="19" cy="17" r="2" fill="#90a4ae"/>
+    `;
   } else if (itemId === 'gold_ingot') {
     svg.innerHTML = `
       <polygon points="6,12 22,8 26,16 10,20" fill="#ffd54f" stroke="#ffa000" stroke-width="0.5"/>

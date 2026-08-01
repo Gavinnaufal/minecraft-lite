@@ -412,6 +412,24 @@ export class HandModel {
       this.itemMesh.position.set(0, 0.08, -0.12);
       this.itemMesh.rotation.set(0.2, 0.3, 0);
       this.handGroup.add(this.itemMesh);
+    } else if (itemId === 'raw_iron') {
+      // Irregular Metallic Raw Iron Ore Chunk
+      const ironGroup = new THREE.Group();
+      const baseGeo = new THREE.DodecahedronGeometry(0.09);
+      const baseMat = new THREE.MeshStandardMaterial({ color: 0xb0bec5, metalness: 0.5, roughness: 0.4 });
+      const baseMesh = new THREE.Mesh(baseGeo, baseMat);
+
+      const spotGeo = new THREE.BoxGeometry(0.05, 0.05, 0.05);
+      const spotMat = new THREE.MeshStandardMaterial({ color: 0x78909c, metalness: 0.6 });
+      const spotMesh = new THREE.Mesh(spotGeo, spotMat);
+      spotMesh.position.set(0.03, 0.03, 0.03);
+
+      ironGroup.add(baseMesh);
+      ironGroup.add(spotMesh);
+      ironGroup.position.set(0, 0.08, -0.12);
+      ironGroup.rotation.set(0.2, 0.4, 0.1);
+      this.itemMesh = ironGroup;
+      this.handGroup.add(this.itemMesh);
     } else if (itemId === 'gold_ingot') {
       // Shiny Gold Ingot
       const ingotGeo = new THREE.BoxGeometry(0.12, 0.07, 0.24);

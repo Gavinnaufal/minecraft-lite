@@ -25,6 +25,7 @@ import { HandModel } from './ui/HandModel';
 import { ParticleSystem } from './world/ParticleSystem';
 import { ItemDropManager } from './world/ItemDropManager';
 import { IronGolem } from './mobs/npc/IronGolem';
+import { Skeleton } from './mobs/hostile/Skeleton';
 import { ProjectileManager } from './entities/ProjectileManager';
 import { ChatBox } from './multiplayer/ChatBox';
 import { TorchLightManager } from './world/TorchLightManager';
@@ -728,6 +729,12 @@ engine.setUpdateCallback((deltaTime) => {
         itemDropManager.spawnDrop(dropPos, 'rotten_flesh', Math.floor(Math.random() * 2) + 1);
       } else if (deadMob instanceof IronGolem) {
         itemDropManager.spawnDrop(dropPos, 'iron_ingot', Math.floor(Math.random() * 3) + 3);
+      } else if (deadMob instanceof Skeleton) {
+        itemDropManager.spawnDrop(dropPos, 'bone', Math.floor(Math.random() * 2) + 1);
+        const arrowCount = Math.floor(Math.random() * 3);
+        if (arrowCount > 0) {
+          itemDropManager.spawnDrop(dropPos, 'arrow', arrowCount);
+        }
       }
     }
   }

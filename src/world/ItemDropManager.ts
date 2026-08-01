@@ -30,6 +30,8 @@ const ITEM_COLORS: Record<string, number> = {
   coal: 0x212121,
   iron_ingot: 0xcfd8dc,
   gold_ingot: 0xffd54f,
+  bone: 0xeeeeee,
+  arrow: 0x8d6e63,
 };
 
 export class ItemDropManager {

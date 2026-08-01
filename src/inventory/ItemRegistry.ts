@@ -31,7 +31,6 @@ const items: ItemType[] = [
   { id: 'stone_shovel', name: 'Stone Shovel', maxStack: 1, isBlock: false, toolType: 'shovel', maxDurability: 130, speedMultiplier: 4.5 },
   { id: 'stone_hoe', name: 'Stone Hoe', maxStack: 1, isBlock: false, toolType: 'hoe', maxDurability: 130, speedMultiplier: 2.5 },
   { id: 'sandstone', name: 'Sandstone', maxStack: 64, isBlock: true, blockId: 10 },
-  { id: 'beef', name: 'Raw Beef', maxStack: 64, isBlock: false },
   { id: 'rotten_flesh', name: 'Rotten Flesh', maxStack: 64, isBlock: false },
   { id: 'torch', name: 'Torch', maxStack: 64, isBlock: true, blockId: 11 },
   { id: 'chest', name: 'Chest', maxStack: 64, isBlock: true, blockId: 12 },

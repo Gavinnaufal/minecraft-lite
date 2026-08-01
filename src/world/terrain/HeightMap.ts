@@ -54,20 +54,4 @@ export class HeightMap {
     const height = WATER_LEVEL + normalized * 22;
     return Math.round(Math.min(CHUNK_HEIGHT - 1, Math.max(1, height)));
   }
-
-  /**
-   * Returns ocean floor height for Ocean biome columns.
-   * Varies from WATER_LEVEL-4 (shallow coast) to WATER_LEVEL-18 (deep ocean).
-   * Uses high-frequency noise for varied sea-bed terrain.
-   */
-  getOceanFloorHeight(worldX: number, worldZ: number): number {
-    // Use a finer noise scale for sea-bed variation
-    const depth = (this.noise.noise2D(worldX / 60, worldZ / 60) + 1) / 2; // 0..1
-    // depth=0 → shallow (WATER_LEVEL-4), depth=1 → deep (WATER_LEVEL-18)
-    const floorY = WATER_LEVEL - 4 - Math.round(depth * 14);
-    return Math.max(1, floorY);
-  }
 }
-
-
-

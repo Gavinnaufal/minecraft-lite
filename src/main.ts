@@ -65,14 +65,13 @@ function createGenerators(seed: number) {
   const n = new NoiseGenerator(seed);
   return {
     heightMap: new HeightMap(n),
-    // continentNoise (seed+1): large-scale ocean vs land
-    // biomeNoise   (seed+3): finer-scale land biome selection
-    biomeGen: new BiomeGenerator(new NoiseGenerator(seed + 1), new NoiseGenerator(seed + 3)),
+    biomeGen: new BiomeGenerator(new NoiseGenerator(seed + 1)),
     caveNoise: new NoiseGenerator(seed + 2),
+    lakeNoise: new NoiseGenerator(seed + 4),
   };
 }
 
-let { heightMap, biomeGen, caveNoise } = createGenerators(worldSeed);
+let { heightMap, biomeGen, caveNoise, lakeNoise } = createGenerators(worldSeed);
 
 // Player & physics
 const player = new Player();
@@ -89,32 +88,25 @@ chunkManager.terrainFiller = (chunk: Chunk) => {
     for (let lx = 0; lx < CHUNK_SIZE_X; lx++) {
       const wx = chunk.chunkX * CHUNK_SIZE_X + lx;
       const wz = chunk.chunkZ * CHUNK_SIZE_Z + lz;
+      let h = heightMap.getHeight(wx, wz);
       const biome = biomeGen.getBiome(wx, wz);
 
-      // For Ocean biome, override height with sea-floor depth.
-      // Smooth coastal transition: blend between ocean floor and normal height
-      // rawVal in [0,1]: < 0.45 = ocean, 0.45-0.55 = coast transition, > 0.55 = land
-      let h: number;
-      if (biome === BiomeType.Ocean) {
-        const rawVal = biomeGen.getRawValue(wx, wz); // [0,1], ocean < 0.45
-        // blend: 0 at coast edge (rawVal=0.45), 1 at deep ocean (rawVal=0.2 or less)
-        const blend = Math.min(1, Math.max(0, (0.45 - rawVal) / 0.25));
-        const normalH = heightMap.getHeight(wx, wz);
-        const oceanH = heightMap.getOceanFloorHeight(wx, wz);
-        h = Math.round(normalH + (oceanH - normalH) * blend);
-        h = Math.max(1, Math.min(WATER_LEVEL - 1, h));
-      } else {
-        h = heightMap.getHeight(wx, wz);
+      // Lake generation: small-scale noise creates depressions that fill with water.
+      // lakeVal in [0,1]: > 0.72 → carve a lake depression below WATER_LEVEL.
+      const lakeVal = lakeNoise.noise2D(wx / 35, wz / 35);
+      const isLake = lakeVal > 0.72 && biome !== BiomeType.Desert;
+      if (isLake) {
+        // Depth increases towards the center of the noise peak
+        const lakeDepth = (lakeVal - 0.72) / (1.0 - 0.72); // 0..1
+        const depressedH = WATER_LEVEL - 2 - Math.round(lakeDepth * 6);
+        h = Math.min(h, Math.max(1, depressedH));
       }
 
       for (let y = 0; y <= h && y < CHUNK_HEIGHT; y++) {
         const depth = h - y;
         let bid: number;
-        if (biome === BiomeType.Ocean) {
-          // Ocean floor: sand on top, stone underneath
-          if (depth === 0) bid = 4;        // sand surface
-          else if (depth <= 2) bid = 4;    // sand layer
-          else bid = 3;                    // stone
+        if (isLake && depth <= 2) {
+          bid = 4; // sand lake bed
         } else if (depth === 0) {
           if (biome === BiomeType.Desert) bid = 4;
           else if (biome === BiomeType.Mountain && h > 80) bid = 3;
@@ -126,22 +118,20 @@ chunkManager.terrainFiller = (chunk: Chunk) => {
       }
     }
   }
+  // Fill water in any column below WATER_LEVEL
   for (let lz = 0; lz < CHUNK_SIZE_Z; lz++) {
     for (let lx = 0; lx < CHUNK_SIZE_X; lx++) {
       const wx = chunk.chunkX * CHUNK_SIZE_X + lx;
       const wz = chunk.chunkZ * CHUNK_SIZE_Z + lz;
+      let h = heightMap.getHeight(wx, wz);
       const biome = biomeGen.getBiome(wx, wz);
 
-      let h: number;
-      if (biome === BiomeType.Ocean) {
-        const rawVal = biomeGen.getRawValue(wx, wz);
-        const blend = Math.min(1, Math.max(0, (0.45 - rawVal) / 0.25));
-        const normalH = heightMap.getHeight(wx, wz);
-        const oceanH = heightMap.getOceanFloorHeight(wx, wz);
-        h = Math.round(normalH + (oceanH - normalH) * blend);
-        h = Math.max(1, Math.min(WATER_LEVEL - 1, h));
-      } else {
-        h = heightMap.getHeight(wx, wz);
+      // Recalculate lake depression to know actual terrain height
+      const lakeVal = lakeNoise.noise2D(wx / 35, wz / 35);
+      if (lakeVal > 0.72 && biome !== BiomeType.Desert) {
+        const lakeDepth = (lakeVal - 0.72) / (1.0 - 0.72);
+        const depressedH = WATER_LEVEL - 2 - Math.round(lakeDepth * 6);
+        h = Math.min(h, Math.max(1, depressedH));
       }
 
       if (h < WATER_LEVEL) {
@@ -149,7 +139,6 @@ chunkManager.terrainFiller = (chunk: Chunk) => {
           chunk.setBlock(lx, y, lz, 7);
         }
       }
-
     }
   }
   for (let lz = 0; lz < CHUNK_SIZE_Z; lz++) {
@@ -222,7 +211,7 @@ saveManager.init().then(() => saveManager.load()).then((savedSeed) => {
       // Seed changed since save — regenerate
       worldSeed = savedSeed;
       const gens = createGenerators(worldSeed);
-      heightMap = gens.heightMap; biomeGen = gens.biomeGen; caveNoise = gens.caveNoise;
+      heightMap = gens.heightMap; biomeGen = gens.biomeGen; caveNoise = gens.caveNoise; lakeNoise = gens.lakeNoise;
       chunkManager.unloadAllChunks();
       chunkManager.update(player.position.x, player.position.z, gameSettings.renderDistance);
     }
@@ -808,7 +797,7 @@ if (import.meta.env.DEV) {
   win.setSeed = (seedStr: string) => {
     worldSeed = seedFromString(seedStr); worldSeedString = seedStr;
     const gens = createGenerators(worldSeed);
-    heightMap = gens.heightMap; biomeGen = gens.biomeGen; caveNoise = gens.caveNoise;
+    heightMap = gens.heightMap; biomeGen = gens.biomeGen; caveNoise = gens.caveNoise; lakeNoise = gens.lakeNoise;
     chunkManager.unloadAllChunks();
     chunkManager.update(player.position.x, player.position.z, gameSettings.renderDistance);
     console.log(`[Seed] Regenerated: "${seedStr}"`);

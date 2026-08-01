@@ -90,6 +90,7 @@ export class Enderman extends Mob {
 
   private attackTimer = 0;
   private teleTimer = 0;
+  private spawnGraceTimer = 2.0;
 
   override reset(position: THREE.Vector3): void {
     super.reset(position, 40);
@@ -98,6 +99,7 @@ export class Enderman extends Mob {
     this.animTimer = 0;
     this.attackTimer = 0;
     this.teleTimer = 0;
+    this.spawnGraceTimer = 2.0;
   }
 
   teleportRandomly(world?: World): void {
@@ -147,11 +149,17 @@ export class Enderman extends Mob {
   update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, player?: Player, _mobManager?: MobManager, camera?: THREE.PerspectiveCamera): void {
     let isMoving = false;
 
+    if (this.spawnGraceTimer > 0) {
+      this.spawnGraceTimer -= deltaTime;
+    }
+
     if (playerPos) {
       const dist3D = this.position.distanceTo(playerPos);
 
       // Stare check: Provoke when player crosshair looks directly at Enderman head
-      if (!this.isProvoked && camera && dist3D < 25) {
+      // Requires: Pointer Lock active, grace timer finished, distance < 25, and dot > 0.985 (tight precision crosshair aim)
+      const hasPointerLock = typeof document !== 'undefined' && !!document.pointerLockElement;
+      if (!this.isProvoked && this.spawnGraceTimer <= 0 && hasPointerLock && camera && dist3D < 25) {
         const headPos = new THREE.Vector3(this.position.x, this.position.y + 2.65, this.position.z);
         const camPos = camera.position;
         const camDir = new THREE.Vector3();
@@ -160,7 +168,7 @@ export class Enderman extends Mob {
         const toHead = headPos.clone().sub(camPos).normalize();
         const dot = camDir.dot(toHead);
 
-        if (dot > 0.95) {
+        if (dot > 0.985) {
           this.isProvoked = true;
           this.isHostile = true;
           AudioManager.getInstance().playSFX('click');

@@ -277,10 +277,9 @@ for (let i = 0; i < 6; i++) {
     } else if (topBlock === 3 || spawnPos.y > 70) { // Stone / Mountain
       mobManager.spawn(spawnPos, new Goat(spawnPos));
     } else { // Grass (1) / Dirt (2)
-      if (rand < 0.3) mobManager.spawn(spawnPos, new Pig(spawnPos));
-      else if (rand < 0.6) mobManager.spawn(spawnPos, new Chicken(spawnPos));
-      else if (rand < 0.85) mobManager.spawn(spawnPos, new Cow(spawnPos));
-      else mobManager.spawn(spawnPos, new Enderman(spawnPos));
+      if (rand < 0.35) mobManager.spawn(spawnPos, new Pig(spawnPos));
+      else if (rand < 0.70) mobManager.spawn(spawnPos, new Chicken(spawnPos));
+      else mobManager.spawn(spawnPos, new Cow(spawnPos));
     }
   }
 }

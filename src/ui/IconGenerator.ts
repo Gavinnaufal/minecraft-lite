@@ -1,4 +1,5 @@
 import { getItemById } from '../inventory/ItemRegistry';
+import { gameSettings } from '../core/GameSettings';
 
 const BLOCK_COLORS: Record<string, { top: string; left: string; right: string }> = {
   grass: { top: '#55aa33', left: '#795548', right: '#5c3d2e' },
@@ -20,6 +21,8 @@ const BLOCK_COLORS: Record<string, { top: string; left: string; right: string }>
 
 export function createItemIcon(itemId: string, size = 28): HTMLElement {
   const container = document.createElement('div');
+  const style = gameSettings.itemGraphicsStyle;
+  const filterStyle = style === 'fancy' ? 'filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));' : (style === 'voxel' ? 'image-rendering: pixelated; filter: drop-shadow(1px 1px 0 #000);' : '');
   container.style.cssText = `
     width: ${size}px;
     height: ${size}px;
@@ -28,6 +31,7 @@ export function createItemIcon(itemId: string, size = 28): HTMLElement {
     align-items: center;
     justify-content: center;
     pointer-events: none;
+    ${filterStyle}
   `;
 
   const item = getItemById(itemId);

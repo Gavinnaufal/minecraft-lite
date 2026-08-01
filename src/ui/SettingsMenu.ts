@@ -116,6 +116,35 @@ export class SettingsMenu {
     this.container.appendChild(pdLabel);
     this.container.appendChild(pdSelect);
 
+    // Item Graphics Style (Independent setting for Items & Hand models)
+    const igLabel = document.createElement('div');
+    igLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: #333; margin-top: 12px;';
+    igLabel.textContent = `Item Graphics Style: ${gameSettings.itemGraphicsStyle === 'fancy' ? 'Fancy (3D High Detail)' : (gameSettings.itemGraphicsStyle === 'voxel' ? 'Voxel Retro (Pixel 3D)' : 'Fast (Simple 2D)')}`;
+
+    const igSelect = document.createElement('select');
+    igSelect.style.cssText = 'width: 100%; margin-bottom: 24px; cursor: pointer; font-family: monospace; font-size: 14px; padding: 6px;';
+    const igOptions = [
+      { val: 'fancy', text: 'Fancy (3D High Detail)' },
+      { val: 'voxel', text: 'Voxel Retro (Pixel 3D)' },
+      { val: 'fast', text: 'Fast (Simple 2D)' },
+    ];
+    for (const opt of igOptions) {
+      const option = document.createElement('option');
+      option.value = opt.val;
+      option.textContent = opt.text;
+      if (opt.val === gameSettings.itemGraphicsStyle) option.selected = true;
+      igSelect.appendChild(option);
+    }
+    igSelect.addEventListener('change', () => {
+      gameSettings.itemGraphicsStyle = igSelect.value as 'fancy' | 'voxel' | 'fast';
+      const labelText = igOptions.find(o => o.val === igSelect.value)?.text ?? 'Fancy';
+      igLabel.textContent = `Item Graphics Style: ${labelText}`;
+      this.onChange?.();
+    });
+
+    this.container.appendChild(igLabel);
+    this.container.appendChild(igSelect);
+
     // Button Row
     const btnBox = document.createElement('div');
     btnBox.style.cssText = 'display: flex; flex-direction: column; gap: 10px; align-items: center;';

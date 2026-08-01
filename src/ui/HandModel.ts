@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Hotbar } from '../inventory/Hotbar';
 import { createBlockMaterial, loadBlockTexture } from '../world/BlockRegistry';
 import { itemIdToBlockId } from '../inventory/ItemRegistry';
+import { gameSettings } from '../core/GameSettings';
 
 export class HandModel {
   private camera: THREE.PerspectiveCamera;
@@ -12,6 +13,7 @@ export class HandModel {
   private isSwinging = false;
   private swingProgress = 0;
   private currentItemId: string | null = null;
+  private lastGraphicsStyle: string | null = null;
 
   constructor(camera: THREE.PerspectiveCamera, hotbar: Hotbar) {
     this.camera = camera;
@@ -42,8 +44,9 @@ export class HandModel {
 
   update(deltaTime: number, isWalking: boolean, isHitting: boolean = false): void {
     const activeItem = this.hotbar.getActiveItem();
-    if (activeItem.itemId !== this.currentItemId) {
+    if (activeItem.itemId !== this.currentItemId || this.lastGraphicsStyle !== gameSettings.itemGraphicsStyle) {
       this.currentItemId = activeItem.itemId;
+      this.lastGraphicsStyle = gameSettings.itemGraphicsStyle;
       this.updateItemMesh(activeItem.itemId);
     }
 

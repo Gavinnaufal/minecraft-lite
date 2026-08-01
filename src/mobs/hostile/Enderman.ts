@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { Mob } from '../Mob';
-import { StateMachine, State } from '../ai/StateMachine';
 import type { World } from '../../world/World';
 import type { Player } from '../../player/Player';
 import type { MobManager } from '../MobManager';
@@ -8,7 +7,6 @@ import { AudioManager } from '../../audio/AudioManager';
 import { getBlockById } from '../../world/BlockRegistry';
 
 export class Enderman extends Mob {
-  private stateMachine = new StateMachine();
   private legL: THREE.Mesh;
   private legR: THREE.Mesh;
   private enderParticles: THREE.Mesh[] = [];
@@ -169,6 +167,16 @@ export class Enderman extends Mob {
         }
       }
 
+      // Water weakness: Enderman takes damage and teleports away when touching water
+      if (world) {
+        const footBlock = world.getBlock(Math.floor(this.position.x), Math.floor(this.position.y), Math.floor(this.position.z));
+        const bodyBlock = world.getBlock(Math.floor(this.position.x), Math.floor(this.position.y + 1), Math.floor(this.position.z));
+        if (footBlock === 7 || bodyBlock === 7) {
+          this.takeDamage(2);
+          this.teleportRandomly(world);
+        }
+      }
+
       // Periodic teleportation when provoked
       if (this.isProvoked) {
         this.teleTimer += deltaTime;
@@ -176,11 +184,7 @@ export class Enderman extends Mob {
           this.teleTimer = 0;
           this.teleportRandomly(world);
         }
-      }
 
-      const state = this.stateMachine.update(deltaTime, dist3D);
-
-      if (this.isProvoked || state === State.Chase) {
         const dx = playerPos.x - this.position.x;
         const dz = playerPos.z - this.position.z;
         const dy = Math.abs(playerPos.y - this.position.y);
@@ -204,7 +208,8 @@ export class Enderman extends Mob {
             }
           }
         }
-      } else if (state === State.Wander) {
+      } else {
+        // Unprovoked: Wander peacefully
         const wanderDx = (Math.random() - 0.5) * 1.5;
         const wanderDz = (Math.random() - 0.5) * 1.5;
         const nextX = this.position.x + wanderDx * deltaTime;

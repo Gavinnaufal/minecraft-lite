@@ -8,22 +8,23 @@ Mini Minecraft adalah game sandbox voxel 3D berkinerja tinggi yang dibangun dari
 
 ## 🚀 Ringkasan Fitur Utama Expansion v2.0
 
-### 🌍 Bioma, Struktur & Demensi Baru
-- 🏡 **Perkampungan Warga (Villages & Prefab Generation)**: Terbentuk secara prosedural di bioma datar (*Plains*). Dilengkapi jalan setapak tanah (*Dirt Path*), prefab rumah kayu ek (*Oak House*), rumah batu (*Cobblestone House*), ladang gandum (*Farm Field*), dan peti harta karun (*Village Loot Chest*).
+### 🌍 Bioma, Struktur & Dimensi Baru
+- 🏡 **Perkampungan Warga (Villages & Starter Spawn)**: Terbentuk secara prosedural di bioma datar (*Plains*). **Terjamin 1 Starter Village** hanya ~40 blok dari lokasi *spawn* awal pemain, dilengkapi jalan setapak tanah (*Dirt Path*), prefab rumah kayu ek (*Oak House*), rumah batu (*Cobblestone House*), ladang gandum (*Farm Field*), dan peti harta karun (*Village Loot Chest*).
 - 🔮 **Dimensi Nether & Portal Obsidian**: Bingkai obsidian 4x5 vertikal dengan aktivasi portal otomatis, countdown teleportasi 3 detik, efek vignette portal ungu, skala koordinat 1:8, terrain gua Nether subterranean, lahar panas, dan pencahayaan kabut merah hangat.
 - 🌋 **Ekspansi Gua & Jurang Ravine**: Generasi jurang terjal dalam (*Ravines*), terowongan gua 3D noise mendalam, kolam lahar underground (*Lava Pools*), dan kluster batu *Obsidian*.
 - 🌊 **Perairan Dangkal & Tepian Pantai (River & Water Polish)**: Depresi terrain sungai dangkal, transisi pantai berpasir halus, kemiringan lereng *smoothstep*, dan aliran air mengalir dinamis.
 
-### 🧑‍🌾 NPC & Sistem Mob AI Complete
-- **Villager NPC**: Warga desa 3D berpakaian jubah cokelat, hidung ikonik, AI navigasi menyusuri jalan setapak desa, dan efek suara khas *"Hmm"*.
-- **Iron Golem**: Pelindung desa raksasa (100 HP, tinggi 2.7 blok), patroli otomatis, serangan animasi lemparan lengan ke atas (*Knockback Upward Toss*), dan membantai mob agresif.
-- 💀 **Pemanah Skeleton**: Mob musuh pemanah 3D dengan busur kayu, AI menjaga jarak tembak ideal (6-12 blok), fisika anak panah lintasan parabola (*Ballistic Trajectory Arc*), serta drop *Bone* & *Arrow*.
-- 🕷️ **Laba-laba Merayap (Spider)**: Mob berkaki 8 dengan mata merah glowing, fisika panjat tebing vertikal (*Vertical Wall-Climbing*), serangan lompat menerjang (*Leap Attack*), serta drop *String*.
-- 👁️ **Enderman**: Mob jangkung setinggi 2.9 blok, mata magenta berkilau, melayang partikel ungu (*Purple Ender Particles*), teleportasi acak 8-20 blok, dan AI terprovokasi tatapan mata (*Stare Trigger*).
-- 🐄 🐷 🐔 🐐 🐢 **Passive Animals**: Cow, Pig (animasi trot), Chicken (animasi kepak sayap), Goat (lompatan tinggi Y=8.5 di pegunungan), dan Turtle (AI merayap pantai & berenang cepat 2.2).
+### 🧑‍🌾 NPC, Mob AI Complete & Mekanik Akurat
+- 🧑‍🌾 **Villager NPC**: Warga desa 3D berpakaian jubah cokelat, hidung ikonik, AI navigasi menyusuri jalan setapak desa, khusus ter-spawn di Perkampungan Warga (*Village*), dan efek suara khas *"Hmm"*.
+- 🛡️ **Iron Golem**: Pelindung desa raksasa (100 HP, tinggi 2.9 blok), patroli otomatis, serangan animasi lemparan lengan ke atas (*Upward Toss* dengan damage berskala 7, 14, 21 HP), dan membasmi mob agresif.
+- 🧟 **Zombie & 💀 Skeleton (Mekanisme Undead)**: Mob musuh yang secara otomatis **terbakar di bawah sinar matahari langsung pada siang hari** (kecuali berteduh/berada di air). Skeleton memiliki AI pemanah tembakan parabola & drop *Bone* & *Arrow*.
+- 🕷️ **Laba-laba Merayap (Spider)**: **Netral di siang hari** dan **Agresif di malam hari** / tempat gelap. Mampu memanjat tebing vertikal (*Wall-Climbing*) & melompat menerjang.
+- 👁️ **Enderman**: Mob jangkung setinggi 2.9 blok, melayang partikel ungu, teleportasi acak, kelemahan air, dan AI terprovokasi tatapan mata (*0.8s Stare Hold Trigger*).
+- 🐄 🐷 🐔 🐐 🐢 **Passive Animals**: Cow (drop 0-2x Raw Beef + 0-2x Leather), Pig (animasi trot), Chicken (AI bertelur otomatis & drop 0-2x Feather), Goat (lompatan tinggi Y=8.5 di pegunungan), dan Turtle (AI makan Seagrass & bertelur pantai pasir).
 
-### 🍖 Sistem Makanan, Memasak & Crafting
-- 🍖 **Furnace & Food Cooking**: Memasak daging mentah (*Raw Porkchop, Raw Chicken, Raw Beef, Mutton*) menjadi daging matang via Furnace (Block ID 10) atau klik kanan makanan untuk memulihkan 8 HP.
+### 🎨 Pengaturan Grafik Item Independen & Item Models
+- 🎨 **Independent Item Graphics Style**: Pengaturan terpisah di Settings Menu (`ESC` -> Options) untuk memilih gaya grafik item: **Fancy 3D** (Detail 3D High Quality), **Voxel Retro** (Pixel 3D Minecraft Klasik), atau **Fast 2D** (Simple 2D Flat).
+- 🍖 **Furnace & Food Cooking**: Memasak daging mentah (*Raw Porkchop, Raw Chicken, Raw Beef, Mutton*) menjadi daging matang via Furnace (Block ID 10) atau memulihkan HP.
 - 🛠️ **Crafting System 3x3**: Grid crafting 3x3 dengan 24+ resep lengkap termasuk Iron Tools, Bow, Arrow, Sandstone, Chest, Torch, Bread, dan Glowstone.
 - 📦 **Peti Penyimpanan (Chest System)**: Blok peti 27-slot interaktif per koordinat dunia.
 - 🌾 **Farming & Pertanian**: Cangkul (*Hoe*), *auto-tilling*, benih gandum, pertumbuhan 4 tahap, dan panen *Bread*.

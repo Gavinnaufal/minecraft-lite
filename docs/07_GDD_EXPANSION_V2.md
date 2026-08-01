@@ -1,7 +1,7 @@
 # Game Design Document (GDD) Expansion v2.0 — Mini Minecraft
 
 Document Version: 2.0
-Target Expansion: Checkpoints CP157–CP238
+Target Expansion: Checkpoints CP157–CP238 (Status: SELESAI 100% ✅)
 
 ---
 

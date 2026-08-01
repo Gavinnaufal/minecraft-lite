@@ -8,11 +8,11 @@
 | Fase 19 — Cave Expansion & Ravines | 165–168 | 4 | 100% |
 | Fase 20 — Village Generation & Prefabs | 173–181 | 9 | 100% |
 | Fase 21 — Villager NPC & Iron Golem | 182–189 | 8 | 100% |
-| Fase 22 — Hostile Mobs (Skeleton, Spider, Enderman) | 190–204 | 3 | 20% |
+| Fase 22 — Hostile Mobs (Skeleton, Spider, Enderman) | 190–204 | 4 | 27% |
 | Fase 23 — Passive Animals & Food | 205–212 | 0 | 0% |
 | Fase 24 — Nether Portal & Dimension | 213–226 | 0 | 0% |
 | Fase 25 — Master Integration & Polish | 227–238 | 0 | 0% |
-| **TOTAL EXPANSION (v2.0)** | | **32** | **38%** |
+| **TOTAL EXPANSION (v2.0)** | | **33** | **39%** |
 
 ---
 
@@ -55,11 +55,11 @@
 - [x] CP-188: Iron Golem knockback attack animation
 - [x] CP-189: Iron Golem spawn in villages & iron ingot drops
 
-### Fase 22 — Hostile Mobs: Skeleton, Spider & Enderman (3/15)
+### Fase 22 — Hostile Mobs: Skeleton, Spider & Enderman (4/15)
 - [x] CP-190: Skeleton base class & 3D model with bow
 - [x] CP-191: Skeleton wander & chase state
 - [x] CP-192: Arrow projectile entity & physics trajectory
-- [ ] CP-193: Skeleton ranged attack state & arrow shooting
+- [x] CP-193: Skeleton ranged attack state & arrow shooting
 - [ ] CP-194: Arrow hit detection & damage to player/mobs
 - [ ] CP-195: Skeleton bone & arrow drops
 - [ ] CP-196: Spider base class & 3D model (8 legs)

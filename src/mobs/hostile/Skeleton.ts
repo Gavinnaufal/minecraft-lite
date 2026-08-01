@@ -3,6 +3,8 @@ import { Mob } from '../Mob';
 import { StateMachine, State } from '../ai/StateMachine';
 import type { World } from '../../world/World';
 import type { Player } from '../../player/Player';
+import { ProjectileManager } from '../../entities/ProjectileManager';
+import { AudioManager } from '../../audio/AudioManager';
 
 export class Skeleton extends Mob {
   private stateMachine = new StateMachine();
@@ -77,10 +79,13 @@ export class Skeleton extends Mob {
     this.mesh.position.copy(position);
   }
 
+  private shootTimer = 0;
+
   override reset(position: THREE.Vector3): void {
     super.reset(position, 20);
     this.isHostile = true;
     this.animTimer = 0;
+    this.shootTimer = 0;
   }
 
   update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, _player?: Player): void {
@@ -97,6 +102,18 @@ export class Skeleton extends Mob {
       if (state === State.Chase || horizDist < 15) {
         // Face player
         this.mesh.rotation.y = Math.atan2(dx, dz);
+
+        // Ranged Attack Shooting Timer
+        this.shootTimer += deltaTime;
+        if (this.shootTimer >= 2.0) {
+          this.shootTimer = 0;
+          const arrowOrigin = new THREE.Vector3(this.position.x, this.position.y + 1.2, this.position.z);
+          const targetTarget = new THREE.Vector3(playerPos.x, playerPos.y + 0.9, playerPos.z);
+          const shootDir = new THREE.Vector3().subVectors(targetTarget, arrowOrigin).normalize();
+
+          ProjectileManager.getInstance().spawnArrow(arrowOrigin, shootDir, 20.0, 'skeleton');
+          AudioManager.getInstance().playSFX('click');
+        }
 
         // Tactical positioning: maintain optimal distance (6 to 12 blocks) for archer
         const chaseSpeed = 2.4;

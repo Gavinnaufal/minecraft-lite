@@ -29,6 +29,19 @@ export class StructureManager {
     return this.boundsList;
   }
 
+  isPositionInStructure(x: number, y: number, z: number): boolean {
+    for (const b of this.boundsList) {
+      if (
+        x >= b.minX && x <= b.maxX &&
+        y >= b.minY && y <= b.maxY &&
+        z >= b.minZ && z <= b.maxZ
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /**
    * Safe block placement for structure prefabs inside a target chunk.
    * Automatically fills solid foundation underneath floor blocks if there's air

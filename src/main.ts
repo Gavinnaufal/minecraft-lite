@@ -31,6 +31,7 @@ import { Enderman } from './mobs/hostile/Enderman';
 import { Pig } from './mobs/passive/Pig';
 import { Chicken } from './mobs/passive/Chicken';
 import { Goat } from './mobs/passive/Goat';
+import { Turtle } from './mobs/passive/Turtle';
 import { ProjectileManager } from './entities/ProjectileManager';
 import { ChatBox } from './multiplayer/ChatBox';
 import { TorchLightManager } from './world/TorchLightManager';
@@ -658,6 +659,28 @@ engine.setUpdateCallback((deltaTime) => {
     const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 40);
     if (spawnPos) {
       mobManager.spawn(spawnPos, new Zombie(spawnPos));
+    }
+  }
+
+  // Spawn passive animals during daytime in appropriate biomes
+  if (!dayNight.isNight && mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.004) {
+    const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 45);
+    if (spawnPos) {
+      const topBlock = world.getBlock(Math.floor(spawnPos.x), Math.floor(spawnPos.y - 1), Math.floor(spawnPos.z));
+      if (topBlock === 2) { // Grass land (Plains / Forest)
+        const rand = Math.random();
+        if (rand < 0.35) {
+          mobManager.spawn(spawnPos, new Pig(spawnPos));
+        } else if (rand < 0.7) {
+          mobManager.spawn(spawnPos, new Chicken(spawnPos));
+        } else {
+          mobManager.spawn(spawnPos, new Cow(spawnPos));
+        }
+      } else if (topBlock === 1 && spawnPos.y > 20) { // High Stone (Mountains)
+        mobManager.spawn(spawnPos, new Goat(spawnPos));
+      } else if (topBlock === 6) { // Sand (Beach)
+        mobManager.spawn(spawnPos, new Turtle(spawnPos));
+      }
     }
   }
 

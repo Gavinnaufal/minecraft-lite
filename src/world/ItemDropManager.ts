@@ -37,6 +37,7 @@ const ITEM_COLORS: Record<string, number> = {
   raw_porkchop: 0xf48fb1,
   raw_chicken: 0xffcc80,
   feather: 0xeeeeee,
+  mutton: 0xc62828,
 };
 
 export class ItemDropManager {

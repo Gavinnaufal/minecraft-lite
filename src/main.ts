@@ -30,6 +30,7 @@ import { Spider } from './mobs/hostile/Spider';
 import { Enderman } from './mobs/hostile/Enderman';
 import { Pig } from './mobs/passive/Pig';
 import { Chicken } from './mobs/passive/Chicken';
+import { Goat } from './mobs/passive/Goat';
 import { ProjectileManager } from './entities/ProjectileManager';
 import { ChatBox } from './multiplayer/ChatBox';
 import { TorchLightManager } from './world/TorchLightManager';
@@ -750,6 +751,8 @@ engine.setUpdateCallback((deltaTime) => {
       } else if (deadMob instanceof Chicken) {
         itemDropManager.spawnDrop(dropPos, 'raw_chicken', 1);
         itemDropManager.spawnDrop(dropPos, 'feather', Math.floor(Math.random() * 3) + 1);
+      } else if (deadMob instanceof Goat) {
+        itemDropManager.spawnDrop(dropPos, 'mutton', Math.floor(Math.random() * 2) + 1);
       }
     }
   }

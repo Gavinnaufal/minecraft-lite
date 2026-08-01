@@ -13,7 +13,7 @@ export class ChatBox {
     this.container.style.cssText = `
       position: fixed; bottom: 80px; left: 16px; width: 340px;
       z-index: 400; font-family: monospace; font-size: 14px; color: #fff;
-      pointer-events: auto; display: flex; flex-direction: column; gap: 4px;
+      pointer-events: auto; display: none; flex-direction: column; gap: 4px;
       user-select: none;
     `;
 
@@ -61,6 +61,7 @@ export class ChatBox {
 
   open(): void {
     this.isOpen = true;
+    this.container.style.display = 'flex';
     this.inputEl.style.display = 'block';
     this.inputEl.value = '';
     this.inputEl.focus();
@@ -71,6 +72,10 @@ export class ChatBox {
     this.isOpen = false;
     this.inputEl.style.display = 'none';
     this.inputEl.blur();
+    // Hide entire container if no messages to show
+    if (this.messageList.children.length === 0) {
+      this.container.style.display = 'none';
+    }
   }
 
   addMessage(author: string, text: string): void {

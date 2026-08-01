@@ -33,8 +33,8 @@ export class Mob {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  update(deltaTime: number, world?: World, _playerPos?: THREE.Vector3, _player?: Player, _mobManager?: MobManager, _camera?: THREE.PerspectiveCamera): void {
-    this.updatePhysics(deltaTime, world);
+  update(_deltaTime: number, _world?: World, _playerPos?: THREE.Vector3, _player?: Player, _mobManager?: MobManager, _camera?: THREE.PerspectiveCamera, _isNight?: boolean): void {
+    this.updatePhysics(_deltaTime, _world);
   }
 
   protected updatePhysics(deltaTime: number, world?: World): void {

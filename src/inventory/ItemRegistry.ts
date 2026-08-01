@@ -51,6 +51,7 @@ const items: ItemType[] = [
   { id: 'cooked_porkchop', name: 'Cooked Porkchop', maxStack: 64, isBlock: false },
   { id: 'cooked_chicken', name: 'Cooked Chicken', maxStack: 64, isBlock: false },
   { id: 'mutton', name: 'Raw Mutton', maxStack: 64, isBlock: false },
+  { id: 'leather', name: 'Leather', maxStack: 64, isBlock: false },
   { id: 'cooked_mutton', name: 'Cooked Mutton', maxStack: 64, isBlock: false },
   { id: 'bow', name: 'Bow', maxStack: 1, isBlock: false },
   { id: 'coal', name: 'Coal', maxStack: 64, isBlock: false },

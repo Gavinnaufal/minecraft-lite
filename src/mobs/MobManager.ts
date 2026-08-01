@@ -70,7 +70,7 @@ export class MobManager {
     return null;
   }
 
-  update(deltaTime: number, playerPos?: THREE.Vector3, player?: Player, camera?: THREE.PerspectiveCamera): void {
+  update(deltaTime: number, playerPos?: THREE.Vector3, player?: Player, camera?: THREE.PerspectiveCamera, isNight: boolean = true): void {
     const CULL_DIST_SQ = 80 * 80;
 
     for (const mob of this.mobs) {
@@ -85,7 +85,7 @@ export class MobManager {
         }
         mob.mesh.visible = true;
       }
-      mob.update(deltaTime, this.world, playerPos, player, this, camera);
+      mob.update(deltaTime, this.world, playerPos, player, this, camera, isNight);
     }
 
     // Despawn mobs that are extremely far away (>120 blocks) to free memory

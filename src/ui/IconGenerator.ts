@@ -144,6 +144,11 @@ export function createItemIcon(itemId: string, size = 28): HTMLElement {
       <path d="M 8,14 Q 16,6 24,14 Q 22,24 10,22 Z" fill="${color}" stroke="#333" stroke-width="0.5"/>
       <circle cx="14" cy="14" r="3" fill="${fatColor}"/>
     `;
+  } else if (itemId === 'leather') {
+    svg.innerHTML = `
+      <path d="M 8,10 Q 16,6 24,10 Q 26,20 22,24 Q 16,26 10,24 Q 6,18 8,10 Z" fill="#8d6e63" stroke="#5d4037" stroke-width="1"/>
+      <path d="M 12,12 Q 16,9 20,12" stroke="#6d4c41" stroke-width="1.5" fill="none"/>
+    `;
   } else if (itemId === 'mutton' || itemId === 'cooked_mutton') {
     const isCooked = itemId.includes('cooked');
     const color = isCooked ? '#5d4037' : '#c62828';

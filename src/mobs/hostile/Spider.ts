@@ -79,6 +79,7 @@ export class Spider extends Mob {
 
   private leapTimer = 0;
   private attackTimer = 0;
+  private isProvoked = false;
 
   override reset(position: THREE.Vector3): void {
     super.reset(position, 16);
@@ -86,9 +87,15 @@ export class Spider extends Mob {
     this.animTimer = 0;
     this.leapTimer = 0;
     this.attackTimer = 0;
+    this.isProvoked = false;
   }
 
-  update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, player?: Player): void {
+  override takeDamage(amount: number): boolean {
+    this.isProvoked = true;
+    return super.takeDamage(amount);
+  }
+
+  update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, player?: Player, _mobManager?: any, _camera?: any, isNight: boolean = true): void {
     let isMoving = false;
 
     if (playerPos) {
@@ -98,7 +105,9 @@ export class Spider extends Mob {
       this.leapTimer += deltaTime;
       this.attackTimer += deltaTime;
 
-      if (state === State.Chase || dist3D < 14) {
+      const isAggressive = isNight || this.isProvoked;
+
+      if (isAggressive && (state === State.Chase || dist3D < 14)) {
         const dx = playerPos.x - this.position.x;
         const dz = playerPos.z - this.position.z;
         const dy = Math.abs(playerPos.y - this.position.y);

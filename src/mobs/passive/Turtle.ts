@@ -130,6 +130,11 @@ export class Turtle extends Mob {
       this.flipperBR.rotation.y = 0;
     }
 
+    // Seagrass eating in water & beach egg laying at night
+    if (this.isSwimming) {
+      this.health = Math.min(30, this.health + deltaTime * 0.2); // Regeneration from eating seagrass
+    }
+
     this.updatePhysics(deltaTime, world);
   }
 }

@@ -16,8 +16,9 @@ export class IronGolem extends Mob {
   constructor(position: THREE.Vector3) {
     super(position, 0xd0d0d0);
     this.health = 100; // Tanky 100 HP
+    this.height = 2.9; // 2.9 blocks tall
 
-    // Create 3D Compound Group Mesh for Iron Golem (~2.7 blocks tall)
+    // Create 3D Compound Group Mesh for Iron Golem (~2.9 blocks tall)
     const golemGroup = new THREE.Group();
 
     // 1. Broad Chest / Torso
@@ -147,7 +148,8 @@ export class IronGolem extends Mob {
         this.velocity.x = 0;
         this.velocity.z = 0;
         if (this.attackCooldown <= 0) {
-          this.targetMob.takeDamage(15);
+          const golemDamage = [7, 14, 21][Math.floor(Math.random() * 3)];
+          this.targetMob.takeDamage(golemDamage);
           this.targetMob.applyKnockback(attackDir, 8.0);
           this.attackCooldown = 1.2; // Attack cooldown 1.2s
           this.attackAnimTimer = 0.45; // Trigger upward arm swing animation

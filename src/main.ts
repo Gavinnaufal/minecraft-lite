@@ -777,7 +777,24 @@ engine.setUpdateCallback((deltaTime) => {
     }
   }
 
-  mobManager.update(deltaTime, new THREE.Vector3(player.position.x, player.position.y, player.position.z), player, camera);
+  mobManager.update(deltaTime, new THREE.Vector3(player.position.x, player.position.y, player.position.z), player, camera, dayNight.isNight);
+  
+  // Undead Daylight Burning mechanic (Zombie & Skeleton burn in direct sunlight)
+  if (!dayNight.isNight && !DimensionManager.getInstance().isNether()) {
+    for (const mob of mobManager.mobs) {
+      if (mob instanceof Zombie || mob instanceof Skeleton) {
+        const mx = Math.floor(mob.position.x);
+        const my = Math.floor(mob.position.y);
+        const mz = Math.floor(mob.position.z);
+        const inWater = world.getBlock(mx, my, mz) === 7;
+        const headBlock = world.getBlock(mx, my + 2, mz);
+        if (!inWater && headBlock === 0) {
+          mob.takeDamage(deltaTime * 1.5);
+        }
+      }
+    }
+  }
+
   ProjectileManager.getInstance().update(deltaTime, world, player, mobManager);
 
   blockBreaker.updateOutline(camera);
@@ -845,7 +862,10 @@ engine.setUpdateCallback((deltaTime) => {
       AudioManager.getInstance().playSFX('break');
 
       if (deadMob instanceof Cow) {
-        itemDropManager.spawnDrop(dropPos, 'raw_beef', Math.floor(Math.random() * 2) + 1);
+        const beefCount = Math.floor(Math.random() * 3); // 0-2x Raw Beef
+        if (beefCount > 0) itemDropManager.spawnDrop(dropPos, 'raw_beef', beefCount);
+        const leatherCount = Math.floor(Math.random() * 3); // 0-2x Leather
+        if (leatherCount > 0) itemDropManager.spawnDrop(dropPos, 'leather', leatherCount);
       } else if (deadMob instanceof Zombie) {
         itemDropManager.spawnDrop(dropPos, 'rotten_flesh', Math.floor(Math.random() * 2) + 1);
       } else if (deadMob instanceof IronGolem) {
@@ -866,9 +886,10 @@ engine.setUpdateCallback((deltaTime) => {
         itemDropManager.spawnDrop(dropPos, 'raw_porkchop', Math.floor(Math.random() * 2) + 1);
       } else if (deadMob instanceof Chicken) {
         itemDropManager.spawnDrop(dropPos, 'raw_chicken', 1);
-        itemDropManager.spawnDrop(dropPos, 'feather', Math.floor(Math.random() * 3) + 1);
+        const featherCount = Math.floor(Math.random() * 3); // 0-2x Feather
+        if (featherCount > 0) itemDropManager.spawnDrop(dropPos, 'feather', featherCount);
       } else if (deadMob instanceof Goat) {
-        itemDropManager.spawnDrop(dropPos, 'mutton', Math.floor(Math.random() * 2) + 1);
+        // Goat has no standard death item drop (Horn obtained by ramming)
       }
     }
   }

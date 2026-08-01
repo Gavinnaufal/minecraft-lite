@@ -556,6 +556,14 @@ export class HandModel {
       this.itemMesh.position.set(0, 0.08, -0.12);
       this.itemMesh.rotation.set(0.3, 0.2, 0.4);
       this.handGroup.add(this.itemMesh);
+    } else if (itemId === 'leather') {
+      // 3D Brown Leather Hide
+      const lthGeo = new THREE.BoxGeometry(0.18, 0.22, 0.02);
+      const lthMat = new THREE.MeshStandardMaterial({ color: 0x8d6e63, roughness: 0.8 });
+      this.itemMesh = new THREE.Mesh(lthGeo, lthMat);
+      this.itemMesh.position.set(0, 0.08, -0.12);
+      this.itemMesh.rotation.set(0.3, 0.2, 0.4);
+      this.handGroup.add(this.itemMesh);
     } else if (itemId === 'string') {
       // 3D Spider Thread String Roll
       const strGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.12, 8);

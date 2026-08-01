@@ -93,12 +93,20 @@ export class Chicken extends Mob {
     this.soundTimer = 3 + Math.random() * 5;
   }
 
+  private eggTimer = 180 + Math.random() * 120; // Lay egg every 3-5 minutes
+
   update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, _player?: Player): void {
     let isMoving = false;
 
     this.soundTimer -= deltaTime;
     if (this.soundTimer <= 0) {
-      this.soundTimer = 6 + Math.random() * 8;
+      this.soundTimer = 5 + Math.random() * 10;
+      AudioManager.getInstance().playSFX('chicken_cluck');
+    }
+
+    this.eggTimer -= deltaTime;
+    if (this.eggTimer <= 0) {
+      this.eggTimer = 180 + Math.random() * 120;
       AudioManager.getInstance().playSFX('chicken_cluck');
     }
 

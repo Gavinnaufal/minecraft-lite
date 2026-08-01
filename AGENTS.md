@@ -19,13 +19,13 @@ Semua keputusan desain/teknis mengacu ke dokumen di folder `docs/`, urutan prior
 5. `docs/03_ARSITEKTUR_FOLDER.md` — struktur folder inti.
 6. `docs/06_TASK_BOARD.md` — status CP1-156 (termasuk Fase 16-17 tambahan yang sudah dikerjakan di luar rencana awal).
 
-**Dokumen v2.0 (Expansion, CP157–CP238, status: BELUM DIKERJAKAN):**
+**Dokumen v2.0 (Expansion, CP157–CP238, status: SELESAI 100%):**
 7. `docs/07_GDD_EXPANSION_V2.md` — desain 10 sistem baru (ocean, cave expansion, village, golem, skeleton, spider, enderman, nether portal, animal baru, food/cooking). **Baca ini dulu sebelum mengerjakan CP157 ke atas**, termasuk bagian "SCOPE BOUNDARY v2.0" di akhir dokumen supaya tidak menambah fitur di luar yang disepakati (misal: JANGAN implementasi villager trading, ore/smelting, atau breeding — itu sengaja di luar scope v2.0).
 8. `docs/08_ROADMAP_V2.md` — checkpoint CP157-238, melanjutkan penomoran dari v1.0.
 9. `docs/09_PROMPT_AI_V2.md` — instruksi detail per CP157-238.
 10. `docs/10_TASK_BOARD_V2.md` — status progress CP157-238, terpisah dari task board v1 tapi saling melengkapi.
 
-Jika user hanya bilang "lanjut" atau "kerjakan checkpoint berikutnya": cek `docs/10_TASK_BOARD_V2.md` dulu (kalau masih ada CP yang belum ✅ di sana, lanjutkan dari situ — jangan cek `06_TASK_BOARD.md` karena v1 sudah 100% selesai).
+Jika user hanya bilang "lanjut" atau "kerjakan checkpoint berikutnya": cek `docs/10_TASK_BOARD_V2.md` dulu (kalau masih ada CP yang belum ✅ di sana, lanjutkan dari situ — jangan cek `06_TASK_BOARD.md` karena v1 & v2 sudah 100% selesai).
 
 ---
 
@@ -48,6 +48,8 @@ Jika user hanya bilang "lanjut" atau "kerjakan checkpoint berikutnya": cek `docs
   - `src/world/structures/` — village generator & prefab bangunan (`VillageGenerator.ts`, `OakHousePrefab.ts`, `VillageLoot.ts`)
   - `src/world/dimension/` — Nether world, dimension manager, portal detector
   - `src/mobs/npc/` — Villager, IronGolem (NPC/neutral, beda kategori dari passive/hostile)
+  - `src/ui/` — UI Renderers & Models (`HandModel.ts`, `IconGenerator.ts`, `SettingsMenu.ts`)
+  - `src/multiplayer/` — Sistem Chat & Networking (`ChatBox.ts`, `NetworkManager.ts`)
   - File baru di `src/mobs/hostile/` (`Skeleton.ts`, `Spider.ts`, `Enderman.ts`) dan `src/mobs/passive/` (`Pig.ts`, `Chicken.ts`, `Goat.ts`, `Turtle.ts`) — mengikuti pola yang sudah ada.
   - Di luar daftar ini, tetap berlaku aturan lama: jangan buat struktur folder baru sendiri tanpa konfirmasi user.
 - Penamaan file: PascalCase untuk class (`VillageGenerator.ts`), camelCase untuk util.
@@ -112,3 +114,7 @@ Beberapa bug signifikan yang pernah terjadi di v1.0 & v2.0 dan cara benarnya, se
 - **Cave generation terlalu agresif ("swiss cheese effect")**: threshold noise terlalu longgar + depth range terlalu dekat surface. Untuk ravine (CP165-168) dan obsidian cluster (CP206), gunakan threshold ketat sejak awal, jangan mulai dari nilai longgar lalu diperbaiki belakangan.
 - **Raycaster menganggap non-solid block sebagai target valid**: dulu cuma cek `blockId !== 0`, seharusnya cek `block.solid`. Kalau nanti Raycaster.ts disentuh lagi untuk fitur v2.0 (misal target Villager/mob untuk interaksi), pastikan tetap pakai `block.solid` check yang sudah benar, jangan regresi ke `!== 0`.
 - **`takeDamage` return signature**: `takeDamage(amount: number)` di `Mob.ts` mengembalikan `boolean` (artinya `isDead`), bukan `void`. Saat meng-override `takeDamage` di subclass (`Enderman.ts`, dll), selalu kembalikan `boolean` agar type-checking TypeScript `tsc` lolos tanpa error.
+- **Enderman Rapid Spinning & Unprovoked Attack**: Gerakan wander Enderman memerlukan timer 3–5 detik agar tidak berputar di tempat. Provokasi tatapan mata memerlukan *0.8s continuous gaze hold* dengan *Pointer Lock* aktif sebelum menjadi marah.
+- **Mob Stay Red Forever**: Modifikasi `emissive` terpisah di `MobManager` membuat material tertimpa permanen. Pemulihan material harus menggunakan `hitFlashTimer` dan `resetMaterials()` yang dipanggil langsung di `Mob.ts` `updatePhysics()`.
+- **Village Terrain Constraint Too Strict**: Syarat elevasi desa sebelumnya terlalu ketat (`<= 5` blok variation), membuat desa tidak pernah ter-spawn. Solusinya: gunakan `getVillageCenter` dengan toleransi bukit `<= 14` blok dan sediakan **Guaranteed Starter Village** pada grid `(0,0)`.
+- **Spider & Undead Day/Night Mechanics**: Undead (Zombie & Skeleton) wajib terbakar saat terkena matahari langsung di siang hari. Spider harus berada dalam status netral pada siang hari dan hanya menjadi agresif pada malam hari / saat diprovokasi.

@@ -36,6 +36,7 @@ export class DebugScreen {
     chunkZ: number;
     facing: string;
     biome: string;
+    dimension?: string;
     mobsCount: number;
   }): void {
     if (!this.visible) return;
@@ -44,18 +45,19 @@ export class DebugScreen {
 
     this.container.innerHTML = `
       <div style="${bgStyle}">
-        <div style="font-weight: bold; color: #ffffa0;">Minecraft Lite 1.0.0 (Three.js Voxel Engine)</div>
+        <div style="font-weight: bold; color: #ffffa0;">Minecraft Lite 2.0.0 Expansion (Three.js Voxel Engine)</div>
         <div>${stats.fps} fps T: 60</div>
         <div style="margin-top: 4px;">XYZ: ${stats.posX.toFixed(3)} / ${stats.posY.toFixed(5)} / ${stats.posZ.toFixed(3)}</div>
         <div>Block: ${Math.floor(stats.posX)} ${Math.floor(stats.posY)} ${Math.floor(stats.posZ)}</div>
-        <div>Chunk: ${stats.chunkX} ${stats.chunkZ} in [0 0 0]</div>
+        <div>Chunk: ${stats.chunkX} ${stats.chunkZ}</div>
+        <div>Dimension: ${stats.dimension || 'Overworld'}</div>
         <div>Facing: ${stats.facing}</div>
         <div>Biome: ${stats.biome}</div>
-        <div>Local Difficulty: 1.50 (Day 1)</div>
+        <div>Local Difficulty: 1.50</div>
       </div>
       <div style="${bgStyle} text-align: right;">
-        <div style="color: #aaaaaa;">Display: 1920x1080 (WebGL)</div>
-        <div>Three.js (r160) + TS</div>
+        <div style="color: #aaaaaa;">Display: WebGL</div>
+        <div>Three.js + TS</div>
         <div>Entities: ${stats.mobsCount} active</div>
         <div style="margin-top: 4px; color: #55ff55;">Mem: 45% 240/512MB</div>
       </div>

@@ -84,8 +84,34 @@ export class MobManager {
   }
 
   update(deltaTime: number, playerPos?: THREE.Vector3, player?: Player, camera?: THREE.PerspectiveCamera): void {
+    const CULL_DIST_SQ = 80 * 80;
+
     for (const mob of this.mobs) {
+      if (playerPos) {
+        const dx = mob.position.x - playerPos.x;
+        const dz = mob.position.z - playerPos.z;
+        const distSq = dx * dx + dz * dz;
+
+        if (distSq > CULL_DIST_SQ) {
+          mob.mesh.visible = false;
+          continue; // Skip AI update for far mobs
+        }
+        mob.mesh.visible = true;
+      }
       mob.update(deltaTime, this.world, playerPos, player, this, camera);
+    }
+
+    // Despawn mobs that are extremely far away (>120 blocks) to free memory
+    if (playerPos) {
+      const DESPAWN_DIST_SQ = 120 * 120;
+      for (let i = this.mobs.length - 1; i >= 0; i--) {
+        const mob = this.mobs[i];
+        const dx = mob.position.x - playerPos.x;
+        const dz = mob.position.z - playerPos.z;
+        if (dx * dx + dz * dz > DESPAWN_DIST_SQ) {
+          this.despawn(mob);
+        }
+      }
     }
   }
 }

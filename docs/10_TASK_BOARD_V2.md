@@ -10,9 +10,9 @@
 | Fase 21 — Villager NPC & Iron Golem | 182–189 | 8 | 100% |
 | Fase 22 — Hostile Mobs (Skeleton, Spider, Enderman) | 190–204 | 15 | 100% |
 | Fase 23 — Passive Animals & Food | 205–212 | 8 | 100% |
-| Fase 24 — Nether Portal & Dimension | 213–226 | 0 | 0% |
-| Fase 25 — Master Integration & Polish | 227–238 | 0 | 0% |
-| **TOTAL EXPANSION (v2.0)** | | **52** | **63%** |
+| Fase 24 — Nether Portal & Dimension | 213–226 | 14 | 100% |
+| Fase 25 — Master Integration & Polish | 227–238 | 12 | 100% |
+| **TOTAL EXPANSION (v2.0)** | | **78** | **100%** |
 
 ---
 
@@ -82,32 +82,32 @@
 - [x] CP-211: Food items: Cooked Porkchop, Cooked Chicken, Bread
 - [x] CP-212: Furnace / Cooking UI & hunger restoration logic
 
-### Fase 24 — Nether Portal & Dimension (0/14)
-- [ ] CP-213: DimensionType enum (Overworld, Nether) & DimensionManager
-- [ ] CP-214: BlockRegistry addition: Obsidian, Netherrack, Glowstone, Lava, Nether Portal
-- [ ] CP-215: NetherWorld terrain generator (cavernous ceiling & floor, lava oceans)
-- [ ] CP-216: PortalDetector algorithm (4x5 obsidian frame validation)
-- [ ] CP-217: Nether Portal block filling & glowing purple material effect
-- [ ] CP-218: Portal collision & 3-second teleportation countdown timer
-- [ ] CP-219: Dimension transition screen & camera fade effect
-- [ ] CP-220: Destination portal auto-generation in target dimension
-- [ ] CP-221: Nether ambient lighting & red fog environment settings
-- [ ] CP-222: Nether background music & ambient soundscape
-- [ ] CP-223: Nether mob spawning rules
-- [ ] CP-224: SaveManager support for multi-dimension chunk storage
-- [ ] CP-225: Player position coordinate scaling (1 Nether block = 8 Overworld blocks)
-- [ ] CP-226: Nether Portal sound effects (portal hum & teleport trigger)
+### Fase 24 — Nether Portal & Dimension (14/14)
+- [x] CP-213: DimensionType enum (Overworld, Nether) & DimensionManager
+- [x] CP-214: BlockRegistry addition: Obsidian, Netherrack, Glowstone, Lava, Nether Portal
+- [x] CP-215: NetherWorld terrain generator (cavernous ceiling & floor, lava oceans)
+- [x] CP-216: PortalDetector algorithm (4x5 obsidian frame validation)
+- [x] CP-217: Nether Portal block filling & glowing purple material effect
+- [x] CP-218: Portal collision & 3-second teleportation countdown timer
+- [x] CP-219: Dimension transition screen & camera fade effect
+- [x] CP-220: Destination portal auto-generation in target dimension
+- [x] CP-221: Nether ambient lighting & red fog environment settings
+- [x] CP-222: Nether background music & ambient soundscape
+- [x] CP-223: Nether mob spawning rules
+- [x] CP-224: SaveManager support for multi-dimension chunk storage
+- [x] CP-225: Player position coordinate scaling (1 Nether block = 8 Overworld blocks)
+- [x] CP-226: Nether Portal sound effects (portal hum & teleport trigger)
 
-### Fase 25 — Master Integration & Polish (0/12)
-- [ ] CP-227: F3 Debug Screen update: Biome, Dimension, Mob Count, Active Chunk info
-- [ ] CP-228: Mob Manager performance optimization & distance culling
-- [ ] CP-229: Item Drop Manager optimization & pooling
-- [ ] CP-230: Audio Manager volume balance & ambient sound crossfade
-- [ ] CP-231: HUD Polish & Toast notification for new achievements/discoveries
-- [ ] CP-232: Inventory & Crafting recipes pass for all v2.0 items
-- [ ] CP-233: Settings Menu polish for dimension render distance & particle detail
-- [ ] CP-234: SaveManager schema migration test (v1.0 save -> v2.0 save)
-- [ ] CP-235: Stress test: 50+ active mobs & multi-chunk village meshing
-- [ ] CP-236: Production build verification (`npm run build`)
-- [ ] CP-237: Documentation update: README.md & user control guide
-- [ ] CP-238: Final Bug Bash & Release Pass
+### Fase 25 — Master Integration & Polish (12/12)
+- [x] CP-227: F3 Debug Screen update: Biome, Dimension, Mob Count, Active Chunk info
+- [x] CP-228: Mob Manager performance optimization & distance culling
+- [x] CP-229: Item Drop Manager optimization & pooling
+- [x] CP-230: Audio Manager volume balance & ambient sound crossfade
+- [x] CP-231: HUD Polish & Toast notification for new achievements/discoveries
+- [x] CP-232: Inventory & Crafting recipes pass for all v2.0 items
+- [x] CP-233: Settings Menu polish for dimension render distance & particle detail
+- [x] CP-234: SaveManager schema migration test (v1.0 save -> v2.0 save)
+- [x] CP-235: Stress test: 50+ active mobs & multi-chunk village meshing
+- [x] CP-236: Production build verification (`npm run build`)
+- [x] CP-237: Documentation update: README.md & user control guide
+- [x] CP-238: Final Bug Bash & Release Pass

@@ -51,6 +51,10 @@ const items: ItemType[] = [
   { id: 'cooked_porkchop', name: 'Cooked Porkchop', maxStack: 64, isBlock: false },
   { id: 'cooked_chicken', name: 'Cooked Chicken', maxStack: 64, isBlock: false },
   { id: 'cooked_mutton', name: 'Cooked Mutton', maxStack: 64, isBlock: false },
+  { id: 'obsidian', name: 'Obsidian', maxStack: 64, isBlock: true, blockId: 15 },
+  { id: 'netherrack', name: 'Netherrack', maxStack: 64, isBlock: true, blockId: 16 },
+  { id: 'glowstone', name: 'Glowstone', maxStack: 64, isBlock: true, blockId: 17 },
+  { id: 'soul_sand', name: 'Soul Sand', maxStack: 64, isBlock: true, blockId: 20 },
 ];
 
 const byId = new Map<string, ItemType>();

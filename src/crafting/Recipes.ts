@@ -39,4 +39,19 @@ export const recipes: Recipe[] = [
   { pattern: [['stone', 'stone'], [null, 'stick'], [null, 'stick']], result: { itemId: 'stone_hoe', count: 1 } },
   // 17. Wheat to Bread
   { pattern: [['wheat', 'wheat', 'wheat']], result: { itemId: 'bread', count: 1 } },
+  // v2.0 Recipes
+  // 18. Iron Sword
+  { pattern: [['iron_ingot'], ['iron_ingot'], ['stick']], result: { itemId: 'iron_sword', count: 1 } },
+  // 19. Iron Pickaxe
+  { pattern: [['iron_ingot', 'iron_ingot', 'iron_ingot'], [null, 'stick', null], [null, 'stick', null]], result: { itemId: 'iron_pickaxe', count: 1 } },
+  // 20. Iron Axe
+  { pattern: [['iron_ingot', 'iron_ingot'], ['iron_ingot', 'stick'], [null, 'stick']], result: { itemId: 'iron_axe', count: 1 } },
+  // 21. Iron Shovel
+  { pattern: [['iron_ingot'], ['stick'], ['stick']], result: { itemId: 'iron_shovel', count: 1 } },
+  // 22. Bow (stick + string)
+  { pattern: [[null, 'stick', 'string'], ['stick', null, 'string'], [null, 'stick', 'string']], result: { itemId: 'bow', count: 1 } },
+  // 23. Arrow (flint + stick + feather)
+  { pattern: [['stone'], ['stick'], ['feather']], result: { itemId: 'arrow', count: 4 } },
+  // 24. Netherrack to Glowstone (4 netherrack)
+  { pattern: [['netherrack', 'netherrack'], ['netherrack', 'netherrack']], result: { itemId: 'glowstone', count: 1 } },
 ];

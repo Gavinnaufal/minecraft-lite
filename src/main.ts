@@ -35,6 +35,9 @@ import { Turtle } from './mobs/passive/Turtle';
 import { ProjectileManager } from './entities/ProjectileManager';
 import { ChatBox } from './multiplayer/ChatBox';
 import { TorchLightManager } from './world/TorchLightManager';
+import { DimensionManager, DimensionType } from './world/dimension/DimensionManager';
+import { PortalDetector } from './world/dimension/PortalDetector';
+import { DimensionTransitionOverlay } from './ui/DimensionTransitionOverlay';
 import { NoiseGenerator, seedFromString } from './world/terrain/NoiseGenerator';
 import { HeightMap } from './world/terrain/HeightMap';
 import { BiomeGenerator, BiomeType } from './world/terrain/BiomeGenerator';
@@ -301,6 +304,8 @@ const blockPlacer = new BlockPlacer(world);
 const blockHighlight = new BlockHighlight(scene);
 const debugScreen = new DebugScreen();
 const toastSystem = ToastSystem.getInstance();
+const dimensionOverlay = new DimensionTransitionOverlay();
+let portalTimer = 0;
 
 import { ChestScreen } from './ui/ChestScreen';
 import { ChestManager } from './inventory/ChestManager';
@@ -605,6 +610,7 @@ engine.setUpdateCallback((deltaTime) => {
     chunkZ: Math.floor(player.position.z / CHUNK_SIZE_Z),
     facing: facingDir,
     biome: biomeName,
+    dimension: DimensionManager.getInstance().currentDimension,
     mobsCount: mobManager.mobs.length,
   });
 
@@ -654,16 +660,38 @@ engine.setUpdateCallback((deltaTime) => {
   lights.ambient.intensity = Math.max(0.25, dayNight.lightIntensity * 0.55);
   if (lights.hemi) lights.hemi.intensity = Math.max(0.2, dayNight.lightIntensity * 0.5);
 
-  // Spawn hostile zombies at night on solid land
-  if (dayNight.isNight && mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.005) {
+  // Spawn hostile zombies at night on solid land (Overworld only)
+  if (!DimensionManager.getInstance().isNether() && dayNight.isNight && mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.005) {
     const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 40);
     if (spawnPos) {
       mobManager.spawn(spawnPos, new Zombie(spawnPos));
     }
   }
 
-  // Spawn passive animals during daytime in appropriate biomes
-  if (!dayNight.isNight && mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.004) {
+  // Nether mob spawning: Skeletons & Spiders (always dangerous, higher rate)
+  if (DimensionManager.getInstance().isNether() && mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.008) {
+    const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 35);
+    if (spawnPos) {
+      if (Math.random() < 0.5) {
+        mobManager.spawn(spawnPos, new Skeleton(spawnPos));
+      } else {
+        mobManager.spawn(spawnPos, new Spider(spawnPos));
+      }
+    }
+  }
+
+  // Nether ambient sounds
+  if (DimensionManager.getInstance().isNether()) {
+    if (Math.random() < 0.003) {
+      AudioManager.getInstance().playSFX('nether_ambient');
+    }
+    if (Math.random() < 0.006) {
+      AudioManager.getInstance().playSFX('lava_bubble');
+    }
+  }
+
+  // Spawn passive animals during daytime in appropriate biomes (Overworld only)
+  if (!DimensionManager.getInstance().isNether() && !dayNight.isNight && mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.004) {
     const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 45);
     if (spawnPos) {
       const topBlock = world.getBlock(Math.floor(spawnPos.x), Math.floor(spawnPos.y - 1), Math.floor(spawnPos.z));
@@ -885,7 +913,17 @@ engine.setUpdateCallback((deltaTime) => {
           if (placed) {
             hotbar.removeItem(activeItem.itemId, 1);
             if (targetHit) {
-              networkManager.sendBlockChange(targetHit.blockX + targetHit.normalX, targetHit.blockY + targetHit.normalY, targetHit.blockZ + targetHit.normalZ, blockIdToPlace);
+              const px = targetHit.blockX + targetHit.normalX;
+              const py = targetHit.blockY + targetHit.normalY;
+              const pz = targetHit.blockZ + targetHit.normalZ;
+              networkManager.sendBlockChange(px, py, pz, blockIdToPlace);
+
+              if (blockIdToPlace === 15 || blockIdToPlace === 11) {
+                if (PortalDetector.detectAndIgnitePortal(world, px, py, pz)) {
+                  AudioManager.getInstance().playSFX('portal_hum');
+                  toastSystem.show('Nether Portal Ignited! 🔮', 'success');
+                }
+              }
             }
           }
         } else if (activeItem.itemId === 'stick' || activeItem.itemId === 'wheat') {
@@ -903,6 +941,53 @@ engine.setUpdateCallback((deltaTime) => {
     chunkManager.update(player.position.x, player.position.z, gameSettings.renderDistance);
   } else {
     chunkManager.processLoadQueue(2);
+  }
+
+  // Nether Portal Standing Detection & 3-second Teleport Countdown Timer
+  const playerFeetX = Math.floor(player.position.x);
+  const playerFeetY = Math.floor(player.position.y);
+  const playerFeetZ = Math.floor(player.position.z);
+  const feetBlockId = world.getBlock(playerFeetX, playerFeetY, playerFeetZ);
+  const bodyBlockId = world.getBlock(playerFeetX, playerFeetY + 1, playerFeetZ);
+
+  if (feetBlockId === 18 || bodyBlockId === 18) {
+    portalTimer += deltaTime;
+    const isNether = DimensionManager.getInstance().isNether();
+    const targetName = isNether ? 'Overworld' : 'Nether';
+    dimensionOverlay.show(targetName, portalTimer / 3.0);
+
+    if (Math.random() < 0.08) {
+      AudioManager.getInstance().playSFX('portal_hum');
+    }
+
+    if (portalTimer >= 3.0) {
+      portalTimer = 0;
+      dimensionOverlay.hide();
+
+      const nextDimension = isNether ? DimensionType.OVERWORLD : DimensionType.NETHER;
+      const targetPos = DimensionManager.getInstance().getConvertedCoordinates(player.position, nextDimension);
+
+      DimensionManager.getInstance().setDimension(nextDimension, scene);
+      AudioManager.getInstance().setDimensionAmbience(nextDimension);
+      player.position = targetPos;
+
+      // Auto-generate destination portal frame in target dimension
+      for (let dy = 0; dy < 5; dy++) {
+        for (let dx = 0; dx < 4; dx++) {
+          const isBorder = (dx === 0 || dx === 3 || dy === 0 || dy === 4);
+          const bId = isBorder ? 15 : 18;
+          world.setBlock(Math.floor(targetPos.x) + dx - 1, Math.floor(targetPos.y) + dy, Math.floor(targetPos.z), bId);
+        }
+      }
+
+      AudioManager.getInstance().playSFX('portal_teleport');
+      hud.setDimension(nextDimension);
+      const welcomeMsg = nextDimension === 'nether' ? 'Welcome to the Nether! 🔥' : `Teleported to ${targetName}! 🔮`;
+      toastSystem.show(welcomeMsg, 'success');
+    }
+  } else if (portalTimer > 0) {
+    portalTimer = 0;
+    dimensionOverlay.hide();
   }
 
   chunkManager.updateFrustumCulling(camera);

@@ -58,6 +58,12 @@ const blockTypes: BlockType[] = [
   { id: 12, name: 'chest', color: 0x8b5a2b, solid: true, transparent: false, hardness: 2.5 },
   { id: 13, name: 'farmland', color: 0x4e3629, solid: true, transparent: false, hardness: 0.6 },
   { id: 14, name: 'wheat_crop', color: 0x88bb33, solid: false, transparent: true, hardness: 0.1 },
+  { id: 15, name: 'obsidian', color: 0x1a122b, solid: true, transparent: false, hardness: 10.0 },
+  { id: 16, name: 'netherrack', color: 0x5c1d1d, solid: true, transparent: false, hardness: 0.8 },
+  { id: 17, name: 'glowstone', color: 0xffd54f, solid: true, transparent: false, hardness: 0.3 },
+  { id: 18, name: 'nether_portal', color: 0x8e24aa, solid: false, transparent: true, hardness: -1 },
+  { id: 19, name: 'lava', color: 0xd32f2f, solid: false, transparent: true, hardness: -1 },
+  { id: 20, name: 'soul_sand', color: 0x4e3629, solid: true, transparent: false, hardness: 0.6 },
 ];
 
 const byId = new Map<number, BlockType>();
@@ -129,6 +135,16 @@ export function createBlockMaterial(blockId: number): THREE.Material | THREE.Mat
     material.opacity = 0.65;
     material.depthWrite = false;
     material.color.setHex(0x3399ff);
+  } else if (block.name === 'lava') {
+    material.transparent = true;
+    material.opacity = 0.9;
+    material.color.setHex(0xd32f2f);
+  } else if (block.name === 'nether_portal') {
+    material.transparent = true;
+    material.opacity = 0.75;
+    material.depthWrite = false;
+    material.side = THREE.DoubleSide;
+    material.color.setHex(0x8e24aa);
   } else if (block.transparent) {
     material.transparent = true;
     material.opacity = 0.6;

@@ -262,6 +262,64 @@ export class AudioManager {
       gain.connect(masterGain);
       osc.start(now);
       osc.stop(now + 0.5);
+    } else if (name === 'portal_hum') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(80, now);
+      osc.frequency.linearRampToValueAtTime(110, now + 0.6);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.6);
+    } else if (name === 'portal_teleport') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(150, now);
+      osc.frequency.exponentialRampToValueAtTime(600, now + 0.8);
+      gain.gain.setValueAtTime(0.4, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.8);
+    } else if (name === 'nether_ambient') {
+      // Deep rumbling drone for Nether atmosphere
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(40, now);
+      osc1.frequency.linearRampToValueAtTime(55, now + 1.5);
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(60, now);
+      osc2.frequency.linearRampToValueAtTime(45, now + 1.5);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.linearRampToValueAtTime(0.12, now + 0.5);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(masterGain);
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + 1.5);
+      osc2.stop(now + 1.5);
+    } else if (name === 'lava_bubble') {
+      // Short lava bubble pop
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(200 + Math.random() * 150, now);
+      osc.frequency.exponentialRampToValueAtTime(80, now + 0.15);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.15);
     } else if (name === 'zombie_groan') {
       // Creepy Low Zombie Groan
       const osc = ctx.createOscillator();
@@ -459,5 +517,26 @@ export class AudioManager {
 
   setMusicVolume(v: number): void {
     this._musicVolume = Math.max(0, Math.min(1, v));
+  }
+
+  /** CP-230: Switch ambient soundscape when changing dimensions. */
+  private netherAmbienceInterval: ReturnType<typeof setInterval> | null = null;
+
+  setDimensionAmbience(dimension: string): void {
+    // Stop existing Nether ambience loop
+    if (this.netherAmbienceInterval) {
+      clearInterval(this.netherAmbienceInterval);
+      this.netherAmbienceInterval = null;
+    }
+
+    if (dimension === 'nether') {
+      // Start Nether ambient drone loop
+      this.netherAmbienceInterval = setInterval(() => {
+        this.playSFX('nether_ambient');
+        if (Math.random() < 0.5) {
+          setTimeout(() => this.playSFX('lava_bubble'), 500 + Math.random() * 1000);
+        }
+      }, 5000);
+    }
   }
 }

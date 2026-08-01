@@ -6,6 +6,9 @@ import type { DayNightCycle } from '../environment/DayNightCycle';
 import type { World, BlockModification } from '../world/World';
 import type { ChunkManager } from '../world/ChunkManager';
 import { gameSettings } from '../core/GameSettings';
+import { DimensionManager } from '../world/dimension/DimensionManager';
+
+const SAVE_VERSION = 2;
 
 export class SaveManager {
   private storage = new StorageAdapter();
@@ -42,7 +45,9 @@ export class SaveManager {
 
   async save(): Promise<void> {
     const data = {
+      saveVersion: SAVE_VERSION,
       worldSeed: this.getSeed(),
+      dimension: DimensionManager.getInstance().currentDimension,
       player: {
         x: this.player.position.x,
         y: this.player.position.y,
@@ -60,7 +65,9 @@ export class SaveManager {
 
   async load(): Promise<number | null> {
     const data = await this.storage.loadData<{
+      saveVersion?: number;
       worldSeed: number;
+      dimension?: string;
       player: { x: number; y: number; z: number; health: number };
       inventory: { itemId: string | null; count: number }[];
       hotbar: { itemId: string | null; count: number }[];
@@ -70,6 +77,18 @@ export class SaveManager {
     }>('world');
 
     if (!data) return null;
+
+    // v1.0 -> v2.0 migration: add default dimension if missing
+    if (!data.saveVersion || data.saveVersion < 2) {
+      console.log('[Save] Migrating v1.0 save to v2.0 format');
+      data.dimension = data.dimension || 'overworld';
+    }
+
+    // Restore dimension
+    if (data.dimension) {
+      const dim = data.dimension as 'overworld' | 'nether';
+      DimensionManager.getInstance().currentDimension = dim as ReturnType<typeof DimensionManager.getInstance>['currentDimension'];
+    }
 
     this.player.position.x = data.player.x;
     this.player.position.y = data.player.y;

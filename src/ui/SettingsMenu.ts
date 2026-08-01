@@ -94,6 +94,28 @@ export class SettingsMenu {
     this.container.appendChild(musicLabel);
     this.container.appendChild(musicSlider);
 
+    // Particle Detail
+    const pdLabel = document.createElement('div');
+    pdLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: #333;';
+    pdLabel.textContent = `Particle Detail: ${gameSettings.particleDetail.charAt(0).toUpperCase() + gameSettings.particleDetail.slice(1)}`;
+
+    const pdSelect = document.createElement('select');
+    pdSelect.style.cssText = 'width: 100%; margin-bottom: 24px; cursor: pointer; font-family: monospace; font-size: 14px; padding: 6px;';
+    for (const opt of ['low', 'medium', 'high']) {
+      const option = document.createElement('option');
+      option.value = opt;
+      option.textContent = opt.charAt(0).toUpperCase() + opt.slice(1);
+      if (opt === gameSettings.particleDetail) option.selected = true;
+      pdSelect.appendChild(option);
+    }
+    pdSelect.addEventListener('change', () => {
+      gameSettings.particleDetail = pdSelect.value as 'low' | 'medium' | 'high';
+      pdLabel.textContent = `Particle Detail: ${pdSelect.value.charAt(0).toUpperCase() + pdSelect.value.slice(1)}`;
+    });
+
+    this.container.appendChild(pdLabel);
+    this.container.appendChild(pdSelect);
+
     // Button Row
     const btnBox = document.createElement('div');
     btnBox.style.cssText = 'display: flex; flex-direction: column; gap: 10px; align-items: center;';

@@ -55,6 +55,15 @@ export class ItemDropManager {
   }
 
   spawnDrop(position: THREE.Vector3, itemId: string, count = 1): void {
+    // CP-229: Enforce max drop limit of 50
+    while (this.drops.length >= 50) {
+      const oldest = this.drops.shift();
+      if (oldest) {
+        this.scene.remove(oldest.mesh);
+        oldest.mesh.geometry.dispose();
+      }
+    }
+
     const colorHex = ITEM_COLORS[itemId] ?? 0x9e9e9e;
     const mat = new THREE.MeshStandardMaterial({ color: colorHex });
     const mesh = new THREE.Mesh(this.dropGeo, mat);
@@ -81,10 +90,29 @@ export class ItemDropManager {
 
   update(deltaTime: number, playerPos: THREE.Vector3, onPickup: (itemId: string, count: number) => void): void {
     const time = performance.now() * 0.004;
+    const CULL_DIST_SQ = 40 * 40;
 
     for (let i = this.drops.length - 1; i >= 0; i--) {
       const drop = this.drops[i];
       drop.age += deltaTime;
+
+      // CP-229: Auto-expire drops older than 60 seconds
+      if (drop.age > 60) {
+        this.scene.remove(drop.mesh);
+        drop.mesh.geometry.dispose();
+        this.drops.splice(i, 1);
+        continue;
+      }
+
+      // CP-229: Distance culling - hide drops far from player
+      const dx = drop.position.x - playerPos.x;
+      const dz = drop.position.z - playerPos.z;
+      const distSq = dx * dx + dz * dz;
+      if (distSq > CULL_DIST_SQ) {
+        drop.mesh.visible = false;
+        continue;
+      }
+      drop.mesh.visible = true;
 
       // Rotate 3D drop
       drop.mesh.rotation.y += deltaTime * 3.0;

@@ -35,6 +35,7 @@ export class HUD {
   private controlsGuide: HTMLDivElement;
   private itemNameBanner: HTMLDivElement;
   private lowHpVignette: HTMLDivElement;
+  private dimensionLabel: string = 'Overworld';
   private lastActiveSlot = -1;
   private bannerTimeout: number | null = null;
 
@@ -234,7 +235,13 @@ export class HUD {
       <span>${SVG_ICONS.compass} <span style="color:#ffcc00;">${dir}</span></span>
       <span style="color:rgba(255,255,255,0.3)">|</span>
       <span>${SVG_ICONS.fps} <span style="color:#81c784;">${fps} FPS</span></span>
+      <span style="color:rgba(255,255,255,0.3)">|</span>
+      <span style="color:${this.dimensionLabel === 'Nether' ? '#ff6633' : '#55ff55'};">${this.dimensionLabel}</span>
     `;
+  }
+
+  setDimension(dimension: string): void {
+    this.dimensionLabel = dimension === 'nether' ? 'Nether' : 'Overworld';
   }
 
   triggerDamageFlash(): void {

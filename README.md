@@ -1,42 +1,51 @@
-# ⛏️ Mini Minecraft (Voxel Sandbox Game)
+# ⛏️ Mini Minecraft 2.0 Expansion (Voxel Sandbox Game)
 
 Mini Minecraft adalah game sandbox voxel 3D berbasis **Three.js**, **TypeScript**, dan **Vite**. Project ini dirancang dengan standar arsitektur performa tinggi (*Web Worker Mesh Generation*, *Frustum Culling*, *Mob Object Pooling*, *Procedural Audio Synthesizer*, dan *WebSocket Multiplayer Sync*).
+
+**v2.0 Expansion** menambahkan 10 sistem baru: Ocean, Cave Expansion, Village, Iron Golem, Skeleton, Spider, Enderman, Nether Portal & Dimension, Animal baru, dan Food/Cooking.
 
 ---
 
 ## 🚀 Fitur Utama
 
-- 🏡 **Perkampungan Warga & Struktur Prefab (Villages & Prefabs)**: Generasi struktur otomatis desa di bioma datar (*Plains*), prefab rumah kayu & batu (*Oak & Cobblestone Houses*), ladang pertanian gandum, jalan setapak tanah (*Dirt Paths*), serta peti harta karun (*Village Loot Chests*).
-- 🧑‍🌾 **Warga Desa & Iron Golem NPC (Villagers & Iron Golems)**:
-  - **Villager NPC**: Warga desa 3D dengan jubah cokelat, hidung besar, AI berjalan di jalan setapak (*Dirt Path preference*), dan efek suara khas nasal *"Hmm"*.
-  - **Iron Golem**: Pelindung desa raksasa 2.7 blok tinggi (100 HP), patroli perbatasan desa, AI membantai mob musuh otomatis, animasi lemparan lengan ke atas (*Upward Arm Toss*), dan menjatuhkan *Iron Ingot*.
-- 💀 **Pemanah Skeleton & Proyektil Panah (Skeleton & Ballistic Arrow)**: Skeleton 3D memegang busur kayu, AI pengejaran taktis menjaga jarak ideal (6-12 blok), sistem proyektil anak panah dengan fisika lintasan parabola (*Ballistic Trajectory Arc*), deteksi tabrakan *Damage & Knockback*, serta drop *Bone* & *Arrow*.
-- 🕷️ **Laba-laba Merayap Tebing & Terjang (Wall-Climbing Spider)**: Spider 3D berkaki 8 dengan mata merah menyala, animasi merayap cepat, fisika panjat tebing vertikal (*Vertical Wall-Climbing Physics*), serangan melompat menerjang (*Leap Attack*), serta drop *String*.
-- 👁️ **Enderman & Efek Partikel Ungu (Tall Enderman & Ender Particles)**: Enderman 3D setinggi 2.9 blok dengan badan hitam pekat, mata magenta glowing, melayang partikel ungu (*Floating Purple Ender Particles*), dan AI netral hingga terprovokasi.
-- 🌋 **Ekspansi Gua & Jurang Ravine (Cave Expansion & Ravines)**: Generasi jurang terjal dalam (*Ravines*), terowongan gua 3D noise dalam, kolam lahar panas (*Lava Pools*), dan kluster batuan *Obsidian* di kedalaman gua.
-- 🎨 **100% Authentic Minecraft UI/UX Design System**:
-  - **Enlarged Inventory & Crafting UI (56px Slots)**: Grid inventaris dan crafting table 3x3 yang dibesarkan dengan slot 56px, ikon 3D 38px, font 15px bold, serta bingkai 3D Bevel abu-abu khas GUI Minecraft klasik (`#c6c6c6`).
-  - **Contiguous GUI Hotbar**: Hotbar bawah 1 baris kontainer padat abu-abu (`#8b8b8b`) dilengkapi bingkai 3D seleksi putih berkilau (`#ffffff`).
-  - **Main Menu & Options Screen**: Latar belakang tekstur *Minecraft Dirt Block (64x64 repeat)*, Judul 3D `MINECRAFT LITE`, *Splash Yellow Text* bergoyang (*"100% TS + Three.js Voxel Engine!"*), dan tombol-tombol batu 3D Minecraft (*Beveled Stone Buttons*).
-  - **Minecraft Crosshair & F3 Overlay**: Formasi Crosshair `+` piksel resmi 16x16 dan overlay F3 2-kolom khas Minecraft.
-- 🔥 **Authentic Cross-Mesh Torch & Lighting**: Obor di dunia dan di tangan menggunakan model silang X 2-plane dengan tekstur 16x16 `torch.png` yang otentik, lengkap dengan pancaran cahaya api berkerlip hangat (*Torch Light Manager*).
-- 🛡️ **Smooth Non-Solid Physics Collision**: Blok non-padat (obor, tanaman gandum, air) bebas ditrobos tanpa membuat karakter atau mob tersangkut/glitch.
-- 🌍 **Procedural Voxel World Generation**: Simplex Noise terrain dengan bioma beragam (Plains, Forest, Desert, Mountains), struktur pohon, gua, perairan cair, serta air mengalir dinamis.
-- 🎨 **16x16 Authentic Pixel-Art Textures**: Tekstur piksel 16x16 khusus untuk seluruh jenis blok (`grass`, `dirt`, `stone`, `sand`, `wood_log`, `plank`, `farmland`, `wheat_crop`, `chest`, `crafting_table`, `torch`, `obsidian`, dll).
-- ☁️ **3D Volumetric Voxel Cloud Layer**: Awan 3D berstruktur voxel kecil-kecil yang tersebar secara natural di langit (`Y = 120`), melayang perlahan ditiup angin, dan berganti warna dinamis.
-- ☀️ **Orbital Celestial System (Sun, Moon & Starfield)**: Matahari & Bulan 3D mengorbit secara real-time dengan 400 bintang berkilauan di langit malam.
-- 🌾 **Sistem Pertanian & Cangkul (Farming & Agriculture)**: Cangkul (*Wooden/Stone Hoe*) & penanaman benih (*Wheat Seeds*) serbaguna langsung di tanah/rumput dengan fitur *auto-tilling*, pertumbuhan gandum 4 tahap, dan panen *Bread* (+5 HP).
-- 🤿 **3D Ocean Diving & Oxygen System**: Fitur berenang dan menyelam bawah air (*camera pitch diving*), filter transparan laut dalam (*blue aquatic tint*), serta bar gelembung nafas (*Oxygen Bubbles UI*).
-- 📦 **Peti Penyimpanan (Storage Chest System)**: Blok peti 27-slot interaktif untuk menyimpan item berlebih secara permanen per koordinat lokasi dunia.
-- 💡 **Dynamic Held Torch Lighting**: Obor di tangan (*Held Torch*) memberikan pancaran cahaya api melayang (*flickering pointlight*) secara real-time saat menjelajahi gua atau malam hari.
-- 🎯 **F3 Debug Screen Overlay**: Overlay statistik modern berefek *glassmorphism* menampilkan FPS, koordinat XYZ pemain, lokasi Chunk `[CX, CZ]`, arah mata angin (*Facing*), bioma aktif, dan jumlah mob aktif.
-- 🔔 **Toast Notification System**: Banner notifikasi mengambang di kanan bawah layar (`+1 Item`, `Wheat Planted!`, `World Saved!`), dilengkapi filter pintar penambangan massal.
-- 💥 **Mob Hit Visual Flash & Knockback**: Kilatan warna merah terang (`0xff3333`) pada mob saat menerima damage serta efek terpental (*knockback*).
-- ⚡ **Web Worker Mesh Generation**: Multithreaded chunk meshing tanpa alokasi memori berlebih (*Zero-copy Transferable ArrayBuffers*).
-- 🛠️ **System Crafting & Inventory**: Grid crafting 3x3, hotbar 9 slot, drag-and-drop UI, split stack / drop 1 item, serta tooltip nama item otomatis.
-- 🎵 **Web Audio API Sound Synthesizer**: Suara hancur/pasang blok, langkah kaki (*footstep*), deru angin, jangkrik malam (*cricket chirps*), suara warga *"Hmm"*, dan musik latar (*background music*) prosedural.
-- 🌐 **Real-time WebSocket Multiplayer & Chat**: Multiplayer 2-player client sync untuk posisi avatar 3D, modifikasi blok, damage mob, serta kotak chat *in-game* (`[T]`).
-- 💾 **IndexedDB Auto Save System**: Menyimpan posisi pemain, waktu dunia, isi inventory, struktur desa, dan perubahan blok secara otomatis.
+### 🌍 World & Environment
+- 🏡 **Perkampungan Warga & Struktur Prefab (Villages & Prefabs)**: Generasi struktur otomatis desa di bioma datar (*Plains*), prefab rumah kayu & batu, ladang pertanian gandum, jalan setapak tanah, serta peti harta karun.
+- 🌋 **Ekspansi Gua & Jurang Ravine**: Generasi jurang terjal dalam (*Ravines*), terowongan gua 3D noise dalam, kolam lahar panas (*Lava Pools*), dan kluster *Obsidian*.
+- 🌊 **River & Water Polish**: Sungai dan danau dangkal, transisi pantai pasir, lereng tepian halus, air mengalir dinamis.
+- 🔮 **Nether Portal & Dimension**: Portal Nether obsidian 4x5, countdown 3 detik teleportasi, dimensi Nether dengan terrain gua, lava ocean, fog merah, dan spawning mob unik.
+
+### 🧑‍🌾 NPC & Mob
+- **Villager NPC**: Warga desa 3D dengan AI berjalan di jalan setapak dan efek suara khas *"Hmm"*.
+- **Iron Golem**: Pelindung desa raksasa (100 HP), patroli perbatasan, AI membantai mob musuh.
+- 💀 **Skeleton**: Pemanah 3D dengan proyektil anak panah (*Ballistic Trajectory Arc*).
+- 🕷️ **Spider**: Laba-laba berkaki 8 dengan fisika panjat tebing vertikal dan serangan melompat.
+- 👁️ **Enderman**: Setinggi 2.9 blok, mata magenta glowing, partikel ungu, teleportasi acak, provokasi tatapan.
+- 🐄 **Cow**: Hewan ternak dasar dengan drop Raw Beef.
+- 🐷 **Pig**: Babi pink dengan animasi trot dan drop Raw Porkchop.
+- 🐔 **Chicken**: Ayam dengan drop Raw Chicken & Feather.
+- 🐐 **Goat**: Kambing gunung dengan lompatan tinggi Y=8.5 dan drop Mutton.
+- 🐢 **Turtle**: Kura-kura dengan AI pantai/air, kecepatan berenang 2.2.
+
+### 🎮 Gameplay
+- 🍖 **Food & Cooking System**: Daging mentah → daging matang via Furnace (Block ID 10), makan daging matang mengembalikan 8 HP.
+- 🛠️ **Crafting System**: Grid crafting 3x3 dengan 24+ resep termasuk Iron Tools, Bow, Arrow, dan Netherrack-to-Glowstone.
+- 📦 **Peti Penyimpanan**: Blok peti 27-slot interaktif.
+- 🌾 **Farming**: Cangkul, penanaman benih, pertumbuhan gandum 4 tahap.
+- 🤿 **Ocean Diving & Oxygen System**: Berenang dan menyelam, bar gelembung nafas.
+
+### 🎨 Visual & Audio
+- 🎨 **100% Authentic Minecraft UI/UX Design System**: Inventory, Crafting, Hotbar, Main Menu, F3 Debug Overlay.
+- 🔥 **Torch & Dynamic Lighting**: Obor silang X 2-plane dengan pancaran cahaya berkerlip.
+- ☁️ **3D Volumetric Voxel Cloud Layer**: Awan 3D berstruktur voxel.
+- ☀️ **Orbital Celestial System**: Matahari & Bulan 3D mengorbit dengan 400 bintang.
+- 🎵 **Web Audio API Sound Synthesizer**: 20+ suara prosedural (mob, blok, portal, ambient).
+- 🌐 **WebSocket Multiplayer**: 2-player sync untuk posisi, blok, damage, dan chat.
+
+### ⚡ Performance
+- **Web Worker Mesh Generation**: Multithreaded chunk meshing.
+- **Distance Culling**: Mob di luar 80 blok di-hide & skip AI, despawn otomatis >120 blok.
+- **Item Drop Pooling**: Max 50 drop aktif, auto-expire 60 detik, distance culling 40 blok.
+- **Frustum Culling**: Hanya render chunk dalam view frustum.
 
 ---
 
@@ -44,62 +53,60 @@ Mini Minecraft adalah game sandbox voxel 3D berbasis **Three.js**, **TypeScript*
 
 | Tombol | Fungsi |
 |---|---|
-| **W, A, S, D** | Bergerak (Maju, Kiri, Mundur, Kanan) / Berenang mengarah ke sudut pandang kamera |
-| **Spacebar** | Melompat (*Jump*) / Berenang naik ke atas permukaan air (*Swim Up*) |
-| **Shift / C** | Berjalan Pelan (*Sneak*) / Menyelam turun ke dasar laut (*Dive Down*) |
-| **Klik Kiri Mouse** | Memecahkan / Menghancurkan Blok / Menyerang Mob |
-| **Klik Kanan Mouse** | Memasang Blok / Membuka Peti / Mencangkul / Menanam Seeds / Memakan Makanan |
-| **Scroll Mouse / Angka 1-9** | Mengganti Slot Active Hotbar |
-| **E** | Membuka / Menutup Layar Inventory & Crafting Grid (3x3) |
-| **F3** | Membuka / Menutup Layar Debug Overlay (FPS, XYZ, Chunk, Bioma) |
-| **T** | Membuka Kotak Chat Multiplayer (*In-Game Chat Box*) |
-| **Escape (ESC)** | Membuka / Menutup Pause Menu / Menutup Peti & Inventaris |
+| **W, A, S, D** | Bergerak (Maju, Kiri, Mundur, Kanan) / Berenang |
+| **Spacebar** | Melompat / Berenang naik |
+| **Shift / C** | Berjalan Pelan (*Sneak*) / Menyelam |
+| **Klik Kiri Mouse** | Menghancurkan Blok / Menyerang Mob |
+| **Klik Kanan Mouse** | Memasang Blok / Membuka Peti / Mencangkul / Menanam / Memasak / Makan |
+| **Scroll Mouse / Angka 1-9** | Mengganti Slot Hotbar |
+| **E** | Membuka Inventory & Crafting Grid |
+| **F3** | Debug Overlay (FPS, XYZ, Chunk, Bioma, Dimension) |
+| **T** | Membuka Chat Multiplayer |
+| **Escape** | Pause Menu / Menutup UI |
 
 ---
 
-## 📜 Panduan Resep Crafting Item (Item Crafting Recipes)
+## 📜 Panduan Resep Crafting
 
-Tekan tombol **`E`** di dalam game untuk membuka layar Inventory & Crafting Grid (2x2 di inventaris atau 3x3 via Crafting Table). Berikut adalah tabel lengkap kombinasi item yang bisa dibuat (*create*):
+Tekan **`E`** untuk membuka Inventory & Crafting Grid.
 
-### 1. Material Dasar & Komponen
+### Material Dasar
 
-| Hasil Crafting | Jumlah | Kombinasi Pola Grid (Crafting Pattern) | Bahan Yang Dibutuhkan |
+| Hasil | Jumlah | Pola Grid | Bahan |
 |---|---|---|---|
-| 🪵 **Plank** (Papan Kayu) | 4x | `[ Wood Log ]` | 1x Wood Log |
-| 🥢 **Stick** (Stik Kayu) | 4x | `[ Plank ]`<br>`[ Plank ]` | 2x Planks (Vertikal) |
-| 🛠️ **Crafting Table** | 1x | `[ Plank ][ Plank ]`<br>`[ Plank ][ Plank ]` | 4x Planks (Grid 2x2) |
-| 📦 **Chest** (Peti) | 1x | `[ Plank ][ Plank ][ Plank ]`<br>`[ Plank ][   -   ][ Plank ]`<br>`[ Plank ][ Plank ][ Plank ]` | 8x Planks (Bingkai 3x3) |
-| 💡 **Torch** (Obor) | 4x | `[ Plank / Wood Log ]`<br>`[ Stick ]` | 1x Plank/Log + 1x Stick |
-| 🥪 **Sandstone** | 1x | `[ Sand ][ Sand ]`<br>`[ Sand ][ Sand ]` | 4x Sand (Grid 2x2) |
-| 🍞 **Bread** (Roti) | 1x | `[ Wheat ][ Wheat ][ Wheat ]` | 3x Wheat (Horizontal) |
+| 🪵 **Plank** | 4x | `[ Wood Log ]` | 1x Wood Log |
+| 🥢 **Stick** | 4x | `[ Plank ][ Plank ]` (Vertikal) | 2x Planks |
+| 🛠️ **Crafting Table** | 1x | Grid 2x2 Planks | 4x Planks |
+| 📦 **Chest** | 1x | Bingkai 3x3 Planks | 8x Planks |
+| 💡 **Torch** | 4x | `[ Plank/Log ][ Stick ]` | 1x Plank/Log + 1x Stick |
+| 🍞 **Bread** | 1x | `[ Wheat x3 ]` (Horizontal) | 3x Wheat |
+| 🥪 **Sandstone** | 1x | Grid 2x2 Sand | 4x Sand |
+| ✨ **Glowstone** | 1x | Grid 2x2 Netherrack | 4x Netherrack |
+
+### Peralatan Kayu & Batu
+
+| Hasil | Bahan |
+|---|---|
+| ⛏️ **Wooden/Stone Pickaxe** | 3x Material + 2x Sticks |
+| 🗡️ **Wooden/Stone Sword** | 2x Material + 1x Stick |
+| 🪓 **Wooden/Stone Axe** | 3x Material + 2x Sticks |
+| 🧹 **Wooden/Stone Shovel** | 1x Material + 2x Sticks |
+| 🧑‍🌾 **Wooden/Stone Hoe** | 2x Material + 2x Sticks |
+
+### Peralatan Besi (v2.0)
+
+| Hasil | Bahan |
+|---|---|
+| ⛏️ **Iron Pickaxe** | 3x Iron Ingot + 2x Sticks |
+| 🗡️ **Iron Sword** | 2x Iron Ingot + 1x Stick |
+| 🪓 **Iron Axe** | 3x Iron Ingot + 2x Sticks |
+| 🧹 **Iron Shovel** | 1x Iron Ingot + 2x Sticks |
+| 🏹 **Bow** | 3x Stick + 3x String |
+| 🏹 **Arrow** (4x) | 1x Stone + 1x Stick + 1x Feather |
 
 ---
 
-### 2. Peralatan & Senjata Kayu (Wooden Tools)
-
-| Hasil Crafting | Kombinasi Pola Grid 3x3 | Bahan Yang Dibutuhkan |
-|---|---|---|
-| ⛏️ **Wooden Pickaxe** | `[ Plank ][ Plank ][ Plank ]`<br>`[   -   ][ Stick ][   -   ]`<br>`[   -   ][ Stick ][   -   ]` | 3x Planks + 2x Sticks |
-| 🗡️ **Wooden Sword** | `[ Plank ]`<br>`[ Plank ]`<br>`[ Stick ]` | 2x Planks + 1x Stick |
-| 🪓 **Wooden Axe** | `[ Plank ][ Plank ]`<br>`[ Plank ][ Stick ]`<br>`[   -   ][ Stick ]` | 3x Planks + 2x Sticks |
-| 🧹 **Wooden Shovel** | `[ Plank ]`<br>`[ Stick ]`<br>`[ Stick ]` | 1x Plank + 2x Sticks |
-| 🧑‍🌾 **Wooden Hoe** | `[ Plank ][ Plank ]`<br>`[   -   ][ Stick ]`<br>`[   -   ][ Stick ]` | 2x Planks + 2x Sticks |
-
----
-
-### 3. Peralatan & Senjata Batu (Stone Tools)
-
-| Hasil Crafting | Kombinasi Pola Grid 3x3 | Bahan Yang Dibutuhkan |
-|---|---|---|
-| ⛏️ **Stone Pickaxe** | `[ Stone ][ Stone ][ Stone ]`<br>`[   -   ][ Stick ][   -   ]`<br>`[   -   ][ Stick ][   -   ]` | 3x Stone + 2x Sticks |
-| 🗡️ **Stone Sword** | `[ Stone ]`<br>`[ Stone ]`<br>`[ Stick ]` | 2x Stone + 1x Stick |
-| 🪓 **Stone Axe** | `[ Stone ][ Stone ]`<br>`[ Stone ][ Stick ]`<br>`[   -   ][ Stick ]` | 3x Stone + 2x Sticks |
-| 🧹 **Stone Shovel** | `[ Stone ]`<br>`[ Stick ]`<br>`[ Stick ]` | 1x Stone + 2x Sticks |
-| 🧑‍🌾 **Stone Hoe** | `[ Stone ][ Stone ]`<br>`[   -   ][ Stick ]`<br>`[   -   ][ Stick ]` | 2x Stone + 2x Sticks |
-
----
-
-## 💻 Cara Install & Menjalankan Game Secara Lokal
+## 💻 Cara Install & Menjalankan Game
 
 ### Prerequisites
 - [Node.js](https://nodejs.org/) (v18 atau lebih baru)
@@ -107,24 +114,18 @@ Tekan tombol **`E`** di dalam game untuk membuka layar Inventory & Crafting Grid
 
 ### 1. Menjalankan Client Game
 ```bash
-# Clone repository
 git clone https://github.com/Gavinnaufal/minecraft-lite.git
 cd minecraft-lite
-
-# Install dependencies
 npm install
-
-# Jalankan dev server
 npm run dev
 ```
 Buka browser di `http://localhost:5173`.
 
-### 2. Menjalankan Server Multiplayer WebSocket (Opsional)
+### 2. Server Multiplayer (Opsional)
 ```bash
-# Buka terminal kedua di root project
 npx tsx server/server.ts
 ```
-Server multiplayer akan berjalan di `ws://localhost:8080`.
+Server multiplayer di `ws://localhost:8080`.
 
 ---
 
@@ -133,7 +134,7 @@ Server multiplayer akan berjalan di `ws://localhost:8080`.
 ```bash
 npm run build
 ```
-Hasil kompilasi produksi siap di-deploy terletak di folder `dist/`.
+Hasil di folder `dist/`.
 
 ---
 
@@ -141,26 +142,29 @@ Hasil kompilasi produksi siap di-deploy terletak di folder `dist/`.
 
 ```
 minecraft-lite/
-├── docs/                   # Dokumentasi Arsitektur, GDD, PRD, Roadmap & Taskboard (v1 + v2)
-├── public/                 # Assets (Tekstur 16x16 Pixel Art & Icons)
-├── server/                 # Node.js WebSocket Multiplayer Server
+├── docs/                   # Dokumentasi (GDD, PRD, Roadmap, Taskboard v1 + v2)
+├── public/                 # Assets (Tekstur 16x16 Pixel Art)
+├── server/                 # WebSocket Multiplayer Server
 ├── src/
-│   ├── audio/              # Web Audio API Synthesizer (AudioManager.ts)
-│   ├── core/               # Game Engine, Input, Clock, & Renderer
-│   ├── entities/           # Entitas Proyektil (Arrow.ts, ProjectileManager.ts)
-│   ├── environment/        # Skybox, DayNightCycle, & CloudManager (3D Clouds, Sun/Moon/Stars)
-│   ├── interaction/        # BlockBreaker, BlockPlacer, & BlockHighlight
-│   ├── inventory/          # Inventory, Hotbar, CraftingRecipes, & ItemRegistry
-│   ├── mobs/               # Mob Base, MobManager & AI State Machine
+│   ├── audio/              # Web Audio API Synthesizer
+│   ├── core/               # Engine, Input, Clock, Renderer, GameSettings
+│   ├── crafting/           # Crafting Recipes
+│   ├── entities/           # Proyektil (Arrow, ProjectileManager)
+│   ├── environment/        # Skybox, DayNightCycle, CloudManager
+│   ├── interaction/        # BlockBreaker, BlockPlacer, BlockHighlight
+│   ├── inventory/          # Inventory, Hotbar, ItemRegistry
+│   ├── mobs/               # Mob Base, MobManager, AI State Machine
 │   │   ├── hostile/        # Zombie, Skeleton, Spider, Enderman
 │   │   ├── npc/            # Villager, IronGolem
-│   │   └── passive/        # Cow
-│   ├── multiplayer/        # WebSocket NetworkManager
-│   ├── player/             # Player Physics, Controller, Collision, & Raycaster
+│   │   └── passive/        # Cow, Pig, Chicken, Goat, Turtle
+│   ├── multiplayer/        # WebSocket NetworkManager, ChatBox
+│   ├── player/             # Player Physics, Controller, Collision, Raycaster
 │   ├── save/               # IndexedDB SaveManager & StorageAdapter
-│   ├── ui/                 # MainMenu, HUD, InventoryScreen, DebugScreen, ToastSystem, PauseMenu, & SettingsMenu
-│   ├── world/              # Chunk, ChunkManager, ChunkMesher (Worker), & Terrain Generator
-│   │   └── structures/     # VillageGenerator, House Prefabs, VillageLoot
+│   ├── ui/                 # MainMenu, HUD, Inventory, Debug, Toast, Settings, DimensionOverlay
+│   ├── world/              # Chunk, ChunkManager, ChunkMesher (Worker), Terrain Generator
+│   │   ├── dimension/      # DimensionManager, NetherWorldGenerator, PortalDetector
+│   │   ├── structures/     # VillageGenerator, House Prefabs, VillageLoot
+│   │   └── terrain/        # NoiseGenerator, HeightMap, BiomeGenerator
 │   ├── main.ts             # Application Entry Point
 │   └── style.css           # Game Styling
 ├── vercel.json             # SPA Deployment Config

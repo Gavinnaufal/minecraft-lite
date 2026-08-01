@@ -87,11 +87,16 @@ function getWaterTerrain(wx: number, wz: number) {
   const biome = biomeGen.getBiome(wx, wz);
   const notDesert = biome !== BiomeType.Desert;
 
+  // Distance from spawn point (0, 0)
+  const spawnDist = Math.hypot(wx, wz);
+  // Spawn protection: 0 within 35 blocks of spawn, smoothly fading in up to 75 blocks
+  const spawnFactor = Math.min(1, Math.max(0, (spawnDist - 35) / 40));
+
   // River noise (iso-line technique)
   const riverVal = lakeNoise.noise2D(wx / 55, wz / 55);
   const distFromCenter = Math.abs(riverVal - 0.5);
 
-  // Pool noise
+  // Pool noise for small shallow puddles/ponds
   const poolVal = lakeNoise.noise2D(wx / 35, wz / 35);
   const poolFactor = Math.max(0, (poolVal - 0.70) / 0.30); // 0 to 1 inside pool
 
@@ -99,42 +104,44 @@ function getWaterTerrain(wx: number, wz: number) {
   let isWater = false;
   let isBeach = false;
 
-  if (notDesert) {
-    // 1. Calculate river channel & smooth bank slope:
-    // River channel: distFromCenter < 0.035
-    // Wide smooth bank slope: distFromCenter from 0.035 to 0.18 (over ~15-20 blocks)
+  if (notDesert && spawnFactor > 0) {
+    // 1. River channel & smooth bank slope:
     let riverTargetH = baseH;
 
     if (distFromCenter < 0.035) {
       const depthFactor = 1 - (distFromCenter / 0.035);
-      const depth = 1 + Math.round(depthFactor * 2); // 1 to 3 blocks deep
+      // Very shallow: 1 block deep (or 2 in exact center)
+      const depth = depthFactor > 0.6 ? 2 : 1;
       riverTargetH = WATER_LEVEL - depth;
     } else if (distFromCenter < 0.18) {
       // Smooth transition zone across ~15 blocks
-      const t = (distFromCenter - 0.035) / (0.18 - 0.035); // 0 to 1
-      const smoothT = t * t * (3 - 2 * t); // Smoothstep curve
+      const t = (distFromCenter - 0.035) / (0.18 - 0.035);
+      const smoothT = t * t * (3 - 2 * t);
       const waterEdgeH = WATER_LEVEL - 1;
       riverTargetH = Math.round(waterEdgeH + (baseH - waterEdgeH) * smoothT);
     }
 
-    // 2. Calculate pool/lake channel & smooth bank slope:
+    // 2. Small shallow puddle/lake channel:
     let poolTargetH = baseH;
 
     if (poolFactor > 0) {
       if (poolFactor > 0.2) {
-        const depth = 1 + Math.round(poolFactor * 2);
+        // Very shallow: 1 block deep (or 2 in center)
+        const depth = poolFactor > 0.7 ? 2 : 1;
         poolTargetH = WATER_LEVEL - depth;
       } else {
-        // Smooth pool edge transition
-        const t = 1.0 - (poolFactor / 0.2); // 0 at pool inner edge, 1 at outer edge
+        const t = 1.0 - (poolFactor / 0.2);
         const smoothT = t * t * (3 - 2 * t);
         const waterEdgeH = WATER_LEVEL - 1;
         poolTargetH = Math.round(waterEdgeH + (baseH - waterEdgeH) * smoothT);
       }
     }
 
-    // Combine river and pool depressions smoothly
-    h = Math.min(baseH, Math.min(riverTargetH, poolTargetH));
+    // Combine river and pool depressions
+    const carvedH = Math.min(baseH, Math.min(riverTargetH, poolTargetH));
+
+    // Apply spawn protection blend (prevents water near spawn)
+    h = Math.round(baseH * (1 - spawnFactor) + carvedH * spawnFactor);
 
     if (h < WATER_LEVEL) {
       isWater = true;

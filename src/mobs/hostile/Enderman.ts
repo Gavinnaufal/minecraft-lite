@@ -5,6 +5,7 @@ import type { World } from '../../world/World';
 import type { Player } from '../../player/Player';
 import type { MobManager } from '../MobManager';
 import { AudioManager } from '../../audio/AudioManager';
+import { getBlockById } from '../../world/BlockRegistry';
 
 export class Enderman extends Mob {
   private stateMachine = new StateMachine();
@@ -90,6 +91,7 @@ export class Enderman extends Mob {
   }
 
   private attackTimer = 0;
+  private teleTimer = 0;
 
   override reset(position: THREE.Vector3): void {
     super.reset(position, 40);
@@ -97,12 +99,50 @@ export class Enderman extends Mob {
     this.isProvoked = false;
     this.animTimer = 0;
     this.attackTimer = 0;
+    this.teleTimer = 0;
+  }
+
+  teleportRandomly(world?: World): void {
+    const origin = this.position.clone();
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const radius = 8 + Math.random() * 12;
+      const angle = Math.random() * Math.PI * 2;
+      const tx = origin.x + Math.cos(angle) * radius;
+      const tz = origin.z + Math.sin(angle) * radius;
+      let ty = origin.y;
+
+      if (world) {
+        let foundGround = false;
+        for (let checkY = Math.floor(origin.y) + 5; checkY >= Math.floor(origin.y) - 5; checkY--) {
+          const bBelow = world.getBlock(Math.floor(tx), checkY, Math.floor(tz));
+          const bHead1 = world.getBlock(Math.floor(tx), checkY + 1, Math.floor(tz));
+          const bHead2 = world.getBlock(Math.floor(tx), checkY + 2, Math.floor(tz));
+
+          if (bBelow !== 0 && bBelow !== 7 && getBlockById(bBelow)?.solid && bHead1 === 0 && bHead2 === 0) {
+            ty = checkY + 1;
+            foundGround = true;
+            break;
+          }
+        }
+        if (!foundGround) continue;
+      }
+
+      // Perform Teleport
+      this.position.set(tx, ty, tz);
+      this.mesh.position.copy(this.position);
+      this.velocity.set(0, 0, 0);
+      AudioManager.getInstance().playSFX('click');
+      break;
+    }
   }
 
   override takeDamage(amount: number): boolean {
     const isDead = super.takeDamage(amount);
     this.isProvoked = true;
     this.isHostile = true;
+    if (!isDead && Math.random() < 0.8) {
+      this.teleportRandomly();
+    }
     return isDead;
   }
 
@@ -126,6 +166,15 @@ export class Enderman extends Mob {
           this.isProvoked = true;
           this.isHostile = true;
           AudioManager.getInstance().playSFX('click');
+        }
+      }
+
+      // Periodic teleportation when provoked
+      if (this.isProvoked) {
+        this.teleTimer += deltaTime;
+        if (this.teleTimer >= 6.0) {
+          this.teleTimer = 0;
+          this.teleportRandomly(world);
         }
       }
 

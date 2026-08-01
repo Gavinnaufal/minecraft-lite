@@ -6,6 +6,14 @@ Mini Minecraft adalah game sandbox voxel 3D berbasis **Three.js**, **TypeScript*
 
 ## 🚀 Fitur Utama
 
+- 🏡 **Perkampungan Warga & Struktur Prefab (Villages & Prefabs)**: Generasi struktur otomatis desa di bioma datar (*Plains*), prefab rumah kayu & batu (*Oak & Cobblestone Houses*), ladang pertanian gandum, jalan setapak tanah (*Dirt Paths*), serta peti harta karun (*Village Loot Chests*).
+- 🧑‍🌾 **Warga Desa & Iron Golem NPC (Villagers & Iron Golems)**:
+  - **Villager NPC**: Warga desa 3D dengan jubah cokelat, hidung besar, AI berjalan di jalan setapak (*Dirt Path preference*), dan efek suara khas nasal *"Hmm"*.
+  - **Iron Golem**: Pelindung desa raksasa 2.7 blok tinggi (100 HP), patroli perbatasan desa, AI membantai mob musuh otomatis, animasi lemparan lengan ke atas (*Upward Arm Toss*), dan menjatuhkan *Iron Ingot*.
+- 💀 **Pemanah Skeleton & Proyektil Panah (Skeleton & Ballistic Arrow)**: Skeleton 3D memegang busur kayu, AI pengejaran taktis menjaga jarak ideal (6-12 blok), sistem proyektil anak panah dengan fisika lintasan parabola (*Ballistic Trajectory Arc*), deteksi tabrakan *Damage & Knockback*, serta drop *Bone* & *Arrow*.
+- 🕷️ **Laba-laba Merayap Tebing & Terjang (Wall-Climbing Spider)**: Spider 3D berkaki 8 dengan mata merah menyala, animasi merayap cepat, fisika panjat tebing vertikal (*Vertical Wall-Climbing Physics*), serangan melompat menerjang (*Leap Attack*), serta drop *String*.
+- 👁️ **Enderman & Efek Partikel Ungu (Tall Enderman & Ender Particles)**: Enderman 3D setinggi 2.9 blok dengan badan hitam pekat, mata magenta glowing, melayang partikel ungu (*Floating Purple Ender Particles*), dan AI netral hingga terprovokasi.
+- 🌋 **Ekspansi Gua & Jurang Ravine (Cave Expansion & Ravines)**: Generasi jurang terjal dalam (*Ravines*), terowongan gua 3D noise dalam, kolam lahar panas (*Lava Pools*), dan kluster batuan *Obsidian* di kedalaman gua.
 - 🎨 **100% Authentic Minecraft UI/UX Design System**:
   - **Enlarged Inventory & Crafting UI (56px Slots)**: Grid inventaris dan crafting table 3x3 yang dibesarkan dengan slot 56px, ikon 3D 38px, font 15px bold, serta bingkai 3D Bevel abu-abu khas GUI Minecraft klasik (`#c6c6c6`).
   - **Contiguous GUI Hotbar**: Hotbar bawah 1 baris kontainer padat abu-abu (`#8b8b8b`) dilengkapi bingkai 3D seleksi putih berkilau (`#ffffff`).
@@ -14,7 +22,7 @@ Mini Minecraft adalah game sandbox voxel 3D berbasis **Three.js**, **TypeScript*
 - 🔥 **Authentic Cross-Mesh Torch & Lighting**: Obor di dunia dan di tangan menggunakan model silang X 2-plane dengan tekstur 16x16 `torch.png` yang otentik, lengkap dengan pancaran cahaya api berkerlip hangat (*Torch Light Manager*).
 - 🛡️ **Smooth Non-Solid Physics Collision**: Blok non-padat (obor, tanaman gandum, air) bebas ditrobos tanpa membuat karakter atau mob tersangkut/glitch.
 - 🌍 **Procedural Voxel World Generation**: Simplex Noise terrain dengan bioma beragam (Plains, Forest, Desert, Mountains), struktur pohon, gua, perairan cair, serta air mengalir dinamis.
-- 🎨 **16x16 Authentic Pixel-Art Textures**: Tekstur piksel 16x16 khusus untuk seluruh jenis blok (`grass`, `dirt`, `stone`, `sand`, `wood_log`, `plank`, `farmland`, `wheat_crop`, `chest`, `crafting_table`, `torch`, dll).
+- 🎨 **16x16 Authentic Pixel-Art Textures**: Tekstur piksel 16x16 khusus untuk seluruh jenis blok (`grass`, `dirt`, `stone`, `sand`, `wood_log`, `plank`, `farmland`, `wheat_crop`, `chest`, `crafting_table`, `torch`, `obsidian`, dll).
 - ☁️ **3D Volumetric Voxel Cloud Layer**: Awan 3D berstruktur voxel kecil-kecil yang tersebar secara natural di langit (`Y = 120`), melayang perlahan ditiup angin, dan berganti warna dinamis.
 - ☀️ **Orbital Celestial System (Sun, Moon & Starfield)**: Matahari & Bulan 3D mengorbit secara real-time dengan 400 bintang berkilauan di langit malam.
 - 🌾 **Sistem Pertanian & Cangkul (Farming & Agriculture)**: Cangkul (*Wooden/Stone Hoe*) & penanaman benih (*Wheat Seeds*) serbaguna langsung di tanah/rumput dengan fitur *auto-tilling*, pertumbuhan gandum 4 tahap, dan panen *Bread* (+5 HP).
@@ -26,9 +34,9 @@ Mini Minecraft adalah game sandbox voxel 3D berbasis **Three.js**, **TypeScript*
 - 💥 **Mob Hit Visual Flash & Knockback**: Kilatan warna merah terang (`0xff3333`) pada mob saat menerima damage serta efek terpental (*knockback*).
 - ⚡ **Web Worker Mesh Generation**: Multithreaded chunk meshing tanpa alokasi memori berlebih (*Zero-copy Transferable ArrayBuffers*).
 - 🛠️ **System Crafting & Inventory**: Grid crafting 3x3, hotbar 9 slot, drag-and-drop UI, split stack / drop 1 item, serta tooltip nama item otomatis.
-- 🎵 **Web Audio API Sound Synthesizer**: Suara hancur/pasang blok, langkah kaki (*footstep*), deru angin, jangkrik malam (*cricket chirps*), dan musik latar (*background music*) prosedural.
+- 🎵 **Web Audio API Sound Synthesizer**: Suara hancur/pasang blok, langkah kaki (*footstep*), deru angin, jangkrik malam (*cricket chirps*), suara warga *"Hmm"*, dan musik latar (*background music*) prosedural.
 - 🌐 **Real-time WebSocket Multiplayer & Chat**: Multiplayer 2-player client sync untuk posisi avatar 3D, modifikasi blok, damage mob, serta kotak chat *in-game* (`[T]`).
-- 💾 **IndexedDB Auto Save System**: Menyimpan posisi pemain, waktu dunia, isi inventory, dan perubahan blok secara otomatis.
+- 💾 **IndexedDB Auto Save System**: Menyimpan posisi pemain, waktu dunia, isi inventory, struktur desa, dan perubahan blok secara otomatis.
 
 ---
 
@@ -133,21 +141,26 @@ Hasil kompilasi produksi siap di-deploy terletak di folder `dist/`.
 
 ```
 minecraft-lite/
-├── docs/                   # Dokumentasi Arsitektur, GDD, PRD, Roadmap & Taskboard
+├── docs/                   # Dokumentasi Arsitektur, GDD, PRD, Roadmap & Taskboard (v1 + v2)
 ├── public/                 # Assets (Tekstur 16x16 Pixel Art & Icons)
 ├── server/                 # Node.js WebSocket Multiplayer Server
 ├── src/
 │   ├── audio/              # Web Audio API Synthesizer (AudioManager.ts)
 │   ├── core/               # Game Engine, Input, Clock, & Renderer
+│   ├── entities/           # Entitas Proyektil (Arrow.ts, ProjectileManager.ts)
 │   ├── environment/        # Skybox, DayNightCycle, & CloudManager (3D Clouds, Sun/Moon/Stars)
 │   ├── interaction/        # BlockBreaker, BlockPlacer, & BlockHighlight
 │   ├── inventory/          # Inventory, Hotbar, CraftingRecipes, & ItemRegistry
-│   ├── mobs/               # Mob Base, Cow (Passive), Zombie (Hostile), & MobManager
+│   ├── mobs/               # Mob Base, MobManager & AI State Machine
+│   │   ├── hostile/        # Zombie, Skeleton, Spider, Enderman
+│   │   ├── npc/            # Villager, IronGolem
+│   │   └── passive/        # Cow
 │   ├── multiplayer/        # WebSocket NetworkManager
 │   ├── player/             # Player Physics, Controller, Collision, & Raycaster
 │   ├── save/               # IndexedDB SaveManager & StorageAdapter
 │   ├── ui/                 # MainMenu, HUD, InventoryScreen, DebugScreen, ToastSystem, PauseMenu, & SettingsMenu
 │   ├── world/              # Chunk, ChunkManager, ChunkMesher (Worker), & Terrain Generator
+│   │   └── structures/     # VillageGenerator, House Prefabs, VillageLoot
 │   ├── main.ts             # Application Entry Point
 │   └── style.css           # Game Styling
 ├── vercel.json             # SPA Deployment Config

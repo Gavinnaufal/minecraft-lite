@@ -3,6 +3,8 @@ import { Mob } from '../Mob';
 import { StateMachine, State } from '../ai/StateMachine';
 import type { World } from '../../world/World';
 import type { Player } from '../../player/Player';
+import type { MobManager } from '../MobManager';
+import { AudioManager } from '../../audio/AudioManager';
 
 export class Enderman extends Mob {
   private stateMachine = new StateMachine();
@@ -94,11 +96,36 @@ export class Enderman extends Mob {
     this.animTimer = 0;
   }
 
-  update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, _player?: Player): void {
+  override takeDamage(amount: number): boolean {
+    const isDead = super.takeDamage(amount);
+    this.isProvoked = true;
+    this.isHostile = true;
+    return isDead;
+  }
+
+  update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, _player?: Player, _mobManager?: MobManager, camera?: THREE.PerspectiveCamera): void {
     let isMoving = false;
 
     if (playerPos) {
       const dist3D = this.position.distanceTo(playerPos);
+
+      // Stare check: Provoke when player crosshair looks directly at Enderman head
+      if (!this.isProvoked && camera && dist3D < 25) {
+        const headPos = new THREE.Vector3(this.position.x, this.position.y + 2.65, this.position.z);
+        const camPos = camera.position;
+        const camDir = new THREE.Vector3();
+        camera.getWorldDirection(camDir);
+
+        const toHead = headPos.clone().sub(camPos).normalize();
+        const dot = camDir.dot(toHead);
+
+        if (dot > 0.95) {
+          this.isProvoked = true;
+          this.isHostile = true;
+          AudioManager.getInstance().playSFX('click');
+        }
+      }
+
       const state = this.stateMachine.update(deltaTime, dist3D);
 
       if (this.isProvoked || state === State.Chase) {

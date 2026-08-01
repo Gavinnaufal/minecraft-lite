@@ -83,9 +83,9 @@ export class MobManager {
     return null;
   }
 
-  update(deltaTime: number, playerPos?: THREE.Vector3, player?: Player): void {
+  update(deltaTime: number, playerPos?: THREE.Vector3, player?: Player, camera?: THREE.PerspectiveCamera): void {
     for (const mob of this.mobs) {
-      mob.update(deltaTime, this.world, playerPos, player, this);
+      mob.update(deltaTime, this.world, playerPos, player, this, camera);
     }
   }
 }

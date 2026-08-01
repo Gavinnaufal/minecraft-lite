@@ -657,7 +657,7 @@ engine.setUpdateCallback((deltaTime) => {
     }
   }
 
-  mobManager.update(deltaTime, new THREE.Vector3(player.position.x, player.position.y, player.position.z), player);
+  mobManager.update(deltaTime, new THREE.Vector3(player.position.x, player.position.y, player.position.z), player, camera);
   ProjectileManager.getInstance().update(deltaTime, world, player, mobManager);
 
   blockBreaker.updateOutline(camera);

@@ -33,7 +33,7 @@ export class Mob {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  update(deltaTime: number, world?: World, _playerPos?: THREE.Vector3, _player?: Player, _mobManager?: MobManager): void {
+  update(deltaTime: number, world?: World, _playerPos?: THREE.Vector3, _player?: Player, _mobManager?: MobManager, _camera?: THREE.PerspectiveCamera): void {
     if (this.hitFlashTimer > 0) {
       this.hitFlashTimer -= deltaTime;
       if (this.hitFlashTimer <= 0) {

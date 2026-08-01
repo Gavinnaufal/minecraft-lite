@@ -107,12 +107,16 @@ export class IronGolem extends Mob {
 
   private targetMob: Mob | null = null;
   private attackCooldown = 0;
+  private attackAnimTimer = 0;
 
   update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, _player?: Player, mobManager?: MobManager): void {
     let isMoving = false;
 
     if (this.attackCooldown > 0) {
       this.attackCooldown -= deltaTime;
+    }
+    if (this.attackAnimTimer > 0) {
+      this.attackAnimTimer -= deltaTime;
     }
 
     // 1. Scan for nearby hostile mobs within 12 blocks
@@ -139,13 +143,14 @@ export class IronGolem extends Mob {
       const attackDir = new THREE.Vector3().subVectors(this.targetMob.position, this.position).normalize();
 
       if (distToTarget <= 2.2) {
-        // Perform attack
+        // Perform attack with upward toss animation
         this.velocity.x = 0;
         this.velocity.z = 0;
         if (this.attackCooldown <= 0) {
           this.targetMob.takeDamage(15);
           this.targetMob.applyKnockback(attackDir, 8.0);
           this.attackCooldown = 1.2; // Attack cooldown 1.2s
+          this.attackAnimTimer = 0.45; // Trigger upward arm swing animation
         }
       } else {
         // Chase hostile target
@@ -222,8 +227,14 @@ export class IronGolem extends Mob {
       }
     }
 
-    // Heavy Golem Stride Animation
-    if (isMoving) {
+    // Heavy Golem Stride & Attack Toss Animation
+    if (this.attackAnimTimer > 0) {
+      // Iconic Upward Arm Toss Swing
+      const progress = 1.0 - (this.attackAnimTimer / 0.45);
+      const armUp = -Math.sin(progress * Math.PI) * 1.8;
+      this.armL.rotation.x = armUp;
+      this.armR.rotation.x = armUp;
+    } else if (isMoving) {
       this.animTimer += deltaTime * 5;
       const swing = Math.sin(this.animTimer) * 0.35;
       this.legL.rotation.x = swing;

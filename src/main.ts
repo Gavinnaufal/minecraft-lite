@@ -30,6 +30,7 @@ import { NoiseGenerator, seedFromString } from './world/terrain/NoiseGenerator';
 import { HeightMap } from './world/terrain/HeightMap';
 import { BiomeGenerator, BiomeType } from './world/terrain/BiomeGenerator';
 import { generateTrees } from './world/terrain/TreeGenerator';
+import { VillageGenerator } from './world/structures/VillageGenerator';
 import { BlockBreaker } from './interaction/BlockBreaker';
 import { BlockPlacer } from './interaction/BlockPlacer';
 import { Inventory } from './inventory/Inventory';
@@ -72,6 +73,7 @@ function createGenerators(seed: number) {
 }
 
 let { heightMap, biomeGen, caveNoise, lakeNoise } = createGenerators(worldSeed);
+const villageGen = new VillageGenerator();
 
 // Player & physics
 const player = new Player();
@@ -215,6 +217,7 @@ chunkManager.terrainFiller = (chunk: Chunk) => {
     }
   }
   generateTrees(chunk, heightMap, biomeGen);
+  villageGen.generateForChunk(chunk, heightMap, biomeGen);
   world.applyModificationsToChunk(chunk);
 };
 

@@ -231,8 +231,39 @@ chunkManager.terrainFiller = (chunk: Chunk) => {
   generateTrees(chunk, heightMap, biomeGen);
   villageGen.generateForChunk(chunk, heightMap, biomeGen);
   villageGen.spawnVillageNPCsForChunk(chunk, mobManager, heightMap, biomeGen);
+  spawnNaturalMobsForChunk(chunk, mobManager, heightMap, biomeGen);
   world.applyModificationsToChunk(chunk);
 };
+
+function spawnNaturalMobsForChunk(chunk: Chunk, mobManager: MobManager, heightMap: HeightMap, biomeGen: BiomeGenerator): void {
+  if (mobManager.mobs.length >= mobManager.mobCap) return;
+  if (Math.random() > 0.45) return;
+
+  const worldX = chunk.chunkX * CHUNK_SIZE_X + Math.floor(Math.random() * (CHUNK_SIZE_X - 2)) + 1;
+  const worldZ = chunk.chunkZ * CHUNK_SIZE_Z + Math.floor(Math.random() * (CHUNK_SIZE_Z - 2)) + 1;
+  const h = heightMap.getHeight(worldX, worldZ);
+  if (h <= WATER_LEVEL + 1) return;
+
+  const spawnPos = new THREE.Vector3(worldX, h + 1, worldZ);
+
+  for (const existing of mobManager.mobs) {
+    if (existing.position.distanceTo(spawnPos) < 10) return;
+  }
+
+  const biome = biomeGen.getBiome(worldX, worldZ);
+  const rand = Math.random();
+
+  if (biome === BiomeType.Mountain || h > 70) {
+    mobManager.spawn(spawnPos, new Goat(spawnPos));
+  } else if (biome === BiomeType.Desert) {
+    mobManager.spawn(spawnPos, new Turtle(spawnPos));
+  } else {
+    if (rand < 0.30) mobManager.spawn(spawnPos, new Pig(spawnPos));
+    else if (rand < 0.60) mobManager.spawn(spawnPos, new Chicken(spawnPos));
+    else if (rand < 0.85) mobManager.spawn(spawnPos, new Cow(spawnPos));
+    else mobManager.spawn(spawnPos, new Enderman(spawnPos));
+  }
+}
 
 console.log(`[Seed] World seed: "${worldSeedString}" (${worldSeed})`);
 
@@ -254,21 +285,33 @@ camera.position.set(player.position.x, player.position.y + player.eyeHeight, pla
 chunkManager.update(player.position.x, player.position.z, gameSettings.renderDistance);
 console.log(`[World] Loading terrain around (${player.position.x.toFixed(0)}, ${player.position.z.toFixed(0)})...`);
 
-// Spawn initial mobs on solid land
-function getLandSpawnPos(originX: number, originZ: number, radius: number): THREE.Vector3 | null {
-  for (let attempt = 0; attempt < 15; attempt++) {
-    const rx = originX + (Math.random() - 0.5) * radius;
-    const rz = originZ + (Math.random() - 0.5) * radius;
+// Spawn initial mobs on solid land (scattered uniformly in polar rings 20..105 blocks away)
+function getLandSpawnPos(originX: number, originZ: number, minRadius: number, maxRadius: number): THREE.Vector3 | null {
+  for (let attempt = 0; attempt < 25; attempt++) {
+    const angle = Math.random() * Math.PI * 2;
+    const radius = minRadius + Math.random() * (maxRadius - minRadius);
+    const rx = originX + Math.cos(angle) * radius;
+    const rz = originZ + Math.sin(angle) * radius;
     const h = heightMap.getHeight(rx, rz);
     if (h > WATER_LEVEL + 1) {
-      return new THREE.Vector3(rx, h + 1, rz);
+      const pos = new THREE.Vector3(rx, h + 1, rz);
+      let tooClose = false;
+      for (const m of mobManager.mobs) {
+        if (m.position.distanceTo(pos) < 10) {
+          tooClose = true;
+          break;
+        }
+      }
+      if (!tooClose) return pos;
     }
   }
   return null;
 }
 
-for (let i = 0; i < 6; i++) {
-  const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 45);
+for (let i = 0; i < 14; i++) {
+  const minR = 20 + (i % 4) * 20;
+  const maxR = minR + 25;
+  const spawnPos = getLandSpawnPos(player.position.x, player.position.z, minR, maxR);
   if (spawnPos) {
     const topBlock = world.getBlock(Math.floor(spawnPos.x), Math.floor(spawnPos.y - 1), Math.floor(spawnPos.z));
     const rand = Math.random();
@@ -672,7 +715,7 @@ engine.setUpdateCallback((deltaTime) => {
 
   // Spawn hostile mobs at night on solid land (Overworld only)
   if (!DimensionManager.getInstance().isNether() && dayNight.isNight && mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.01) {
-    const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 40);
+    const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 25, 70);
     if (spawnPos) {
       const rand = Math.random();
       if (rand < 0.35) mobManager.spawn(spawnPos, new Zombie(spawnPos));
@@ -684,7 +727,7 @@ engine.setUpdateCallback((deltaTime) => {
 
   // Nether mob spawning: Skeletons, Spiders & Endermen (always dangerous, higher rate)
   if (DimensionManager.getInstance().isNether() && mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.015) {
-    const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 35);
+    const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 20, 60);
     if (spawnPos) {
       const rand = Math.random();
       if (rand < 0.4) {
@@ -709,7 +752,7 @@ engine.setUpdateCallback((deltaTime) => {
 
   // Spawn passive animals during daytime in appropriate biomes (Overworld only)
   if (!DimensionManager.getInstance().isNether() && !dayNight.isNight && mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.008) {
-    const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 45);
+    const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 25, 75);
     if (spawnPos) {
       const topBlock = world.getBlock(Math.floor(spawnPos.x), Math.floor(spawnPos.y - 1), Math.floor(spawnPos.z));
       if (topBlock === 1 || topBlock === 2) { // Grass (1) or Dirt (2) -> Plains / Forest

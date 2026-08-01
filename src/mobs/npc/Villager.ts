@@ -3,12 +3,14 @@ import { Mob } from '../Mob';
 import { StateMachine, State } from '../ai/StateMachine';
 import type { World } from '../../world/World';
 import type { Player } from '../../player/Player';
+import { AudioManager } from '../../audio/AudioManager';
 
 export class Villager extends Mob {
   private stateMachine = new StateMachine();
   private legL: THREE.Mesh;
   private legR: THREE.Mesh;
   private animTimer = 0;
+  private idleSoundTimer = 0;
 
   constructor(position: THREE.Vector3) {
     super(position, 0x8d5524);
@@ -146,6 +148,20 @@ export class Villager extends Mob {
       this.legR.rotation.x = 0;
     }
 
+    // Periodic idle/greeting "Hmm" sound effect when player is nearby
+    if (playerPos && this.position.distanceTo(playerPos) < 10) {
+      this.idleSoundTimer += deltaTime;
+      if (this.idleSoundTimer >= 8) {
+        this.idleSoundTimer = 0;
+        AudioManager.getInstance().playSFX('villager_hmm');
+      }
+    }
+
     this.updatePhysics(deltaTime, world);
+  }
+
+  override takeDamage(amount: number): boolean {
+    AudioManager.getInstance().playSFX('villager_hurt');
+    return super.takeDamage(amount);
   }
 }

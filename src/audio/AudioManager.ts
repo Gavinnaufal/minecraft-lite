@@ -246,6 +246,49 @@ export class AudioManager {
       filter.connect(masterGain);
       osc.start(now);
       osc.stop(now + 0.9);
+    } else if (name === 'villager_hmm') {
+      // Iconic Villager Nasal "Hmm" Sound
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(210, now);
+      osc.frequency.linearRampToValueAtTime(190, now + 0.15);
+      osc.frequency.exponentialRampToValueAtTime(160, now + 0.45);
+
+      gain.gain.setValueAtTime(0.0, now);
+      gain.gain.linearRampToValueAtTime(0.35, now + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(450, now);
+      filter.Q.setValueAtTime(3.5, now);
+
+      osc.connect(filter);
+      filter.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.45);
+    } else if (name === 'villager_hurt') {
+      // Villager Hurt "Hrh!" Sound
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(320, now);
+      osc.frequency.exponentialRampToValueAtTime(140, now + 0.25);
+
+      gain.gain.setValueAtTime(0.4, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(600, now);
+
+      osc.connect(filter);
+      filter.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.25);
     }
   }
 

@@ -89,11 +89,14 @@ export class Enderman extends Mob {
     this.mesh.position.copy(position);
   }
 
+  private attackTimer = 0;
+
   override reset(position: THREE.Vector3): void {
     super.reset(position, 40);
     this.isHostile = false;
     this.isProvoked = false;
     this.animTimer = 0;
+    this.attackTimer = 0;
   }
 
   override takeDamage(amount: number): boolean {
@@ -103,7 +106,7 @@ export class Enderman extends Mob {
     return isDead;
   }
 
-  update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, _player?: Player, _mobManager?: MobManager, camera?: THREE.PerspectiveCamera): void {
+  update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, player?: Player, _mobManager?: MobManager, camera?: THREE.PerspectiveCamera): void {
     let isMoving = false;
 
     if (playerPos) {
@@ -131,14 +134,26 @@ export class Enderman extends Mob {
       if (this.isProvoked || state === State.Chase) {
         const dx = playerPos.x - this.position.x;
         const dz = playerPos.z - this.position.z;
+        const dy = Math.abs(playerPos.y - this.position.y);
         const horizDist = Math.sqrt(dx * dx + dz * dz);
 
+        this.attackTimer += deltaTime;
+
         if (horizDist > 0.001) {
-          const chaseSpeed = 3.6;
+          const chaseSpeed = 4.0; // Very fast Enderman sprint
           this.velocity.x = (dx / horizDist) * chaseSpeed;
           this.velocity.z = (dz / horizDist) * chaseSpeed;
           this.mesh.rotation.y = Math.atan2(dx, dz);
           isMoving = true;
+
+          // Heavy Melee Attack on contact (6 damage)
+          if (horizDist < 1.6 && dy < 2.5 && this.attackTimer >= 1.0) {
+            this.attackTimer = 0;
+            if (player && player.health > 0) {
+              player.health = Math.max(0, player.health - 6);
+              AudioManager.getInstance().playSFX('hit');
+            }
+          }
         }
       } else if (state === State.Wander) {
         const wanderDx = (Math.random() - 0.5) * 1.5;

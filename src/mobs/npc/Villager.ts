@@ -61,6 +61,12 @@ export class Villager extends Mob {
     this.mesh.position.copy(position);
   }
 
+  private villageCenter: THREE.Vector3 | null = null;
+
+  setVillageCenter(center: THREE.Vector3): void {
+    this.villageCenter = center.clone();
+  }
+
   override reset(position: THREE.Vector3): void {
     super.reset(position, 20);
     this.animTimer = 0;
@@ -73,20 +79,54 @@ export class Villager extends Mob {
       const state = this.stateMachine.update(deltaTime, dist);
 
       if (state === State.Wander) {
-        const dx = (Math.random() - 0.5) * 1.5;
-        const dz = (Math.random() - 0.5) * 1.5;
-        const nextX = this.position.x + dx * deltaTime;
-        const nextZ = this.position.z + dz * deltaTime;
+        let dx = (Math.random() - 0.5) * 1.5;
+        let dz = (Math.random() - 0.5) * 1.5;
+
+        // If tethered to a village center and wandering too far (> 25 blocks), pull back toward village
+        if (this.villageCenter) {
+          const distToVillage = this.position.distanceTo(this.villageCenter);
+          if (distToVillage > 25) {
+            const pullDir = new THREE.Vector3().subVectors(this.villageCenter, this.position).normalize();
+            dx = pullDir.x * 1.2;
+            dz = pullDir.z * 1.2;
+          }
+        }
+
+        // Check 3 candidate directions and favor dirt path blocks (blockId === 2)
+        let bestDx = dx;
+        let bestDz = dz;
+
+        const candidates = [
+          { x: dx, z: dz },
+          { x: dz, z: -dx },
+          { x: -dz, z: dx },
+        ];
+
+        for (const cand of candidates) {
+          const checkX = Math.floor(this.position.x + cand.x * 1.5);
+          const checkY = Math.floor(this.position.y);
+          const checkZ = Math.floor(this.position.z + cand.z * 1.5);
+
+          const blockBelow = world?.getBlock(checkX, checkY, checkZ);
+          if (blockBelow === 2) { // Dirt path block!
+            bestDx = cand.x;
+            bestDz = cand.z;
+            break;
+          }
+        }
+
+        const nextX = this.position.x + bestDx * deltaTime;
+        const nextZ = this.position.z + bestDz * deltaTime;
 
         // Water avoidance
         const nextBlock = world?.getBlock(Math.floor(nextX), Math.floor(this.position.y), Math.floor(nextZ));
         if (nextBlock !== 7) {
-          this.velocity.x = dx;
-          this.velocity.z = dz;
-          isMoving = Math.abs(dx) > 0.001 || Math.abs(dz) > 0.001;
+          this.velocity.x = bestDx;
+          this.velocity.z = bestDz;
+          isMoving = Math.abs(bestDx) > 0.001 || Math.abs(bestDz) > 0.001;
 
           if (isMoving) {
-            this.mesh.rotation.y = Math.atan2(dx, dz);
+            this.mesh.rotation.y = Math.atan2(bestDx, bestDz);
           }
         } else {
           this.velocity.x = 0;

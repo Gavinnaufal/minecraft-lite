@@ -65,7 +65,9 @@ function createGenerators(seed: number) {
   const n = new NoiseGenerator(seed);
   return {
     heightMap: new HeightMap(n),
-    biomeGen: new BiomeGenerator(new NoiseGenerator(seed + 1)),
+    // continentNoise (seed+1): large-scale ocean vs land
+    // biomeNoise   (seed+3): finer-scale land biome selection
+    biomeGen: new BiomeGenerator(new NoiseGenerator(seed + 1), new NoiseGenerator(seed + 3)),
     caveNoise: new NoiseGenerator(seed + 2),
   };
 }
@@ -91,17 +93,16 @@ chunkManager.terrainFiller = (chunk: Chunk) => {
 
       // For Ocean biome, override height with sea-floor depth.
       // Smooth coastal transition: blend between ocean floor and normal height
-      // based on how deep into the Ocean biome we are (via raw noise value).
+      // rawVal in [0,1]: < 0.45 = ocean, 0.45-0.55 = coast transition, > 0.55 = land
       let h: number;
       if (biome === BiomeType.Ocean) {
-        const rawVal = biomeGen.getRawValue(wx, wz); // negative in Ocean
-        // rawVal goes from -0.15 (coast) to ~-1.0 (deep ocean)
-        // blend factor: 0 at coast edge (-0.15), 1 at fully deep (-0.6+)
-        const blend = Math.min(1, ((-rawVal) - 0.15) / 0.45);
+        const rawVal = biomeGen.getRawValue(wx, wz); // [0,1], ocean < 0.45
+        // blend: 0 at coast edge (rawVal=0.45), 1 at deep ocean (rawVal=0.2 or less)
+        const blend = Math.min(1, Math.max(0, (0.45 - rawVal) / 0.25));
         const normalH = heightMap.getHeight(wx, wz);
         const oceanH = heightMap.getOceanFloorHeight(wx, wz);
         h = Math.round(normalH + (oceanH - normalH) * blend);
-        h = Math.max(1, Math.min(WATER_LEVEL - 2, h));
+        h = Math.max(1, Math.min(WATER_LEVEL - 1, h));
       } else {
         h = heightMap.getHeight(wx, wz);
       }
@@ -134,11 +135,11 @@ chunkManager.terrainFiller = (chunk: Chunk) => {
       let h: number;
       if (biome === BiomeType.Ocean) {
         const rawVal = biomeGen.getRawValue(wx, wz);
-        const blend = Math.min(1, ((-rawVal) - 0.15) / 0.45);
+        const blend = Math.min(1, Math.max(0, (0.45 - rawVal) / 0.25));
         const normalH = heightMap.getHeight(wx, wz);
         const oceanH = heightMap.getOceanFloorHeight(wx, wz);
         h = Math.round(normalH + (oceanH - normalH) * blend);
-        h = Math.max(1, Math.min(WATER_LEVEL - 2, h));
+        h = Math.max(1, Math.min(WATER_LEVEL - 1, h));
       } else {
         h = heightMap.getHeight(wx, wz);
       }

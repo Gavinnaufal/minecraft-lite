@@ -9,26 +9,52 @@ export enum BiomeType {
 }
 
 export class BiomeGenerator {
-  private readonly noise: NoiseGenerator;
-  private readonly scale: number;
+  /** Large-scale noise [0,1]: low = ocean, high = land (scale ~300) */
+  private readonly continentNoise: NoiseGenerator;
+  /** Medium-scale noise [0,1]: determines which land biome (scale ~150) */
+  private readonly biomeNoise: NoiseGenerator;
+  private readonly continentScale: number;
+  private readonly biomeScale: number;
 
-  constructor(noise: NoiseGenerator, scale = 200) {
-    this.noise = noise;
-    this.scale = scale;
+  constructor(
+    continentNoise: NoiseGenerator,
+    biomeNoise: NoiseGenerator,
+    continentScale = 300,
+    biomeScale = 150,
+  ) {
+    this.continentNoise = continentNoise;
+    this.biomeNoise = biomeNoise;
+    this.continentScale = continentScale;
+    this.biomeScale = biomeScale;
   }
 
   getBiome(worldX: number, worldZ: number): BiomeType {
-    const value = this.noise.noise2D(worldX / this.scale, worldZ / this.scale);
+    // continentVal in [0,1]: < 0.45 → ocean (~45% of terrain)
+    const continentVal = this.continentNoise.noise2D(
+      worldX / this.continentScale,
+      worldZ / this.continentScale,
+    );
+    if (continentVal < 0.45) return BiomeType.Ocean;
 
-    if (value < -0.15) return BiomeType.Ocean;
-    if (value < 0.2)   return BiomeType.Desert;
-    if (value < 0.5)   return BiomeType.Plains;
-    if (value < 0.75)  return BiomeType.Forest;
+    // Land biomes determined by a separate finer-scale noise
+    const biomeVal = this.biomeNoise.noise2D(
+      worldX / this.biomeScale,
+      worldZ / this.biomeScale,
+    );
+    if (biomeVal < 0.25) return BiomeType.Desert;
+    if (biomeVal < 0.55) return BiomeType.Plains;
+    if (biomeVal < 0.8)  return BiomeType.Forest;
     return BiomeType.Mountain;
   }
 
-  /** Raw noise value [~-1..1] used for smooth biome blending */
+  /**
+   * Raw continent noise value [0,1].
+   * < 0.45 = ocean, 0.45–0.55 = coastal transition, > 0.55 = deep land.
+   */
   getRawValue(worldX: number, worldZ: number): number {
-    return this.noise.noise2D(worldX / this.scale, worldZ / this.scale);
+    return this.continentNoise.noise2D(
+      worldX / this.continentScale,
+      worldZ / this.continentScale,
+    );
   }
 }

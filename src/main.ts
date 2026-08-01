@@ -90,24 +90,31 @@ chunkManager.terrainFiller = (chunk: Chunk) => {
       const wz = chunk.chunkZ * CHUNK_SIZE_Z + lz;
       let h = heightMap.getHeight(wx, wz);
       const biome = biomeGen.getBiome(wx, wz);
+      const notDesert = biome !== BiomeType.Desert;
 
-      // River generation: iso-line technique on noise creates thin winding bands.
-      // Where noise ≈ 0.5 (within ±0.045), we get a river-like winding path.
-      // Scale 60 = wide gentle curves, depth only 1-2 blocks = shallow stream.
+      // River: thin winding stream (±0.025 iso-line = ~3-4 blocks wide)
       const riverVal = lakeNoise.noise2D(wx / 60, wz / 60);
       const distFromCenter = Math.abs(riverVal - 0.5);
-      const isRiver = distFromCenter < 0.045 && biome !== BiomeType.Desert;
+      const isRiver = distFromCenter < 0.025 && notDesert;
       if (isRiver) {
-        // Center of river (distFromCenter≈0) is 2 blocks deep, edges are 1 block
-        const riverDepth = 1 + Math.round((1 - distFromCenter / 0.045));
+        const riverDepth = 1 + Math.round(1 - distFromCenter / 0.025);
         h = Math.min(h, WATER_LEVEL - riverDepth);
       }
+
+      // Small shallow pond: higher-frequency noise, depth 1 block only
+      const pondVal = lakeNoise.noise2D(wx / 25, wz / 25);
+      const isPond = pondVal > 0.78 && notDesert;
+      if (isPond) {
+        h = Math.min(h, WATER_LEVEL - 1);
+      }
+
+      const isWater = isRiver || isPond;
 
       for (let y = 0; y <= h && y < CHUNK_HEIGHT; y++) {
         const depth = h - y;
         let bid: number;
-        if (isRiver && depth <= 1) {
-          bid = 4; // sand riverbed
+        if (isWater && depth <= 1) {
+          bid = 4; // sand bed
         } else if (depth === 0) {
           if (biome === BiomeType.Desert) bid = 4;
           else if (biome === BiomeType.Mountain && h > 80) bid = 3;
@@ -126,13 +133,18 @@ chunkManager.terrainFiller = (chunk: Chunk) => {
       const wz = chunk.chunkZ * CHUNK_SIZE_Z + lz;
       let h = heightMap.getHeight(wx, wz);
       const biome = biomeGen.getBiome(wx, wz);
+      const notDesert = biome !== BiomeType.Desert;
 
-      // Recalculate river depression
       const riverVal = lakeNoise.noise2D(wx / 60, wz / 60);
       const distFromCenter = Math.abs(riverVal - 0.5);
-      if (distFromCenter < 0.045 && biome !== BiomeType.Desert) {
-        const riverDepth = 1 + Math.round((1 - distFromCenter / 0.045));
+      if (distFromCenter < 0.025 && notDesert) {
+        const riverDepth = 1 + Math.round(1 - distFromCenter / 0.025);
         h = Math.min(h, WATER_LEVEL - riverDepth);
+      }
+
+      const pondVal = lakeNoise.noise2D(wx / 25, wz / 25);
+      if (pondVal > 0.78 && notDesert) {
+        h = Math.min(h, WATER_LEVEL - 1);
       }
 
       if (h < WATER_LEVEL) {

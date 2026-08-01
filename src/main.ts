@@ -478,7 +478,9 @@ window.addEventListener('contextmenu', (e) => e.preventDefault());
 // Hotbar switching & Menu toggling
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    if (furnaceScreen.getIsOpen()) {
+    if (chatBox.visible) {
+      chatBox.close();
+    } else if (furnaceScreen.getIsOpen()) {
       furnaceScreen.close();
     } else if (chestScreen.isOpen) {
       chestScreen.closeChest();
@@ -489,7 +491,7 @@ window.addEventListener('keydown', (e) => {
     }
     return;
   }
-  if (pauseMenu.isOpen) return;
+  if (pauseMenu.isOpen || chatBox.visible) return;
   if (e.key === 'o' || e.key === 'O') { settingsMenu.toggle(); return; }
   if (e.key === 'e' || e.key === 'E') {
     if (furnaceScreen.getIsOpen()) furnaceScreen.close();

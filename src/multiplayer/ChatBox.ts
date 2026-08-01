@@ -52,7 +52,7 @@ export class ChatBox {
     });
 
     window.addEventListener('keydown', (e) => {
-      if ((e.key === 't' || e.key === 'T') && !this.isOpen) {
+      if ((e.key === 't' || e.key === 'T') && !this.isOpen && document.pointerLockElement) {
         e.preventDefault();
         this.open();
       }

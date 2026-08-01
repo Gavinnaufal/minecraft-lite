@@ -7,6 +7,7 @@ import type { World, BlockModification } from '../world/World';
 import type { ChunkManager } from '../world/ChunkManager';
 import { gameSettings } from '../core/GameSettings';
 import { DimensionManager } from '../world/dimension/DimensionManager';
+import { FurnaceManager, type FurnaceData } from '../inventory/FurnaceManager';
 
 const SAVE_VERSION = 2;
 
@@ -59,6 +60,7 @@ export class SaveManager {
       hotbarIndex: this.hotbar.activeSlotIndex,
       timeOfDay: this.dayNight.timeOfDay,
       modifiedBlocks: this.world.getModifiedBlocks(),
+      furnaces: FurnaceManager.getInstance().getAllFurnaces(),
     };
     await this.storage.saveData('world', data);
   }
@@ -74,9 +76,14 @@ export class SaveManager {
       hotbarIndex: number;
       timeOfDay: number;
       modifiedBlocks?: BlockModification[];
+      furnaces?: Record<string, FurnaceData>;
     }>('world');
 
     if (!data) return null;
+
+    if (data.furnaces) {
+      FurnaceManager.getInstance().loadFurnaces(data.furnaces);
+    }
 
     // v1.0 -> v2.0 migration: add default dimension if missing
     if (!data.saveVersion || data.saveVersion < 2) {

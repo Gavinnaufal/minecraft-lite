@@ -58,6 +58,7 @@ import { Zombie } from './mobs/hostile/Zombie';
 import { BlockHighlight } from './interaction/BlockHighlight';
 import { DebugScreen } from './ui/DebugScreen';
 import { ToastSystem } from './ui/ToastSystem';
+import { FurnaceScreen } from './ui/FurnaceScreen';
 import * as THREE from 'three';
 import { CHUNK_SIZE_X, CHUNK_SIZE_Z, CHUNK_HEIGHT, WATER_LEVEL } from './utils/constants';
 import type { Chunk } from './world/Chunk';
@@ -458,6 +459,8 @@ inventoryScreen.create();
 const chestScreen = new ChestScreen(inventory, hotbar);
 chestScreen.create();
 
+const furnaceScreen = new FurnaceScreen(inventory, hotbar);
+
 const pauseMenu = new PauseMenu(saveManager, settingsMenu, () => {
   inputManager.requestPointerLock();
 });
@@ -466,7 +469,7 @@ pauseMenu.create();
 mainMenu.create();
 
 canvas.addEventListener('click', () => {
-  if (!mainMenu.isOpen && !pauseMenu.isOpen && !inventoryScreen.isOpen && !chestScreen.isOpen) {
+  if (!mainMenu.isOpen && !pauseMenu.isOpen && !inventoryScreen.isOpen && !chestScreen.isOpen && !furnaceScreen.getIsOpen()) {
     inputManager.requestPointerLock();
   }
 });
@@ -475,7 +478,9 @@ window.addEventListener('contextmenu', (e) => e.preventDefault());
 // Hotbar switching & Menu toggling
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    if (chestScreen.isOpen) {
+    if (furnaceScreen.getIsOpen()) {
+      furnaceScreen.close();
+    } else if (chestScreen.isOpen) {
       chestScreen.closeChest();
     } else if (inventoryScreen.isOpen) {
       inventoryScreen.toggle();
@@ -487,7 +492,8 @@ window.addEventListener('keydown', (e) => {
   if (pauseMenu.isOpen) return;
   if (e.key === 'o' || e.key === 'O') { settingsMenu.toggle(); return; }
   if (e.key === 'e' || e.key === 'E') {
-    if (chestScreen.isOpen) chestScreen.closeChest();
+    if (furnaceScreen.getIsOpen()) furnaceScreen.close();
+    else if (chestScreen.isOpen) chestScreen.closeChest();
     else inventoryScreen.toggle();
     return;
   }
@@ -585,7 +591,7 @@ function findMobIndexFromHitObject(hitObject: THREE.Object3D): number {
 }
 
 engine.setUpdateCallback((deltaTime) => {
-  if (mainMenu.isOpen || pauseMenu.isOpen || inventoryScreen.isOpen || chestScreen.isOpen || chatBox.visible) {
+  if (mainMenu.isOpen || pauseMenu.isOpen || inventoryScreen.isOpen || chestScreen.isOpen || furnaceScreen.getIsOpen() || chatBox.visible) {
     return;
   }
 
@@ -902,11 +908,11 @@ engine.setUpdateCallback((deltaTime) => {
   if (bp > 0) { progressBar.style.display = 'block'; progressFill.style.width = `${bp * 100}%`; }
   else progressBar.style.display = 'none';
 
-  const activeItem = hotbar.getActiveItem();
+  // Continuous right click handling for block placement & interaction
   if (inputManager.isRightMouseDown && !wasRightDown) {
     const targetHit = blockBreaker.getTarget(camera);
+    const activeItem = hotbar.getActiveItem();
 
-    // Right-click Chest block (12) or Crafting Table (9) in the world!
     if (targetHit) {
       const hitBlockId = world.getBlock(targetHit.blockX, targetHit.blockY, targetHit.blockZ);
       if (hitBlockId === 12) {
@@ -918,15 +924,9 @@ engine.setUpdateCallback((deltaTime) => {
         wasRightDown = inputManager.isRightMouseDown;
         return;
       } else if (hitBlockId === 10) { // Furnace block
-        if (activeItem.itemId && (activeItem.itemId.startsWith('raw_') || activeItem.itemId === 'mutton')) {
-          const cookedId = activeItem.itemId === 'mutton' ? 'cooked_mutton' : activeItem.itemId.replace('raw_', 'cooked_');
-          hotbar.removeItem(activeItem.itemId, 1);
-          hotbar.addItem(cookedId, 1);
-          AudioManager.getInstance().playSFX('break');
-          toastSystem.show(`Memanggang ${getItemById(activeItem.itemId)?.name} menjadi ${getItemById(cookedId)?.name}!`, 'success');
-          wasRightDown = inputManager.isRightMouseDown;
-          return;
-        }
+        furnaceScreen.open(targetHit.blockX, targetHit.blockY, targetHit.blockZ);
+        wasRightDown = inputManager.isRightMouseDown;
+        return;
       }
     }
 

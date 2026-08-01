@@ -25,6 +25,7 @@ import { HandModel } from './ui/HandModel';
 import { ParticleSystem } from './world/ParticleSystem';
 import { ItemDropManager } from './world/ItemDropManager';
 import { IronGolem } from './mobs/npc/IronGolem';
+import { Villager } from './mobs/npc/Villager';
 import { Skeleton } from './mobs/hostile/Skeleton';
 import { Spider } from './mobs/hostile/Spider';
 import { Enderman } from './mobs/hostile/Enderman';
@@ -757,12 +758,14 @@ engine.setUpdateCallback((deltaTime) => {
       const topBlock = world.getBlock(Math.floor(spawnPos.x), Math.floor(spawnPos.y - 1), Math.floor(spawnPos.z));
       if (topBlock === 1 || topBlock === 2) { // Grass (1) or Dirt (2) -> Plains / Forest
         const rand = Math.random();
-        if (rand < 0.3) {
+        if (rand < 0.25) {
           mobManager.spawn(spawnPos, new Pig(spawnPos));
-        } else if (rand < 0.6) {
+        } else if (rand < 0.50) {
           mobManager.spawn(spawnPos, new Chicken(spawnPos));
-        } else if (rand < 0.85) {
+        } else if (rand < 0.70) {
           mobManager.spawn(spawnPos, new Cow(spawnPos));
+        } else if (rand < 0.88) {
+          mobManager.spawn(spawnPos, new Villager(spawnPos));
         } else {
           mobManager.spawn(spawnPos, new Enderman(spawnPos));
         }

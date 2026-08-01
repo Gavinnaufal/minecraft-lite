@@ -18,22 +18,29 @@ function villageHash(chunkX: number, chunkZ: number): number {
 }
 
 export class VillageGenerator {
-  private readonly villageGridScale = 20; // Check 1 potential village per 20x20 chunk grid (~320x320 blocks)
+  private readonly villageGridScale = 6; // Check 1 potential village per 6x6 chunk grid (~96x96 blocks)
+  private spawnedVillages = new Set<string>();
 
   /**
-   * Returns true if a village center is located near the given chunk coordinate and terrain is flat Plains.
+   * Returns true if a village center is located near the given chunk coordinate.
+   * Grid (0, 0) near player spawn is ALWAYS a guaranteed Starter Village!
    */
   getVillageCenter(chunkX: number, chunkZ: number, heightMap: HeightMap, biomeGen: BiomeGenerator): { cx: number; cz: number } | null {
     const gridX = Math.floor(chunkX / this.villageGridScale);
     const gridZ = Math.floor(chunkZ / this.villageGridScale);
 
+    // Guaranteed Starter Village at grid (0, 0)
+    if (gridX === 0 && gridZ === 0) {
+      return { cx: 40, cz: 40 };
+    }
+
     const hashVal = villageHash(gridX, gridZ);
 
-    // 40% chance of a village in this grid region
-    if (hashVal % 100 > 40) return null;
+    // 75% chance of a village in this grid region
+    if (hashVal % 100 > 75) return null;
 
-    const offsetX = (hashVal % 12) + 4; // Offset 4..15 chunks inside grid
-    const offsetZ = ((hashVal >> 4) % 12) + 4;
+    const offsetX = (hashVal % 4) + 1; // Offset 1..4 chunks inside grid
+    const offsetZ = ((hashVal >> 3) % 4) + 1;
 
     const centerChunkX = gridX * this.villageGridScale + offsetX;
     const centerChunkZ = gridZ * this.villageGridScale + offsetZ;
@@ -41,7 +48,7 @@ export class VillageGenerator {
     const centerWX = centerChunkX * CHUNK_SIZE_X + 8;
     const centerWZ = centerChunkZ * CHUNK_SIZE_Z + 8;
 
-    // Validate that terrain is flat Plains
+    // Validate that terrain is suitable
     if (!this.isFlatPlainsTerrain(centerWX, centerWZ, heightMap, biomeGen)) {
       return null;
     }
@@ -53,11 +60,12 @@ export class VillageGenerator {
     let minH = Infinity;
     let maxH = -Infinity;
 
-    for (let dx = -15; dx <= 15; dx += 5) {
-      for (let dz = -15; dz <= 15; dz += 5) {
+    for (let dx = -12; dx <= 12; dx += 6) {
+      for (let dz = -12; dz <= 12; dz += 6) {
         const wx = centerWX + dx;
         const wz = centerWZ + dz;
-        if (biomeGen.getBiome(wx, wz) !== BiomeType.Plains) return false;
+        const biome = biomeGen.getBiome(wx, wz);
+        if (biome !== BiomeType.Plains && biome !== BiomeType.Forest) return false;
 
         const h = heightMap.getHeight(wx, wz);
         if (h <= WATER_LEVEL + 1) return false; // Don't spawn village in water
@@ -66,8 +74,8 @@ export class VillageGenerator {
       }
     }
 
-    // Require flat terrain (height variation <= 5 blocks)
-    return (maxH - minH) <= 5;
+    // Require reasonably gentle terrain (height variation <= 14 blocks)
+    return (maxH - minH) <= 14;
   }
 
   /**
@@ -172,8 +180,6 @@ export class VillageGenerator {
       }
     }
   }
-
-  private spawnedVillages = new Set<string>();
 
   /**
    * Spawns 1 Iron Golem and 2 Villager NPCs at the center of the village when the center chunk generates.

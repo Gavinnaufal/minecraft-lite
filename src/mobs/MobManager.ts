@@ -8,7 +8,7 @@ export class MobManager {
   private pool: Mob[] = [];
   private scene: THREE.Scene;
   private world?: World;
-  mobCap = 10;
+  mobCap = 18;
 
   constructor(scene: THREE.Scene, world?: World) {
     this.scene = scene;

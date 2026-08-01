@@ -267,10 +267,21 @@ function getLandSpawnPos(originX: number, originZ: number, radius: number): THRE
   return null;
 }
 
-for (let i = 0; i < 4; i++) {
-  const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 40);
+for (let i = 0; i < 6; i++) {
+  const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 45);
   if (spawnPos) {
-    mobManager.spawn(spawnPos, new Cow(spawnPos));
+    const topBlock = world.getBlock(Math.floor(spawnPos.x), Math.floor(spawnPos.y - 1), Math.floor(spawnPos.z));
+    const rand = Math.random();
+    if (topBlock === 4) { // Sand (Beach)
+      mobManager.spawn(spawnPos, new Turtle(spawnPos));
+    } else if (topBlock === 3 || spawnPos.y > 70) { // Stone / Mountain
+      mobManager.spawn(spawnPos, new Goat(spawnPos));
+    } else { // Grass (1) / Dirt (2)
+      if (rand < 0.3) mobManager.spawn(spawnPos, new Pig(spawnPos));
+      else if (rand < 0.6) mobManager.spawn(spawnPos, new Chicken(spawnPos));
+      else if (rand < 0.85) mobManager.spawn(spawnPos, new Cow(spawnPos));
+      else mobManager.spawn(spawnPos, new Enderman(spawnPos));
+    }
   }
 }
 
@@ -660,22 +671,29 @@ engine.setUpdateCallback((deltaTime) => {
   lights.ambient.intensity = Math.max(0.25, dayNight.lightIntensity * 0.55);
   if (lights.hemi) lights.hemi.intensity = Math.max(0.2, dayNight.lightIntensity * 0.5);
 
-  // Spawn hostile zombies at night on solid land (Overworld only)
-  if (!DimensionManager.getInstance().isNether() && dayNight.isNight && mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.005) {
+  // Spawn hostile mobs at night on solid land (Overworld only)
+  if (!DimensionManager.getInstance().isNether() && dayNight.isNight && mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.01) {
     const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 40);
     if (spawnPos) {
-      mobManager.spawn(spawnPos, new Zombie(spawnPos));
+      const rand = Math.random();
+      if (rand < 0.35) mobManager.spawn(spawnPos, new Zombie(spawnPos));
+      else if (rand < 0.65) mobManager.spawn(spawnPos, new Skeleton(spawnPos));
+      else if (rand < 0.85) mobManager.spawn(spawnPos, new Spider(spawnPos));
+      else mobManager.spawn(spawnPos, new Enderman(spawnPos));
     }
   }
 
-  // Nether mob spawning: Skeletons & Spiders (always dangerous, higher rate)
-  if (DimensionManager.getInstance().isNether() && mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.008) {
+  // Nether mob spawning: Skeletons, Spiders & Endermen (always dangerous, higher rate)
+  if (DimensionManager.getInstance().isNether() && mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.015) {
     const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 35);
     if (spawnPos) {
-      if (Math.random() < 0.5) {
+      const rand = Math.random();
+      if (rand < 0.4) {
         mobManager.spawn(spawnPos, new Skeleton(spawnPos));
-      } else {
+      } else if (rand < 0.75) {
         mobManager.spawn(spawnPos, new Spider(spawnPos));
+      } else {
+        mobManager.spawn(spawnPos, new Enderman(spawnPos));
       }
     }
   }
@@ -691,22 +709,24 @@ engine.setUpdateCallback((deltaTime) => {
   }
 
   // Spawn passive animals during daytime in appropriate biomes (Overworld only)
-  if (!DimensionManager.getInstance().isNether() && !dayNight.isNight && mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.004) {
+  if (!DimensionManager.getInstance().isNether() && !dayNight.isNight && mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.008) {
     const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 45);
     if (spawnPos) {
       const topBlock = world.getBlock(Math.floor(spawnPos.x), Math.floor(spawnPos.y - 1), Math.floor(spawnPos.z));
-      if (topBlock === 2) { // Grass land (Plains / Forest)
+      if (topBlock === 1 || topBlock === 2) { // Grass (1) or Dirt (2) -> Plains / Forest
         const rand = Math.random();
-        if (rand < 0.35) {
+        if (rand < 0.3) {
           mobManager.spawn(spawnPos, new Pig(spawnPos));
-        } else if (rand < 0.7) {
+        } else if (rand < 0.6) {
           mobManager.spawn(spawnPos, new Chicken(spawnPos));
-        } else {
+        } else if (rand < 0.85) {
           mobManager.spawn(spawnPos, new Cow(spawnPos));
+        } else {
+          mobManager.spawn(spawnPos, new Enderman(spawnPos));
         }
-      } else if (topBlock === 1 && spawnPos.y > 20) { // High Stone (Mountains)
+      } else if (topBlock === 3 || spawnPos.y > 70) { // Stone (3) -> Mountains
         mobManager.spawn(spawnPos, new Goat(spawnPos));
-      } else if (topBlock === 6) { // Sand (Beach)
+      } else if (topBlock === 4) { // Sand (4) -> Beach
         mobManager.spawn(spawnPos, new Turtle(spawnPos));
       }
     }

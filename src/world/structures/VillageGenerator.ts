@@ -5,6 +5,7 @@ import { BiomeType } from '../terrain/BiomeGenerator';
 import { CHUNK_SIZE_X, CHUNK_SIZE_Z, WATER_LEVEL } from '../../utils/constants';
 import { buildOakHousePrefab } from './prefabs/HousePrefab';
 import { buildStoneHousePrefab } from './prefabs/StoneHousePrefab';
+import { buildFarmPrefab } from './prefabs/FarmPrefab';
 
 function villageHash(chunkX: number, chunkZ: number): number {
   let h = (chunkX * 1619 + chunkZ * 31337) ^ 0x5bd1e995;
@@ -128,6 +129,21 @@ export class VillageGenerator {
       const groundY = heightMap.getHeight(hWX + 2, hWZ + 2);
       if (groundY > WATER_LEVEL) {
         buildStoneHousePrefab(chunk, chunkMinWX, chunkMinWZ, hWX, groundY, hWZ);
+      }
+    }
+
+    // Build Wheat Farms at designated village offsets
+    const farmLocations = [
+      { relX: 8, relZ: 6 },
+      { relX: -12, relZ: 6 },
+    ];
+
+    for (const loc of farmLocations) {
+      const fWX = villageCX + loc.relX;
+      const fWZ = villageCZ + loc.relZ;
+      const groundY = heightMap.getHeight(fWX + 2, fWZ + 3);
+      if (groundY > WATER_LEVEL) {
+        buildFarmPrefab(chunk, chunkMinWX, chunkMinWZ, fWX, groundY, fWZ);
       }
     }
   }

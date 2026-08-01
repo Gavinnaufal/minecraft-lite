@@ -82,14 +82,65 @@ export class IronGolem extends Mob {
     this.mesh.position.copy(position);
   }
 
+  private patrolWaypoints: THREE.Vector3[] = [];
+  private currentWaypointIndex = 0;
+  private patrolWaitTimer = 0;
+
+  setVillageCenter(center: THREE.Vector3): void {
+    // Create 4 perimeter patrol waypoints around village
+    const radius = 18;
+    this.patrolWaypoints = [
+      new THREE.Vector3(center.x + radius, center.y, center.z),
+      new THREE.Vector3(center.x, center.y, center.z + radius),
+      new THREE.Vector3(center.x - radius, center.y, center.z),
+      new THREE.Vector3(center.x, center.y, center.z - radius),
+    ];
+    this.currentWaypointIndex = 0;
+  }
+
   override reset(position: THREE.Vector3): void {
     super.reset(position, 100);
     this.animTimer = 0;
+    this.patrolWaitTimer = 0;
   }
 
   update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, _player?: Player): void {
     let isMoving = false;
-    if (playerPos) {
+
+    // Handle Patrol logic if villageCenter is set
+    if (this.patrolWaypoints.length > 0) {
+      if (this.patrolWaitTimer > 0) {
+        this.patrolWaitTimer -= deltaTime;
+        this.velocity.x = 0;
+        this.velocity.z = 0;
+      } else {
+        const targetWP = this.patrolWaypoints[this.currentWaypointIndex];
+        const distToWP = this.position.distanceTo(targetWP);
+
+        if (distToWP < 2.5) {
+          // Reached waypoint: wait 3 seconds before next patrol leg
+          this.patrolWaitTimer = 3;
+          this.currentWaypointIndex = (this.currentWaypointIndex + 1) % this.patrolWaypoints.length;
+        } else {
+          const moveDir = new THREE.Vector3().subVectors(targetWP, this.position).normalize();
+          const speed = 2.0;
+
+          const nextX = this.position.x + moveDir.x * speed * deltaTime;
+          const nextZ = this.position.z + moveDir.z * speed * deltaTime;
+
+          const nextBlock = world?.getBlock(Math.floor(nextX), Math.floor(this.position.y), Math.floor(nextZ));
+          if (nextBlock !== 7) {
+            this.velocity.x = moveDir.x * speed;
+            this.velocity.z = moveDir.z * speed;
+            isMoving = true;
+            this.mesh.rotation.y = Math.atan2(moveDir.x, moveDir.z);
+          } else {
+            this.velocity.x = 0;
+            this.velocity.z = 0;
+          }
+        }
+      }
+    } else if (playerPos) {
       const dist = this.position.distanceTo(playerPos);
       const state = this.stateMachine.update(deltaTime, dist);
 

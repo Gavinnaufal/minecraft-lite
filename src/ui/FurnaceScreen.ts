@@ -52,6 +52,7 @@ export class FurnaceScreen {
       z-index: 1000;
       color: #fff;
       font-family: 'Segoe UI', Tahoma, sans-serif;
+      display: none;
     `;
     document.body.appendChild(this.container);
   }
@@ -67,7 +68,7 @@ export class FurnaceScreen {
     this.currentCoordKey = { x, y, z };
     this.currentFurnaceData = FurnaceManager.getInstance().getFurnaceData(x, y, z);
     this.isOpen = true;
-    this.container.classList.remove('hidden');
+    this.container.style.display = 'block';
 
     this.render();
     this.startFurnaceLoop();
@@ -80,7 +81,7 @@ export class FurnaceScreen {
 
   public close(): void {
     this.isOpen = false;
-    this.container.classList.add('hidden');
+    this.container.style.display = 'none';
     if (this.updateInterval !== null) {
       clearInterval(this.updateInterval);
       this.updateInterval = null;

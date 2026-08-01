@@ -92,13 +92,13 @@ function getWaterTerrain(wx: number, wz: number) {
   // Spawn protection: 0 within 35 blocks of spawn, smoothly fading in up to 75 blocks
   const spawnFactor = Math.min(1, Math.max(0, (spawnDist - 35) / 40));
 
-  // River noise (iso-line technique)
-  const riverVal = lakeNoise.noise2D(wx / 55, wz / 55);
+  // River noise (iso-line technique, reduced frequency by ~50%)
+  const riverVal = lakeNoise.noise2D(wx / 75, wz / 75);
   const distFromCenter = Math.abs(riverVal - 0.5);
 
-  // Pool noise for small shallow puddles/ponds
+  // Pool noise for small shallow puddles/ponds (reduced frequency by 50%: threshold 0.85)
   const poolVal = lakeNoise.noise2D(wx / 35, wz / 35);
-  const poolFactor = Math.max(0, (poolVal - 0.70) / 0.30); // 0 to 1 inside pool
+  const poolFactor = Math.max(0, (poolVal - 0.85) / 0.15); // 0 to 1 inside pool
 
   let h = baseH;
   let isWater = false;
@@ -108,14 +108,14 @@ function getWaterTerrain(wx: number, wz: number) {
     // 1. River channel & smooth bank slope:
     let riverTargetH = baseH;
 
-    if (distFromCenter < 0.035) {
-      const depthFactor = 1 - (distFromCenter / 0.035);
+    if (distFromCenter < 0.018) {
+      const depthFactor = 1 - (distFromCenter / 0.018);
       // Very shallow: 1 block deep (or 2 in exact center)
       const depth = depthFactor > 0.6 ? 2 : 1;
       riverTargetH = WATER_LEVEL - depth;
-    } else if (distFromCenter < 0.18) {
-      // Smooth transition zone across ~15 blocks
-      const t = (distFromCenter - 0.035) / (0.18 - 0.035);
+    } else if (distFromCenter < 0.12) {
+      // Smooth transition zone across ~12 blocks
+      const t = (distFromCenter - 0.018) / (0.12 - 0.018);
       const smoothT = t * t * (3 - 2 * t);
       const waterEdgeH = WATER_LEVEL - 1;
       riverTargetH = Math.round(waterEdgeH + (baseH - waterEdgeH) * smoothT);

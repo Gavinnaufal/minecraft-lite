@@ -33,7 +33,7 @@ export class BlockPlacer {
     }
 
     const existing = this.world.getBlock(placeX, placeY, placeZ);
-    if (existing !== 0) return false;
+    if (existing !== 0 && existing !== 7) return false;
 
     this.world.setBlock(placeX, placeY, placeZ, blockId);
     AudioManager.getInstance().playSFX('place');

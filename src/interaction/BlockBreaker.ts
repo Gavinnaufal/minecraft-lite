@@ -4,6 +4,7 @@ import type { World } from '../world/World';
 import { getBlockById } from '../world/BlockRegistry';
 import { getItemById } from '../inventory/ItemRegistry';
 import { AudioManager } from '../audio/AudioManager';
+import { checkAndSpreadWater } from '../world/WaterSpreader';
 
 // Pre-create 10 Minecraft 16x16 pixelated crack stage textures
 const crackTextures: THREE.CanvasTexture[] = [];
@@ -124,6 +125,7 @@ export class BlockBreaker {
     if (this.breakProgress >= 1) {
       this.removeCrackOverlay();
       this.world.setBlock(hit.blockX, hit.blockY, hit.blockZ, 0);
+      checkAndSpreadWater(this.world, hit.blockX, hit.blockY, hit.blockZ);
       AudioManager.getInstance().playSFX('break');
       this.onBlockBroken?.(hit.blockX, hit.blockY, hit.blockZ, hit.blockId);
       this.breakProgress = 0;

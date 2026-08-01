@@ -42,8 +42,22 @@ export function generateTrees(
       if (isTrunkInChunk) {
         const localX = wx - chunkMinWX;
         const localZ = wz - chunkMinWZ;
+
+        let actualSurfaceY = -1;
+        for (let y = CHUNK_HEIGHT - 1; y >= 0; y--) {
+          const b = chunk.getBlock(localX, y, localZ);
+          if (b !== 0 && b !== 7) {
+            actualSurfaceY = y;
+            break;
+          }
+        }
+
+        if (actualSurfaceY <= 0) continue;
+        const groundBid = chunk.getBlock(localX, actualSurfaceY, localZ);
+        if (groundBid !== 1 && groundBid !== 2) continue; // Only grow on grass/dirt
+
         for (let ty = 1; ty <= trunkHeight; ty++) {
-          const y = surfaceY + ty;
+          const y = actualSurfaceY + ty;
           if (y >= CHUNK_HEIGHT) break;
           chunk.setBlock(localX, y, localZ, 5); // wood_log
         }

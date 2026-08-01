@@ -82,46 +82,74 @@ const world = new World(chunkManager);
 const playerController = new PlayerController(player, world);
 const playerCollision = new PlayerCollision(player, world);
 
+function getWaterTerrain(wx: number, wz: number) {
+  const baseH = heightMap.getHeight(wx, wz);
+  const biome = biomeGen.getBiome(wx, wz);
+  const notDesert = biome !== BiomeType.Desert;
+
+  // River noise (iso-line technique for winding rivers/lakes)
+  const riverVal = lakeNoise.noise2D(wx / 50, wz / 50);
+  const distFromCenter = Math.abs(riverVal - 0.5);
+
+  // Pool/lake noise (widening rivers into open lake basins)
+  const poolVal = lakeNoise.noise2D(wx / 32, wz / 32);
+  const isPool = poolVal > 0.74 && notDesert;
+
+  const isRiverChannel = distFromCenter < 0.045 && notDesert;
+  const isRiverShore = distFromCenter >= 0.045 && distFromCenter < 0.082 && notDesert;
+
+  let h = baseH;
+  let isWater = false;
+  let isBeach = false;
+
+  if (isRiverChannel || isPool) {
+    isWater = true;
+    isBeach = true; // Underwater bed is Sand
+    let depthFactor = 0;
+    if (isRiverChannel) {
+      depthFactor = 1 - (distFromCenter / 0.045);
+    }
+    if (isPool) {
+      depthFactor = Math.max(depthFactor, (poolVal - 0.74) / 0.26);
+    }
+    // Water depth: 1 to 3 blocks below WATER_LEVEL (shallow & beautiful)
+    const depth = 1 + Math.round(depthFactor * 2);
+    h = Math.min(baseH, WATER_LEVEL - depth);
+  } else if (isRiverShore) {
+    isBeach = true; // Sandy shore beach!
+    const shoreProgress = (distFromCenter - 0.045) / (0.082 - 0.045); // 0 near water edge, 1 at land edge
+    const targetH = WATER_LEVEL + Math.floor(shoreProgress * 2);
+    h = Math.min(baseH, targetH);
+  } else if (baseH <= WATER_LEVEL + 1) {
+    isBeach = true; // Natural beach at water level
+  }
+
+  h = Math.max(1, h);
+  return { h, isWater, isBeach, biome };
+}
+
 chunkManager.terrainFiller = (chunk: Chunk) => {
   chunk.fill(0);
   for (let lz = 0; lz < CHUNK_SIZE_Z; lz++) {
     for (let lx = 0; lx < CHUNK_SIZE_X; lx++) {
       const wx = chunk.chunkX * CHUNK_SIZE_X + lx;
       const wz = chunk.chunkZ * CHUNK_SIZE_Z + lz;
-      let h = heightMap.getHeight(wx, wz);
-      const biome = biomeGen.getBiome(wx, wz);
-      const notDesert = biome !== BiomeType.Desert;
-
-      // River: thin winding stream (±0.025 iso-line = ~3-4 blocks wide)
-      const riverVal = lakeNoise.noise2D(wx / 60, wz / 60);
-      const distFromCenter = Math.abs(riverVal - 0.5);
-      const isRiver = distFromCenter < 0.025 && notDesert;
-      if (isRiver) {
-        const riverDepth = 1 + Math.round(1 - distFromCenter / 0.025);
-        h = Math.min(h, WATER_LEVEL - riverDepth);
-      }
-
-      // Small shallow pond: higher-frequency noise, depth 1 block only
-      const pondVal = lakeNoise.noise2D(wx / 25, wz / 25);
-      const isPond = pondVal > 0.78 && notDesert;
-      if (isPond) {
-        h = Math.min(h, WATER_LEVEL - 1);
-      }
-
-      const isWater = isRiver || isPond;
+      const { h, isBeach, biome } = getWaterTerrain(wx, wz);
 
       for (let y = 0; y <= h && y < CHUNK_HEIGHT; y++) {
         const depth = h - y;
         let bid: number;
-        if (isWater && depth <= 1) {
-          bid = 4; // sand bed
+        if (isBeach && depth <= 2) {
+          bid = 4; // Sand beach or underwater sand bed!
         } else if (depth === 0) {
           if (biome === BiomeType.Desert) bid = 4;
           else if (biome === BiomeType.Mountain && h > 80) bid = 3;
-          else bid = 1;
+          else bid = 1; // Grass
         } else if (depth <= 3) {
-          bid = biome === BiomeType.Desert ? 4 : 2;
-        } else bid = 3;
+          bid = biome === BiomeType.Desert ? 4 : 2; // Dirt
+        } else {
+          bid = 3; // Stone
+        }
         chunk.setBlock(lx, y, lz, bid);
       }
     }
@@ -131,25 +159,11 @@ chunkManager.terrainFiller = (chunk: Chunk) => {
     for (let lx = 0; lx < CHUNK_SIZE_X; lx++) {
       const wx = chunk.chunkX * CHUNK_SIZE_X + lx;
       const wz = chunk.chunkZ * CHUNK_SIZE_Z + lz;
-      let h = heightMap.getHeight(wx, wz);
-      const biome = biomeGen.getBiome(wx, wz);
-      const notDesert = biome !== BiomeType.Desert;
-
-      const riverVal = lakeNoise.noise2D(wx / 60, wz / 60);
-      const distFromCenter = Math.abs(riverVal - 0.5);
-      if (distFromCenter < 0.025 && notDesert) {
-        const riverDepth = 1 + Math.round(1 - distFromCenter / 0.025);
-        h = Math.min(h, WATER_LEVEL - riverDepth);
-      }
-
-      const pondVal = lakeNoise.noise2D(wx / 25, wz / 25);
-      if (pondVal > 0.78 && notDesert) {
-        h = Math.min(h, WATER_LEVEL - 1);
-      }
+      const { h } = getWaterTerrain(wx, wz);
 
       if (h < WATER_LEVEL) {
         for (let y = h + 1; y <= WATER_LEVEL && y < CHUNK_HEIGHT; y++) {
-          chunk.setBlock(lx, y, lz, 7);
+          chunk.setBlock(lx, y, lz, 7); // Water block
         }
       }
     }

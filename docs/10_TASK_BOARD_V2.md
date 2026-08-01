@@ -7,12 +7,12 @@
 | Fase 18 — River & Water Polish | 157–164 | 8 | 100% |
 | Fase 19 — Cave Expansion & Ravines | 165–168 | 4 | 100% |
 | Fase 20 — Village Generation & Prefabs | 173–181 | 9 | 100% |
-| Fase 21 — Villager NPC & Iron Golem | 182–189 | 0 | 0% |
+| Fase 21 — Villager NPC & Iron Golem | 182–189 | 1 | 13% |
 | Fase 22 — Hostile Mobs (Skeleton, Spider, Enderman) | 190–204 | 0 | 0% |
 | Fase 23 — Passive Animals & Food | 205–212 | 0 | 0% |
 | Fase 24 — Nether Portal & Dimension | 213–226 | 0 | 0% |
 | Fase 25 — Master Integration & Polish | 227–238 | 0 | 0% |
-| **TOTAL EXPANSION (v2.0)** | | **21** | **25%** |
+| **TOTAL EXPANSION (v2.0)** | | **22** | **26%** |
 
 ---
 
@@ -45,8 +45,8 @@
 - [x] CP-180: Village chest loot generation
 - [x] CP-181: Structure saving & persistence in SaveManager
 
-### Fase 21 — Villager NPC & Iron Golem (0/8)
-- [ ] CP-182: Villager NPC base class & 3D voxel mesh
+### Fase 21 — Villager NPC & Iron Golem (1/8)
+- [x] CP-182: Villager NPC base class & 3D voxel mesh
 - [ ] CP-183: Villager wander state & village pathfinding AI
 - [ ] CP-184: Villager idle & greeting sound effects
 - [ ] CP-185: Iron Golem base class & 3D voxel mesh

@@ -1,5 +1,6 @@
 import type { Chunk } from '../../Chunk';
 import { StructureManager } from '../StructureManager';
+import { VillageLoot } from '../VillageLoot';
 import { CHUNK_SIZE_X, CHUNK_SIZE_Z } from '../../../utils/constants';
 
 export function buildStoneHousePrefab(
@@ -63,6 +64,8 @@ export function buildStoneHousePrefab(
   const torchLZ = torchWZ - chunkMinWZ;
   if (torchLX >= 0 && torchLX < CHUNK_SIZE_X && torchLZ >= 0 && torchLZ < CHUNK_SIZE_Z) {
     manager.placeBlockInChunk(chunk, torchLX, groundY + 3, torchLZ, 11); // Torch
+    const chestWX = torchWX - 1;
     manager.placeBlockInChunk(chunk, torchLX - 1, groundY + 1, torchLZ, 12); // Chest
+    VillageLoot.fillChest(chestWX, groundY + 1, torchWZ);
   }
 }

@@ -23,7 +23,7 @@
 | Fase 17 — Master Polish | 145–155 | 11 | 100% |
 | **TOTAL** | | **155** | **100%** |
 
-Build: ✅ `npm run build` passes (646KB bundle, 456ms)
+Build: ✅ `npm run build` passes (683KB bundle, 802ms)
 
 ---
 
@@ -220,6 +220,7 @@ Build: ✅ `npm run build` passes (646KB bundle, 456ms)
 - [x] CP-154: 3D Volumetric Voxel Clouds & Celestial System
 - [x] CP-155: Agriculture & Quiet Toast System Polish
 - [x] CP-156: Authentic AABB Sweep Physics, Dynamic Sprint FOV & Mob Knockback Polish Pass
+- [x] CP-EX: Ocean Biome — BiomeType.Ocean enum, getOceanFloorHeight(), smooth coastal blending, sand sea-floor surface
 
 ---
 

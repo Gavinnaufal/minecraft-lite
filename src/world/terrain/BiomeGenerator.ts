@@ -1,6 +1,7 @@
 import { NoiseGenerator } from './NoiseGenerator';
 
 export enum BiomeType {
+  Ocean = 'ocean',
   Desert = 'desert',
   Plains = 'plains',
   Forest = 'forest',
@@ -19,9 +20,15 @@ export class BiomeGenerator {
   getBiome(worldX: number, worldZ: number): BiomeType {
     const value = this.noise.noise2D(worldX / this.scale, worldZ / this.scale);
 
-    if (value < 0.35) return BiomeType.Desert;
-    if (value < 0.6) return BiomeType.Plains;
-    if (value < 0.8) return BiomeType.Forest;
+    if (value < -0.15) return BiomeType.Ocean;
+    if (value < 0.2)   return BiomeType.Desert;
+    if (value < 0.5)   return BiomeType.Plains;
+    if (value < 0.75)  return BiomeType.Forest;
     return BiomeType.Mountain;
+  }
+
+  /** Raw noise value [~-1..1] used for smooth biome blending */
+  getRawValue(worldX: number, worldZ: number): number {
+    return this.noise.noise2D(worldX / this.scale, worldZ / this.scale);
   }
 }

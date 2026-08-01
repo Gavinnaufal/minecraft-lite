@@ -87,17 +87,39 @@ chunkManager.terrainFiller = (chunk: Chunk) => {
     for (let lx = 0; lx < CHUNK_SIZE_X; lx++) {
       const wx = chunk.chunkX * CHUNK_SIZE_X + lx;
       const wz = chunk.chunkZ * CHUNK_SIZE_Z + lz;
-      const h = heightMap.getHeight(wx, wz);
+      const biome = biomeGen.getBiome(wx, wz);
+
+      // For Ocean biome, override height with sea-floor depth.
+      // Smooth coastal transition: blend between ocean floor and normal height
+      // based on how deep into the Ocean biome we are (via raw noise value).
+      let h: number;
+      if (biome === BiomeType.Ocean) {
+        const rawVal = biomeGen.getRawValue(wx, wz); // negative in Ocean
+        // rawVal goes from -0.15 (coast) to ~-1.0 (deep ocean)
+        // blend factor: 0 at coast edge (-0.15), 1 at fully deep (-0.6+)
+        const blend = Math.min(1, ((-rawVal) - 0.15) / 0.45);
+        const normalH = heightMap.getHeight(wx, wz);
+        const oceanH = heightMap.getOceanFloorHeight(wx, wz);
+        h = Math.round(normalH + (oceanH - normalH) * blend);
+        h = Math.max(1, Math.min(WATER_LEVEL - 2, h));
+      } else {
+        h = heightMap.getHeight(wx, wz);
+      }
+
       for (let y = 0; y <= h && y < CHUNK_HEIGHT; y++) {
         const depth = h - y;
         let bid: number;
-        if (depth === 0) {
-          const biome = biomeGen.getBiome(wx, wz);
+        if (biome === BiomeType.Ocean) {
+          // Ocean floor: sand on top, stone underneath
+          if (depth === 0) bid = 4;        // sand surface
+          else if (depth <= 2) bid = 4;    // sand layer
+          else bid = 3;                    // stone
+        } else if (depth === 0) {
           if (biome === BiomeType.Desert) bid = 4;
           else if (biome === BiomeType.Mountain && h > 80) bid = 3;
           else bid = 1;
         } else if (depth <= 3) {
-          bid = biomeGen.getBiome(wx, wz) === BiomeType.Desert ? 4 : 2;
+          bid = biome === BiomeType.Desert ? 4 : 2;
         } else bid = 3;
         chunk.setBlock(lx, y, lz, bid);
       }
@@ -107,12 +129,26 @@ chunkManager.terrainFiller = (chunk: Chunk) => {
     for (let lx = 0; lx < CHUNK_SIZE_X; lx++) {
       const wx = chunk.chunkX * CHUNK_SIZE_X + lx;
       const wz = chunk.chunkZ * CHUNK_SIZE_Z + lz;
-      const h = heightMap.getHeight(wx, wz);
+      const biome = biomeGen.getBiome(wx, wz);
+
+      let h: number;
+      if (biome === BiomeType.Ocean) {
+        const rawVal = biomeGen.getRawValue(wx, wz);
+        const blend = Math.min(1, ((-rawVal) - 0.15) / 0.45);
+        const normalH = heightMap.getHeight(wx, wz);
+        const oceanH = heightMap.getOceanFloorHeight(wx, wz);
+        h = Math.round(normalH + (oceanH - normalH) * blend);
+        h = Math.max(1, Math.min(WATER_LEVEL - 2, h));
+      } else {
+        h = heightMap.getHeight(wx, wz);
+      }
+
       if (h < WATER_LEVEL) {
         for (let y = h + 1; y <= WATER_LEVEL && y < CHUNK_HEIGHT; y++) {
           chunk.setBlock(lx, y, lz, 7);
         }
       }
+
     }
   }
   for (let lz = 0; lz < CHUNK_SIZE_Z; lz++) {

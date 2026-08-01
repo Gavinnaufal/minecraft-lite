@@ -41,6 +41,7 @@ const items: ItemType[] = [
   { id: 'iron_ingot', name: 'Iron Ingot', maxStack: 64, isBlock: false },
   { id: 'bone', name: 'Bone', maxStack: 64, isBlock: false },
   { id: 'arrow', name: 'Arrow', maxStack: 64, isBlock: false },
+  { id: 'string', name: 'String', maxStack: 64, isBlock: false },
 ];
 
 const byId = new Map<string, ItemType>();

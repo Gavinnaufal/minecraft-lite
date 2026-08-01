@@ -26,6 +26,7 @@ import { ParticleSystem } from './world/ParticleSystem';
 import { ItemDropManager } from './world/ItemDropManager';
 import { IronGolem } from './mobs/npc/IronGolem';
 import { Skeleton } from './mobs/hostile/Skeleton';
+import { Spider } from './mobs/hostile/Spider';
 import { ProjectileManager } from './entities/ProjectileManager';
 import { ChatBox } from './multiplayer/ChatBox';
 import { TorchLightManager } from './world/TorchLightManager';
@@ -735,6 +736,8 @@ engine.setUpdateCallback((deltaTime) => {
         if (arrowCount > 0) {
           itemDropManager.spawnDrop(dropPos, 'arrow', arrowCount);
         }
+      } else if (deadMob instanceof Spider) {
+        itemDropManager.spawnDrop(dropPos, 'string', Math.floor(Math.random() * 2) + 1);
       }
     }
   }

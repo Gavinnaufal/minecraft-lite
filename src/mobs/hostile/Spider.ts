@@ -4,6 +4,7 @@ import { StateMachine, State } from '../ai/StateMachine';
 import type { World } from '../../world/World';
 import type { Player } from '../../player/Player';
 import { getBlockById } from '../../world/BlockRegistry';
+import { AudioManager } from '../../audio/AudioManager';
 
 export class Spider extends Mob {
   private stateMachine = new StateMachine();
@@ -76,22 +77,31 @@ export class Spider extends Mob {
     this.mesh.position.copy(position);
   }
 
+  private leapTimer = 0;
+  private attackTimer = 0;
+
   override reset(position: THREE.Vector3): void {
     super.reset(position, 16);
     this.isHostile = true;
     this.animTimer = 0;
+    this.leapTimer = 0;
+    this.attackTimer = 0;
   }
 
-  update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, _player?: Player): void {
+  update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, player?: Player): void {
     let isMoving = false;
 
     if (playerPos) {
       const dist3D = this.position.distanceTo(playerPos);
       const state = this.stateMachine.update(deltaTime, dist3D);
 
+      this.leapTimer += deltaTime;
+      this.attackTimer += deltaTime;
+
       if (state === State.Chase || dist3D < 14) {
         const dx = playerPos.x - this.position.x;
         const dz = playerPos.z - this.position.z;
+        const dy = Math.abs(playerPos.y - this.position.y);
         const horizDist = Math.sqrt(dx * dx + dz * dz);
 
         if (horizDist > 0.001) {
@@ -100,6 +110,24 @@ export class Spider extends Mob {
           this.velocity.z = (dz / horizDist) * chaseSpeed;
           this.mesh.rotation.y = Math.atan2(dx, dz);
           isMoving = true;
+
+          // Leap Attack when close (1.2 to 4 blocks)
+          if (horizDist < 4.0 && horizDist > 1.2 && this.isGrounded && this.leapTimer >= 2.5) {
+            this.leapTimer = 0;
+            this.velocity.y = 5.8;
+            this.velocity.x *= 1.5;
+            this.velocity.z *= 1.5;
+            AudioManager.getInstance().playSFX('click');
+          }
+
+          // Melee attack on contact
+          if (horizDist < 1.6 && dy < 1.5 && this.attackTimer >= 1.2) {
+            this.attackTimer = 0;
+            if (player && player.health > 0) {
+              player.health = Math.max(0, player.health - 3);
+              AudioManager.getInstance().playSFX('hit');
+            }
+          }
         }
       } else if (state === State.Wander) {
         const wanderDx = (Math.random() - 0.5) * 1.8;

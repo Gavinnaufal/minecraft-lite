@@ -4,6 +4,7 @@ import { StateMachine, State } from '../ai/StateMachine';
 import type { World } from '../../world/World';
 import type { Player } from '../../player/Player';
 import { getBlockById } from '../../world/BlockRegistry';
+import { AudioManager } from '../../audio/AudioManager';
 
 export class Goat extends Mob {
   private stateMachine = new StateMachine();
@@ -13,6 +14,7 @@ export class Goat extends Mob {
   private legBR: THREE.Mesh;
   private animTimer = 0;
   private jumpTimer = 0;
+  private soundTimer = 5 + Math.random() * 7;
 
   constructor(position: THREE.Vector3) {
     super(position, 0xf5f5dc);
@@ -85,11 +87,18 @@ export class Goat extends Mob {
     this.isHostile = false;
     this.animTimer = 0;
     this.jumpTimer = 0;
+    this.soundTimer = 5 + Math.random() * 7;
   }
 
   update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, _player?: Player): void {
     let isMoving = false;
     this.jumpTimer += deltaTime;
+
+    this.soundTimer -= deltaTime;
+    if (this.soundTimer <= 0) {
+      this.soundTimer = 9 + Math.random() * 10;
+      AudioManager.getInstance().playSFX('goat_baa');
+    }
 
     if (playerPos) {
       const dist3D = this.position.distanceTo(playerPos);

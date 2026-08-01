@@ -225,6 +225,43 @@ export class AudioManager {
       filter.connect(masterGain);
       osc.start(now);
       osc.stop(now + 0.75);
+    } else if (name === 'pig_oink') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.exponentialRampToValueAtTime(140, now + 0.25);
+      gain.gain.setValueAtTime(0.35, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.25);
+    } else if (name === 'chicken_cluck') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(580, now);
+      osc.frequency.exponentialRampToValueAtTime(320, now + 0.12);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.12);
+    } else if (name === 'goat_baa') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(280, now);
+      osc.frequency.linearRampToValueAtTime(320, now + 0.2);
+      osc.frequency.exponentialRampToValueAtTime(220, now + 0.5);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+      osc.connect(gain);
+      gain.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.5);
     } else if (name === 'zombie_groan') {
       // Creepy Low Zombie Groan
       const osc = ctx.createOscillator();

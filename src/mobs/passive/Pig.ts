@@ -3,6 +3,7 @@ import { Mob } from '../Mob';
 import { StateMachine, State } from '../ai/StateMachine';
 import type { World } from '../../world/World';
 import type { Player } from '../../player/Player';
+import { AudioManager } from '../../audio/AudioManager';
 
 export class Pig extends Mob {
   private stateMachine = new StateMachine();
@@ -75,14 +76,23 @@ export class Pig extends Mob {
     this.mesh.position.copy(position);
   }
 
+  private soundTimer = 4 + Math.random() * 6;
+
   override reset(position: THREE.Vector3): void {
     super.reset(position, 10);
     this.isHostile = false;
     this.animTimer = 0;
+    this.soundTimer = 4 + Math.random() * 6;
   }
 
   update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, _player?: Player): void {
     let isMoving = false;
+
+    this.soundTimer -= deltaTime;
+    if (this.soundTimer <= 0) {
+      this.soundTimer = 8 + Math.random() * 10;
+      AudioManager.getInstance().playSFX('pig_oink');
+    }
 
     if (playerPos) {
       const dist3D = this.position.distanceTo(playerPos);

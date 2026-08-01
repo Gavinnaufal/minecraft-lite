@@ -3,12 +3,14 @@ import { Mob } from '../Mob';
 import { StateMachine, State } from '../ai/StateMachine';
 import type { World } from '../../world/World';
 import type { Player } from '../../player/Player';
+import { AudioManager } from '../../audio/AudioManager';
 
 export class Chicken extends Mob {
   private stateMachine = new StateMachine();
   private legL: THREE.Mesh;
   private legR: THREE.Mesh;
   private animTimer = 0;
+  private soundTimer = 3 + Math.random() * 5;
 
   constructor(position: THREE.Vector3) {
     super(position, 0xffffff);
@@ -88,10 +90,17 @@ export class Chicken extends Mob {
     super.reset(position, 4);
     this.isHostile = false;
     this.animTimer = 0;
+    this.soundTimer = 3 + Math.random() * 5;
   }
 
   update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, _player?: Player): void {
     let isMoving = false;
+
+    this.soundTimer -= deltaTime;
+    if (this.soundTimer <= 0) {
+      this.soundTimer = 6 + Math.random() * 8;
+      AudioManager.getInstance().playSFX('chicken_cluck');
+    }
 
     if (playerPos) {
       const dist3D = this.position.distanceTo(playerPos);

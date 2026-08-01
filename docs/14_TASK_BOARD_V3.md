@@ -16,9 +16,9 @@
 
 ## CHECKLIST DETAIL V3.0
 
-### Fase 26 — Ore Mining & Smelting (1/10)
+### Fase 26 — Ore Mining & Smelting (2/10)
 - [x] CP-239: BlockRegistry addition: coal_ore, iron_ore
-- [ ] CP-240: OreGenerator.ts cluster noise placement
+- [x] CP-240: OreGenerator.ts cluster noise placement
 - [ ] CP-241: Ore cluster threshold tuning
 - [ ] CP-242: Item baru: raw_iron, coal
 - [ ] CP-243: Furnace smelting mode terpisah dari cooking mode

@@ -44,6 +44,7 @@ import { HeightMap } from './world/terrain/HeightMap';
 import { BiomeGenerator, BiomeType } from './world/terrain/BiomeGenerator';
 import { generateTrees } from './world/terrain/TreeGenerator';
 import { VillageGenerator } from './world/structures/VillageGenerator';
+import { OreGenerator } from './world/ores/OreGenerator';
 import { BlockBreaker } from './interaction/BlockBreaker';
 import { BlockPlacer } from './interaction/BlockPlacer';
 import { Inventory } from './inventory/Inventory';
@@ -87,6 +88,7 @@ function createGenerators(seed: number) {
 
 let { heightMap, biomeGen, caveNoise, lakeNoise } = createGenerators(worldSeed);
 const villageGen = new VillageGenerator();
+let oreGen = new OreGenerator(worldSeed);
 
 // Player & physics
 const player = new Player();
@@ -229,6 +231,7 @@ chunkManager.terrainFiller = (chunk: Chunk) => {
       }
     }
   }
+  oreGen.generateForChunk(chunk);
   generateTrees(chunk, heightMap, biomeGen);
   villageGen.generateForChunk(chunk, heightMap, biomeGen);
   villageGen.spawnVillageNPCsForChunk(chunk, mobManager, heightMap, biomeGen);

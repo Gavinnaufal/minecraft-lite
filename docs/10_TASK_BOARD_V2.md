@@ -8,11 +8,11 @@
 | Fase 19 — Cave Expansion & Ravines | 165–168 | 4 | 100% |
 | Fase 20 — Village Generation & Prefabs | 173–181 | 9 | 100% |
 | Fase 21 — Villager NPC & Iron Golem | 182–189 | 8 | 100% |
-| Fase 22 — Hostile Mobs (Skeleton, Spider, Enderman) | 190–204 | 10 | 67% |
+| Fase 22 — Hostile Mobs (Skeleton, Spider, Enderman) | 190–204 | 11 | 73% |
 | Fase 23 — Passive Animals & Food | 205–212 | 0 | 0% |
 | Fase 24 — Nether Portal & Dimension | 213–226 | 0 | 0% |
 | Fase 25 — Master Integration & Polish | 227–238 | 0 | 0% |
-| **TOTAL EXPANSION (v2.0)** | | **39** | **45%** |
+| **TOTAL EXPANSION (v2.0)** | | **40** | **46%** |
 
 ---
 
@@ -55,7 +55,7 @@
 - [x] CP-188: Iron Golem knockback attack animation
 - [x] CP-189: Iron Golem spawn in villages & iron ingot drops
 
-### Fase 22 — Hostile Mobs: Skeleton, Spider & Enderman (10/15)
+### Fase 22 — Hostile Mobs: Skeleton, Spider & Enderman (11/15)
 - [x] CP-190: Skeleton base class & 3D model with bow
 - [x] CP-191: Skeleton wander & chase state
 - [x] CP-192: Arrow projectile entity & physics trajectory
@@ -66,7 +66,7 @@
 - [x] CP-197: Spider wall-climbing physics & raycast step
 - [x] CP-198: Spider leap attack & string drops
 - [x] CP-199: Enderman base class & tall 3D model (3 blocks high)
-- [ ] CP-200: Enderman purple particle effect
+- [x] CP-200: Enderman purple particle effect
 - [ ] CP-201: Enderman neutral wander & stare-trigger provocation logic
 - [ ] CP-202: Enderman hostile chase & melee attack
 - [ ] CP-203: Enderman random teleportation when hit/provoked

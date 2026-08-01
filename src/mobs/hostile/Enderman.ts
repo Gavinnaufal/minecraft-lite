@@ -8,7 +8,9 @@ export class Enderman extends Mob {
   private stateMachine = new StateMachine();
   private legL: THREE.Mesh;
   private legR: THREE.Mesh;
+  private enderParticles: THREE.Mesh[] = [];
   private animTimer = 0;
+  private particleTimer = 0;
   isProvoked = false;
 
   constructor(position: THREE.Vector3) {
@@ -65,6 +67,21 @@ export class Enderman extends Mob {
 
     enderGroup.add(this.legL);
     enderGroup.add(this.legR);
+
+    // 6. Floating Purple Ender Particles
+    const pGeo = new THREE.BoxGeometry(0.06, 0.06, 0.06);
+    const pMat = new THREE.MeshStandardMaterial({ color: 0xd500f9, emissive: 0xaa00d6 });
+
+    for (let i = 0; i < 8; i++) {
+      const pMesh = new THREE.Mesh(pGeo, pMat);
+      pMesh.position.set(
+        (Math.random() - 0.5) * 0.9,
+        Math.random() * 2.8,
+        (Math.random() - 0.5) * 0.9
+      );
+      enderGroup.add(pMesh);
+      this.enderParticles.push(pMesh);
+    }
 
     this.mesh = enderGroup;
     this.mesh.position.copy(position);
@@ -128,6 +145,15 @@ export class Enderman extends Mob {
     } else {
       this.legL.rotation.x = 0;
       this.legR.rotation.x = 0;
+    }
+
+    // Floating purple Ender particle animation
+    this.particleTimer += deltaTime * 3.5;
+    for (let i = 0; i < this.enderParticles.length; i++) {
+      const p = this.enderParticles[i];
+      p.position.y += Math.sin(this.particleTimer + i * 1.2) * 0.006;
+      p.rotation.x += deltaTime * 1.5;
+      p.rotation.y += deltaTime * 2.0;
     }
 
     this.updatePhysics(deltaTime, world);

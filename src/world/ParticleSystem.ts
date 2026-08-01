@@ -5,6 +5,7 @@ interface Particle {
   velocity: THREE.Vector3;
   life: number;
   maxLife: number;
+  useGravity?: boolean;
 }
 
 export class ParticleSystem {
@@ -14,6 +15,34 @@ export class ParticleSystem {
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
+  }
+
+  spawnEnderParticles(position: THREE.Vector3): void {
+    const mat = new THREE.MeshBasicMaterial({ color: 0xd500f9, transparent: true, opacity: 0.9 });
+
+    for (let i = 0; i < 3; i++) {
+      const mesh = new THREE.Mesh(this.particleGeo, mat);
+      mesh.position.set(
+        position.x + (Math.random() - 0.5) * 0.8,
+        position.y + Math.random() * 2.8,
+        position.z + (Math.random() - 0.5) * 0.8,
+      );
+
+      const velocity = new THREE.Vector3(
+        (Math.random() - 0.5) * 0.6,
+        0.5 + Math.random() * 0.8,
+        (Math.random() - 0.5) * 0.6,
+      );
+
+      this.scene.add(mesh);
+      this.particles.push({
+        mesh,
+        velocity,
+        life: 0.5 + Math.random() * 0.5,
+        maxLife: 1.0,
+        useGravity: false,
+      });
+    }
   }
 
   spawnBlockBreakParticles(position: THREE.Vector3, colorHex = 0x8d6e63): void {
@@ -136,7 +165,9 @@ export class ParticleSystem {
         continue;
       }
 
-      p.velocity.y += -18.0 * deltaTime; // Gravity
+      if (p.useGravity !== false) {
+        p.velocity.y += -18.0 * deltaTime; // Gravity
+      }
       p.mesh.position.addScaledVector(p.velocity, deltaTime);
       p.mesh.scale.multiplyScalar(0.93); // Shrink over time
     }

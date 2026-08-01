@@ -4,6 +4,7 @@ import type { BiomeGenerator } from '../terrain/BiomeGenerator';
 import { BiomeType } from '../terrain/BiomeGenerator';
 import { CHUNK_SIZE_X, CHUNK_SIZE_Z, WATER_LEVEL } from '../../utils/constants';
 import { buildOakHousePrefab } from './prefabs/HousePrefab';
+import { buildStoneHousePrefab } from './prefabs/StoneHousePrefab';
 
 function villageHash(chunkX: number, chunkZ: number): number {
   let h = (chunkX * 1619 + chunkZ * 31337) ^ 0x5bd1e995;
@@ -95,19 +96,31 @@ export class VillageGenerator {
       }
     }
 
-    // Build Oak Houses at designated village offsets
-    const houseLocations = [
+    // Build Oak & Stone Houses at designated village offsets
+    const oakHouseLocations = [
       { relX: 4, relZ: 4 },
       { relX: -8, relZ: 4 },
+    ];
+    const stoneHouseLocations = [
       { relX: 4, relZ: -8 },
+      { relX: -10, relZ: -8 },
     ];
 
-    for (const loc of houseLocations) {
+    for (const loc of oakHouseLocations) {
       const hWX = villageCX + loc.relX;
       const hWZ = villageCZ + loc.relZ;
       const groundY = heightMap.getHeight(hWX + 2, hWZ + 2);
       if (groundY > WATER_LEVEL) {
         buildOakHousePrefab(chunk, chunkMinWX, chunkMinWZ, hWX, groundY, hWZ);
+      }
+    }
+
+    for (const loc of stoneHouseLocations) {
+      const hWX = villageCX + loc.relX;
+      const hWZ = villageCZ + loc.relZ;
+      const groundY = heightMap.getHeight(hWX + 2, hWZ + 2);
+      if (groundY > WATER_LEVEL) {
+        buildStoneHousePrefab(chunk, chunkMinWX, chunkMinWZ, hWX, groundY, hWZ);
       }
     }
   }

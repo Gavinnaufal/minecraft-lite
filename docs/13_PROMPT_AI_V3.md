@@ -39,7 +39,7 @@ Format mengikuti pola `09_PROMPT_AI_V2.md`: isi lengkap disediakan bertahap sesu
 
 ## CP-247: Ore block texture pass
 - File: `public/textures/blocks/`
-- Output: tekstur 16x16 px baru untuk coal_ore & iron_ore (pola spot/bintik pada base texture stone, mengikuti gaya "Authentic 16x16 Pixel Art Textures Pass" dari CP-153).
+- Output: tekstur 16x16 px baru untuk blok coal_ore & iron_ore (pola spot/bintik pada base texture stone, mengikuti gaya CP-153). Catatan: Ikon 2D SVG & 3D Hand Model raw_iron sudah tuntas dikerjakan di CP-242, CP-247 murni fokus pada tekstur piksel blok batu ore.
 
 ## CP-248: Playtest & balance
 - Output: laporan playtest rasio kemunculan ore per chunk pada beberapa seed berbeda, dokumentasikan hasil di file laporan terpisah (pola sama seperti `109_PROFILING.md`/`115_STRESS_TEST.md`).

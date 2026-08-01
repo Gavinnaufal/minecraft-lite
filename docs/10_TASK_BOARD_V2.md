@@ -6,13 +6,13 @@
 |---|---|---|---|
 | Fase 18 — River & Water Polish | 157–164 | 8 | 100% |
 | Fase 19 — Cave Expansion & Ravines | 165–168 | 4 | 100% |
-| Fase 20 — Village Generation & Prefabs | 173–181 | 3 | 33% |
+| Fase 20 — Village Generation & Prefabs | 173–181 | 4 | 44% |
 | Fase 21 — Villager NPC & Iron Golem | 182–189 | 0 | 0% |
 | Fase 22 — Hostile Mobs (Skeleton, Spider, Enderman) | 190–204 | 0 | 0% |
 | Fase 23 — Passive Animals & Food | 205–212 | 0 | 0% |
 | Fase 24 — Nether Portal & Dimension | 213–226 | 0 | 0% |
 | Fase 25 — Master Integration & Polish | 227–238 | 0 | 0% |
-| **TOTAL EXPANSION (v2.0)** | | **15** | **18%** |
+| **TOTAL EXPANSION (v2.0)** | | **16** | **19%** |
 
 ---
 
@@ -34,11 +34,11 @@
 - [x] CP-167: Lava pool generation
 - [x] CP-168: Underground obsidian cluster generation
 
-### Fase 20 — Village Generation & Prefabs (3/9)
+### Fase 20 — Village Generation & Prefabs (4/9)
 - [x] CP-173: StructureManager & VillageGenerator layout algorithm
 - [x] CP-174: Oak Wood House prefab generator
 - [x] CP-175: Cobblestone House prefab generator
-- [ ] CP-176: Dirt path generator connecting village houses
+- [x] CP-176: Dirt path generator connecting village houses
 - [ ] CP-177: Small wheat farm field structure in villages
 - [ ] CP-178: Village spawn placement on flat Plains biomes
 - [ ] CP-179: Structure bounding box collision & chunk meshing integration

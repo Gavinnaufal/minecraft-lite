@@ -85,9 +85,16 @@ export class VillageGenerator {
         const relX = wx - villageCX;
         const relZ = wz - villageCZ;
 
-        // Path detection (dirt path along main village cross roads)
-        const isMainRoad = (Math.abs(relX) <= 1 && Math.abs(relZ) <= 15) || (Math.abs(relZ) <= 1 && Math.abs(relX) <= 15);
-        if (isMainRoad) {
+        // Path detection (main cross roads + branch paths connecting to house doors)
+        const isMainRoad = (Math.abs(relX) <= 1 && Math.abs(relZ) <= 14) || (Math.abs(relZ) <= 1 && Math.abs(relX) <= 14);
+        const isOakPath1 = relZ === 4 && relX >= 0 && relX <= 6;
+        const isOakPath2 = relZ === 4 && relX <= 0 && relX >= -6;
+        const isStonePath1 = relZ === -8 && relX >= 0 && relX <= 7;
+        const isStonePath2 = relZ === -8 && relX <= 0 && relX >= -7;
+
+        const isVillagePath = isMainRoad || isOakPath1 || isOakPath2 || isStonePath1 || isStonePath2;
+
+        if (isVillagePath) {
           const groundY = heightMap.getHeight(wx, wz);
           if (groundY > WATER_LEVEL) {
             chunk.setBlock(lx, groundY, lz, 2); // Dirt path block

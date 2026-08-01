@@ -25,6 +25,7 @@ import { HandModel } from './ui/HandModel';
 import { ParticleSystem } from './world/ParticleSystem';
 import { ItemDropManager } from './world/ItemDropManager';
 import { IronGolem } from './mobs/npc/IronGolem';
+import { ProjectileManager } from './entities/ProjectileManager';
 import { ChatBox } from './multiplayer/ChatBox';
 import { TorchLightManager } from './world/TorchLightManager';
 import { NoiseGenerator, seedFromString } from './world/terrain/NoiseGenerator';
@@ -229,8 +230,9 @@ console.log(`[Seed] World seed: "${worldSeedString}" (${worldSeed})`);
 const inventory = new Inventory();
 const hotbar = new Hotbar();
 
-// Mobs
+// Mobs & Projectiles
 const mobManager = new MobManager(scene, world);
+ProjectileManager.getInstance().setScene(scene);
 const dayNight = new DayNightCycle();
 
 // Spawn player on terrain surface immediately
@@ -654,6 +656,7 @@ engine.setUpdateCallback((deltaTime) => {
   }
 
   mobManager.update(deltaTime, new THREE.Vector3(player.position.x, player.position.y, player.position.z), player);
+  ProjectileManager.getInstance().update(deltaTime, world);
 
   blockBreaker.updateOutline(camera);
   blockBreaker.updateBreak(deltaTime, inputManager.isLeftMouseDown, camera, hotbar.getActiveItem());

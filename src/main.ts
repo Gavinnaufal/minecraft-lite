@@ -87,41 +87,61 @@ function getWaterTerrain(wx: number, wz: number) {
   const biome = biomeGen.getBiome(wx, wz);
   const notDesert = biome !== BiomeType.Desert;
 
-  // River noise (iso-line technique for winding rivers/lakes)
-  const riverVal = lakeNoise.noise2D(wx / 50, wz / 50);
+  // River noise (iso-line technique)
+  const riverVal = lakeNoise.noise2D(wx / 55, wz / 55);
   const distFromCenter = Math.abs(riverVal - 0.5);
 
-  // Pool/lake noise (widening rivers into open lake basins)
-  const poolVal = lakeNoise.noise2D(wx / 32, wz / 32);
-  const isPool = poolVal > 0.74 && notDesert;
-
-  const isRiverChannel = distFromCenter < 0.045 && notDesert;
-  const isRiverShore = distFromCenter >= 0.045 && distFromCenter < 0.082 && notDesert;
+  // Pool noise
+  const poolVal = lakeNoise.noise2D(wx / 35, wz / 35);
+  const poolFactor = Math.max(0, (poolVal - 0.70) / 0.30); // 0 to 1 inside pool
 
   let h = baseH;
   let isWater = false;
   let isBeach = false;
 
-  if (isRiverChannel || isPool) {
-    isWater = true;
-    isBeach = true; // Underwater bed is Sand
-    let depthFactor = 0;
-    if (isRiverChannel) {
-      depthFactor = 1 - (distFromCenter / 0.045);
+  if (notDesert) {
+    // 1. Calculate river channel & smooth bank slope:
+    // River channel: distFromCenter < 0.035
+    // Wide smooth bank slope: distFromCenter from 0.035 to 0.18 (over ~15-20 blocks)
+    let riverTargetH = baseH;
+
+    if (distFromCenter < 0.035) {
+      const depthFactor = 1 - (distFromCenter / 0.035);
+      const depth = 1 + Math.round(depthFactor * 2); // 1 to 3 blocks deep
+      riverTargetH = WATER_LEVEL - depth;
+    } else if (distFromCenter < 0.18) {
+      // Smooth transition zone across ~15 blocks
+      const t = (distFromCenter - 0.035) / (0.18 - 0.035); // 0 to 1
+      const smoothT = t * t * (3 - 2 * t); // Smoothstep curve
+      const waterEdgeH = WATER_LEVEL - 1;
+      riverTargetH = Math.round(waterEdgeH + (baseH - waterEdgeH) * smoothT);
     }
-    if (isPool) {
-      depthFactor = Math.max(depthFactor, (poolVal - 0.74) / 0.26);
+
+    // 2. Calculate pool/lake channel & smooth bank slope:
+    let poolTargetH = baseH;
+
+    if (poolFactor > 0) {
+      if (poolFactor > 0.2) {
+        const depth = 1 + Math.round(poolFactor * 2);
+        poolTargetH = WATER_LEVEL - depth;
+      } else {
+        // Smooth pool edge transition
+        const t = 1.0 - (poolFactor / 0.2); // 0 at pool inner edge, 1 at outer edge
+        const smoothT = t * t * (3 - 2 * t);
+        const waterEdgeH = WATER_LEVEL - 1;
+        poolTargetH = Math.round(waterEdgeH + (baseH - waterEdgeH) * smoothT);
+      }
     }
-    // Water depth: 1 to 3 blocks below WATER_LEVEL (shallow & beautiful)
-    const depth = 1 + Math.round(depthFactor * 2);
-    h = Math.min(baseH, WATER_LEVEL - depth);
-  } else if (isRiverShore) {
-    isBeach = true; // Sandy shore beach!
-    const shoreProgress = (distFromCenter - 0.045) / (0.082 - 0.045); // 0 near water edge, 1 at land edge
-    const targetH = WATER_LEVEL + Math.floor(shoreProgress * 2);
-    h = Math.min(baseH, targetH);
-  } else if (baseH <= WATER_LEVEL + 1) {
-    isBeach = true; // Natural beach at water level
+
+    // Combine river and pool depressions smoothly
+    h = Math.min(baseH, Math.min(riverTargetH, poolTargetH));
+
+    if (h < WATER_LEVEL) {
+      isWater = true;
+      isBeach = true;
+    } else if (h <= WATER_LEVEL + 2) {
+      isBeach = true; // Sand beach shore!
+    }
   }
 
   h = Math.max(1, h);

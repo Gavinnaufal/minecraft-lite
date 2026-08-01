@@ -17,9 +17,9 @@ export class VillageGenerator {
   private readonly villageGridScale = 20; // Check 1 potential village per 20x20 chunk grid (~320x320 blocks)
 
   /**
-   * Returns true if a village center is located near the given chunk coordinate.
+   * Returns true if a village center is located near the given chunk coordinate and terrain is flat Plains.
    */
-  getVillageCenter(chunkX: number, chunkZ: number, biomeGen: BiomeGenerator): { cx: number; cz: number } | null {
+  getVillageCenter(chunkX: number, chunkZ: number, heightMap: HeightMap, biomeGen: BiomeGenerator): { cx: number; cz: number } | null {
     const gridX = Math.floor(chunkX / this.villageGridScale);
     const gridZ = Math.floor(chunkZ / this.villageGridScale);
 
@@ -37,12 +37,33 @@ export class VillageGenerator {
     const centerWX = centerChunkX * CHUNK_SIZE_X + 8;
     const centerWZ = centerChunkZ * CHUNK_SIZE_Z + 8;
 
-    // Village only spawns in Plains biome
-    if (biomeGen.getBiome(centerWX, centerWZ) !== BiomeType.Plains) {
+    // Validate that terrain is flat Plains
+    if (!this.isFlatPlainsTerrain(centerWX, centerWZ, heightMap, biomeGen)) {
       return null;
     }
 
     return { cx: centerWX, cz: centerWZ };
+  }
+
+  private isFlatPlainsTerrain(centerWX: number, centerWZ: number, heightMap: HeightMap, biomeGen: BiomeGenerator): boolean {
+    let minH = Infinity;
+    let maxH = -Infinity;
+
+    for (let dx = -15; dx <= 15; dx += 5) {
+      for (let dz = -15; dz <= 15; dz += 5) {
+        const wx = centerWX + dx;
+        const wz = centerWZ + dz;
+        if (biomeGen.getBiome(wx, wz) !== BiomeType.Plains) return false;
+
+        const h = heightMap.getHeight(wx, wz);
+        if (h <= WATER_LEVEL + 1) return false; // Don't spawn village in water
+        if (h < minH) minH = h;
+        if (h > maxH) maxH = h;
+      }
+    }
+
+    // Require flat terrain (height variation <= 5 blocks)
+    return (maxH - minH) <= 5;
   }
 
   /**
@@ -58,7 +79,7 @@ export class VillageGenerator {
 
     for (let gx = currentGridX - 1; gx <= currentGridX + 1; gx++) {
       for (let gz = currentGridZ - 1; gz <= currentGridZ + 1; gz++) {
-        const center = this.getVillageCenter(gx * this.villageGridScale, gz * this.villageGridScale, biomeGen);
+        const center = this.getVillageCenter(gx * this.villageGridScale, gz * this.villageGridScale, heightMap, biomeGen);
         if (!center) continue;
 
         const distToCenter = Math.hypot(

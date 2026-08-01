@@ -24,6 +24,7 @@ import { MainMenu } from './ui/MainMenu';
 import { HandModel } from './ui/HandModel';
 import { ParticleSystem } from './world/ParticleSystem';
 import { ItemDropManager } from './world/ItemDropManager';
+import { IronGolem } from './mobs/npc/IronGolem';
 import { ChatBox } from './multiplayer/ChatBox';
 import { TorchLightManager } from './world/TorchLightManager';
 import { NoiseGenerator, seedFromString } from './world/terrain/NoiseGenerator';
@@ -218,6 +219,7 @@ chunkManager.terrainFiller = (chunk: Chunk) => {
   }
   generateTrees(chunk, heightMap, biomeGen);
   villageGen.generateForChunk(chunk, heightMap, biomeGen);
+  villageGen.spawnVillageNPCsForChunk(chunk, mobManager, heightMap, biomeGen);
   world.applyModificationsToChunk(chunk);
 };
 
@@ -721,6 +723,8 @@ engine.setUpdateCallback((deltaTime) => {
         itemDropManager.spawnDrop(dropPos, 'beef', Math.floor(Math.random() * 2) + 1);
       } else if (deadMob instanceof Zombie) {
         itemDropManager.spawnDrop(dropPos, 'rotten_flesh', Math.floor(Math.random() * 2) + 1);
+      } else if (deadMob instanceof IronGolem) {
+        itemDropManager.spawnDrop(dropPos, 'iron_ingot', Math.floor(Math.random() * 3) + 3);
       }
     }
   }

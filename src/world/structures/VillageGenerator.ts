@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import type { Chunk } from '../Chunk';
 import type { HeightMap } from '../terrain/HeightMap';
 import type { BiomeGenerator } from '../terrain/BiomeGenerator';
@@ -6,6 +7,9 @@ import { CHUNK_SIZE_X, CHUNK_SIZE_Z, WATER_LEVEL } from '../../utils/constants';
 import { buildOakHousePrefab } from './prefabs/HousePrefab';
 import { buildStoneHousePrefab } from './prefabs/StoneHousePrefab';
 import { buildFarmPrefab } from './prefabs/FarmPrefab';
+import type { MobManager } from '../../mobs/MobManager';
+import { IronGolem } from '../../mobs/npc/IronGolem';
+import { Villager } from '../../mobs/npc/Villager';
 
 function villageHash(chunkX: number, chunkZ: number): number {
   let h = (chunkX * 1619 + chunkZ * 31337) ^ 0x5bd1e995;
@@ -167,5 +171,38 @@ export class VillageGenerator {
         buildFarmPrefab(chunk, chunkMinWX, chunkMinWZ, fWX, groundY, fWZ);
       }
     }
+  }
+
+  private spawnedVillages = new Set<string>();
+
+  /**
+   * Spawns 1 Iron Golem and 2 Villager NPCs at the center of the village when the center chunk generates.
+   */
+  spawnVillageNPCsForChunk(chunk: Chunk, mobManager: MobManager, heightMap: HeightMap, biomeGen: BiomeGenerator): void {
+    const center = this.getVillageCenter(chunk.chunkX, chunk.chunkZ, heightMap, biomeGen);
+    if (!center) return;
+
+    const key = `${center.cx},${center.cz}`;
+    if (this.spawnedVillages.has(key)) return;
+    this.spawnedVillages.add(key);
+
+    const groundY = heightMap.getHeight(center.cx, center.cz);
+    const centerPos = new THREE.Vector3(center.cx, groundY + 1, center.cz);
+
+    // Spawn 1 Iron Golem tethered to village
+    const golem = new IronGolem(centerPos);
+    golem.setVillageCenter(centerPos);
+    mobManager.spawn(centerPos, golem);
+
+    // Spawn 2 Villagers tethered to village
+    const v1Pos = new THREE.Vector3(center.cx + 2, groundY + 1, center.cz + 2);
+    const v1 = new Villager(v1Pos);
+    v1.setVillageCenter(centerPos);
+    mobManager.spawn(v1Pos, v1);
+
+    const v2Pos = new THREE.Vector3(center.cx - 2, groundY + 1, center.cz - 2);
+    const v2 = new Villager(v2Pos);
+    v2.setVillageCenter(centerPos);
+    mobManager.spawn(v2Pos, v2);
   }
 }

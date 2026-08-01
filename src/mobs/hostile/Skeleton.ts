@@ -85,25 +85,55 @@ export class Skeleton extends Mob {
 
   update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, _player?: Player): void {
     let isMoving = false;
-    if (playerPos) {
-      const dist = this.position.distanceTo(playerPos);
-      const state = this.stateMachine.update(deltaTime, dist);
 
-      if (state === State.Wander) {
-        const dx = (Math.random() - 0.5) * 1.5;
-        const dz = (Math.random() - 0.5) * 1.5;
-        const nextX = this.position.x + dx * deltaTime;
-        const nextZ = this.position.z + dz * deltaTime;
+    if (playerPos) {
+      const dx = playerPos.x - this.position.x;
+      const dz = playerPos.z - this.position.z;
+      const horizDist = Math.sqrt(dx * dx + dz * dz);
+      const dist3D = this.position.distanceTo(playerPos);
+
+      const state = this.stateMachine.update(deltaTime, dist3D);
+
+      if (state === State.Chase || horizDist < 15) {
+        // Face player
+        this.mesh.rotation.y = Math.atan2(dx, dz);
+
+        // Tactical positioning: maintain optimal distance (6 to 12 blocks) for archer
+        const chaseSpeed = 2.4;
+        if (horizDist > 12) {
+          // Move closer to player
+          const nx = dx / horizDist;
+          const nz = dz / horizDist;
+          this.velocity.x = nx * chaseSpeed;
+          this.velocity.z = nz * chaseSpeed;
+          isMoving = true;
+        } else if (horizDist < 4) {
+          // Back up if player gets too close
+          const nx = -dx / horizDist;
+          const nz = -dz / horizDist;
+          this.velocity.x = nx * chaseSpeed * 0.8;
+          this.velocity.z = nz * chaseSpeed * 0.8;
+          isMoving = true;
+        } else {
+          // Hold position & aim bow
+          this.velocity.x = 0;
+          this.velocity.z = 0;
+        }
+      } else if (state === State.Wander) {
+        const wanderDx = (Math.random() - 0.5) * 1.5;
+        const wanderDz = (Math.random() - 0.5) * 1.5;
+        const nextX = this.position.x + wanderDx * deltaTime;
+        const nextZ = this.position.z + wanderDz * deltaTime;
 
         // Water avoidance
         const nextBlock = world?.getBlock(Math.floor(nextX), Math.floor(this.position.y), Math.floor(nextZ));
         if (nextBlock !== 7) {
-          this.velocity.x = dx;
-          this.velocity.z = dz;
-          isMoving = Math.abs(dx) > 0.001 || Math.abs(dz) > 0.001;
+          this.velocity.x = wanderDx;
+          this.velocity.z = wanderDz;
+          isMoving = Math.abs(wanderDx) > 0.001 || Math.abs(wanderDz) > 0.001;
 
           if (isMoving) {
-            this.mesh.rotation.y = Math.atan2(dx, dz);
+            this.mesh.rotation.y = Math.atan2(wanderDx, wanderDz);
           }
         } else {
           this.velocity.x = 0;

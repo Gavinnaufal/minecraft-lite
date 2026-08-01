@@ -752,7 +752,7 @@ engine.setUpdateCallback((deltaTime) => {
       AudioManager.getInstance().playSFX('break');
 
       if (deadMob instanceof Cow) {
-        itemDropManager.spawnDrop(dropPos, 'beef', Math.floor(Math.random() * 2) + 1);
+        itemDropManager.spawnDrop(dropPos, 'raw_beef', Math.floor(Math.random() * 2) + 1);
       } else if (deadMob instanceof Zombie) {
         itemDropManager.spawnDrop(dropPos, 'rotten_flesh', Math.floor(Math.random() * 2) + 1);
       } else if (deadMob instanceof IronGolem) {

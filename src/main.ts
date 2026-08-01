@@ -27,6 +27,7 @@ import { ItemDropManager } from './world/ItemDropManager';
 import { IronGolem } from './mobs/npc/IronGolem';
 import { Skeleton } from './mobs/hostile/Skeleton';
 import { Spider } from './mobs/hostile/Spider';
+import { Enderman } from './mobs/hostile/Enderman';
 import { ProjectileManager } from './entities/ProjectileManager';
 import { ChatBox } from './multiplayer/ChatBox';
 import { TorchLightManager } from './world/TorchLightManager';
@@ -738,6 +739,10 @@ engine.setUpdateCallback((deltaTime) => {
         }
       } else if (deadMob instanceof Spider) {
         itemDropManager.spawnDrop(dropPos, 'string', Math.floor(Math.random() * 2) + 1);
+      } else if (deadMob instanceof Enderman) {
+        if (Math.random() < 0.6) {
+          itemDropManager.spawnDrop(dropPos, 'ender_pearl', 1);
+        }
       }
     }
   }

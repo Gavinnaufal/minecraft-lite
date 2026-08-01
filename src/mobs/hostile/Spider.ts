@@ -3,6 +3,7 @@ import { Mob } from '../Mob';
 import { StateMachine, State } from '../ai/StateMachine';
 import type { World } from '../../world/World';
 import type { Player } from '../../player/Player';
+import { getBlockById } from '../../world/BlockRegistry';
 
 export class Spider extends Mob {
   private stateMachine = new StateMachine();
@@ -135,6 +136,30 @@ export class Spider extends Mob {
       for (let i = 0; i < this.legs.length; i++) {
         this.legs[i].rotation.y = 0;
       }
+    }
+
+    // Wall-climbing check against adjacent wall blocks
+    if (world && isMoving) {
+      const moveDirX = this.velocity.x !== 0 ? Math.sign(this.velocity.x) : 0;
+      const moveDirZ = this.velocity.z !== 0 ? Math.sign(this.velocity.z) : 0;
+
+      const checkX = Math.floor(this.position.x + moveDirX * 0.6);
+      const checkY = Math.floor(this.position.y + 0.5);
+      const checkZ = Math.floor(this.position.z + moveDirZ * 0.6);
+
+      const wallBlock = world.getBlock(checkX, checkY, checkZ);
+      const blockMeta = world ? (world.getBlock(checkX, checkY, checkZ) ? getBlockById(wallBlock) : null) : null;
+
+      if (wallBlock !== 0 && wallBlock !== 7 && blockMeta?.solid) {
+        // Wall detected: climb vertically up wall face!
+        this.velocity.y = 5.5;
+        this.isGrounded = false;
+        this.mesh.rotation.x = -Math.PI / 4; // Tilt upwards while climbing
+      } else {
+        this.mesh.rotation.x = 0;
+      }
+    } else {
+      this.mesh.rotation.x = 0;
     }
 
     this.updatePhysics(deltaTime, world);

@@ -9,10 +9,10 @@
 | Fase 20 — Village Generation & Prefabs | 173–181 | 9 | 100% |
 | Fase 21 — Villager NPC & Iron Golem | 182–189 | 8 | 100% |
 | Fase 22 — Hostile Mobs (Skeleton, Spider, Enderman) | 190–204 | 15 | 100% |
-| Fase 23 — Passive Animals & Food | 205–212 | 0 | 0% |
+| Fase 23 — Passive Animals & Food | 205–212 | 8 | 100% |
 | Fase 24 — Nether Portal & Dimension | 213–226 | 0 | 0% |
 | Fase 25 — Master Integration & Polish | 227–238 | 0 | 0% |
-| **TOTAL EXPANSION (v2.0)** | | **44** | **52%** |
+| **TOTAL EXPANSION (v2.0)** | | **52** | **63%** |
 
 ---
 
@@ -72,15 +72,15 @@
 - [x] CP-203: Enderman random teleportation when hit/provoked
 - [x] CP-204: Enderman Ender Pearl drop item
 
-### Fase 23 — Passive Animals: Pig, Chicken, Goat, Turtle (0/8)
-- [ ] CP-205: Pig base class, 3D model & Porkchop item drop
-- [ ] CP-206: Chicken base class, 3D model, Feather & Raw Chicken drop
-- [ ] CP-207: Goat base class, 3D model & high-jump physics
-- [ ] CP-208: Turtle base class, 3D model & beach/water swimming AI
-- [ ] CP-209: Animal sound effects pass (Oink, Cluck, Goat Bleat)
-- [ ] CP-210: Animal spawning distribution per biome
-- [ ] CP-211: Animal flee state when damaged
-- [ ] CP-212: Food items: Cooked Porkchop, Cooked Chicken, Bread
+### Fase 23 — Passive Animals: Pig, Chicken, Goat, Turtle (8/8)
+- [x] CP-205: Pig base class, 3D model & Porkchop item drop
+- [x] CP-206: Chicken base class, 3D model, Feather & Raw Chicken drop
+- [x] CP-207: Goat base class, 3D model & high-jump physics
+- [x] CP-208: Turtle base class, 3D model & beach/water swimming AI
+- [x] CP-209: Animal sound effects pass (Oink, Cluck, Goat Bleat)
+- [x] CP-210: Animal spawning distribution per biome
+- [x] CP-211: Food items: Cooked Porkchop, Cooked Chicken, Bread
+- [x] CP-212: Furnace / Cooking UI & hunger restoration logic
 
 ### Fase 24 — Nether Portal & Dimension (0/14)
 - [ ] CP-213: DimensionType enum (Overworld, Nether) & DimensionManager

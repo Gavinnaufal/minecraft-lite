@@ -11,6 +11,11 @@ const BLOCK_COLORS: Record<string, { top: string; left: string; right: string }>
   crafting_table: { top: '#8d6e63', left: '#6d4c41', right: '#4e342e' },
   chest: { top: '#b17036', left: '#8b5a2b', right: '#73471e' },
   farmland: { top: '#4e3629', left: '#3b281e', right: '#291b13' },
+  sandstone: { top: '#d2b48c', left: '#c4a47c', right: '#b6946c' },
+  obsidian: { top: '#2b1b3d', left: '#1b122c', right: '#120b20' },
+  netherrack: { top: '#802626', left: '#6a1b1b', right: '#571414' },
+  glowstone: { top: '#ffe082', left: '#ffd54f', right: '#ffc107' },
+  soul_sand: { top: '#5d4037', left: '#4e3629', right: '#3e2a1e' },
 };
 
 export function createItemIcon(itemId: string, size = 28): HTMLElement {
@@ -45,7 +50,7 @@ export function createItemIcon(itemId: string, size = 28): HTMLElement {
     return container;
   }
 
-  // Tools & Items
+  // Tools & Items SVG Renderers
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('width', String(size));
   svg.setAttribute('height', String(size));
@@ -54,44 +59,128 @@ export function createItemIcon(itemId: string, size = 28): HTMLElement {
   if (itemId === 'stick') {
     svg.innerHTML = `<line x1="8" y1="24" x2="24" y2="8" stroke="#8d6e63" stroke-width="4" stroke-linecap="round"/>`;
   } else if (itemId.includes('pickaxe')) {
+    const isIron = itemId.includes('iron');
     const isStone = itemId.includes('stone');
-    const headColor = isStone ? '#9e9e9e' : '#b18c5d';
+    const headColor = isIron ? '#cfd8dc' : (isStone ? '#9e9e9e' : '#b18c5d');
     svg.innerHTML = `
       <line x1="8" y1="24" x2="22" y2="10" stroke="#6d4c41" stroke-width="3" stroke-linecap="round"/>
       <path d="M 14,6 Q 22,8 26,16 Q 20,20 18,12 Z" fill="${headColor}" stroke="#333" stroke-width="0.5"/>
     `;
   } else if (itemId.includes('sword')) {
+    const isIron = itemId.includes('iron');
     const isStone = itemId.includes('stone');
-    const bladeColor = isStone ? '#9e9e9e' : '#b18c5d';
+    const bladeColor = isIron ? '#cfd8dc' : (isStone ? '#9e9e9e' : '#b18c5d');
     svg.innerHTML = `
       <line x1="8" y1="24" x2="12" y2="20" stroke="#4e342e" stroke-width="3" stroke-linecap="round"/>
       <line x1="9" y1="19" x2="15" y2="25" stroke="#ffcc00" stroke-width="2"/>
       <polygon points="12,18 26,4 28,6 14,20" fill="${bladeColor}" stroke="#333" stroke-width="0.5"/>
     `;
   } else if (itemId.includes('shovel')) {
+    const isIron = itemId.includes('iron');
     const isStone = itemId.includes('stone');
-    const headColor = isStone ? '#9e9e9e' : '#b18c5d';
+    const headColor = isIron ? '#cfd8dc' : (isStone ? '#9e9e9e' : '#b18c5d');
     svg.innerHTML = `
       <line x1="8" y1="24" x2="20" y2="12" stroke="#6d4c41" stroke-width="3" stroke-linecap="round"/>
       <polygon points="18,10 26,6 28,8 22,14" fill="${headColor}" stroke="#333" stroke-width="0.5"/>
     `;
   } else if (itemId.includes('axe')) {
+    const isIron = itemId.includes('iron');
     const isStone = itemId.includes('stone');
-    const headColor = isStone ? '#9e9e9e' : '#b18c5d';
+    const headColor = isIron ? '#cfd8dc' : (isStone ? '#9e9e9e' : '#b18c5d');
     svg.innerHTML = `
       <line x1="8" y1="24" x2="22" y2="10" stroke="#6d4c41" stroke-width="3" stroke-linecap="round"/>
       <path d="M 18,6 L 26,8 L 24,18 L 18,12 Z" fill="${headColor}" stroke="#333" stroke-width="0.5"/>
     `;
-  } else if (itemId === 'beef') {
-    svg.innerHTML = `<path d="M 8,14 Q 16,6 24,14 Q 22,24 10,22 Z" fill="#b71c1c" stroke="#333" stroke-width="0.5"/><circle cx="14" cy="14" r="3" fill="#ef9a9a"/>`;
-  } else if (itemId === 'rotten_flesh') {
-    svg.innerHTML = `<path d="M 8,14 Q 16,6 24,14 Q 22,24 10,22 Z" fill="#33691e" stroke="#333" stroke-width="0.5"/><circle cx="14" cy="14" r="3" fill="#81c784"/>`;
   } else if (itemId.includes('hoe')) {
+    const isIron = itemId.includes('iron');
     const isStone = itemId.includes('stone');
-    const headColor = isStone ? '#9e9e9e' : '#b18c5d';
+    const headColor = isIron ? '#cfd8dc' : (isStone ? '#9e9e9e' : '#b18c5d');
     svg.innerHTML = `
       <line x1="8" y1="24" x2="22" y2="10" stroke="#6d4c41" stroke-width="3" stroke-linecap="round"/>
       <path d="M 18,6 L 28,6 L 24,12 L 18,10 Z" fill="${headColor}" stroke="#333" stroke-width="0.5"/>
+    `;
+  } else if (itemId === 'bow') {
+    svg.innerHTML = `
+      <path d="M 8,24 Q 24,24 24,8" stroke="#8d6e63" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <line x1="8" y1="24" x2="24" y2="8" stroke="#eeeeee" stroke-width="1.5"/>
+    `;
+  } else if (itemId === 'arrow') {
+    svg.innerHTML = `
+      <line x1="8" y1="24" x2="22" y2="10" stroke="#6d4c41" stroke-width="2.5" stroke-linecap="round"/>
+      <polygon points="20,8 26,6 24,12" fill="#757575"/>
+      <path d="M 6,26 L 10,22 M 4,24 L 8,20" stroke="#eeeeee" stroke-width="2"/>
+    `;
+  } else if (itemId === 'ender_pearl') {
+    svg.innerHTML = `
+      <circle cx="16" cy="16" r="9" fill="#00695c" stroke="#004d40" stroke-width="1"/>
+      <circle cx="16" cy="16" r="6" fill="#00897b"/>
+      <circle cx="13" cy="13" r="2.5" fill="#80cbc4"/>
+    `;
+  } else if (itemId === 'raw_porkchop' || itemId === 'cooked_porkchop') {
+    const isCooked = itemId.includes('cooked');
+    const color = isCooked ? '#8d6e63' : '#f48fb1';
+    const fatColor = isCooked ? '#d7ccc8' : '#f8bbd0';
+    svg.innerHTML = `
+      <path d="M 8,12 Q 18,4 25,12 Q 22,24 10,22 Z" fill="${color}" stroke="#333" stroke-width="0.5"/>
+      <path d="M 8,12 Q 16,8 20,13" stroke="${fatColor}" stroke-width="2.5" fill="none"/>
+      <circle cx="20" cy="18" r="2" fill="#eeeeee"/>
+    `;
+  } else if (itemId === 'raw_chicken' || itemId === 'cooked_chicken') {
+    const isCooked = itemId.includes('cooked');
+    const color = isCooked ? '#d84315' : '#ffcc80';
+    svg.innerHTML = `
+      <path d="M 10,18 Q 14,8 22,12 Q 24,20 14,24 Z" fill="${color}" stroke="#333" stroke-width="0.5"/>
+      <line x1="8" y1="20" x2="11" y2="18" stroke="#eeeeee" stroke-width="3" stroke-linecap="round"/>
+    `;
+  } else if (itemId === 'beef' || itemId === 'raw_beef' || itemId === 'cooked_beef') {
+    const isCooked = itemId.includes('cooked');
+    const color = isCooked ? '#4e342e' : '#b71c1c';
+    const fatColor = isCooked ? '#8d6e63' : '#ef9a9a';
+    svg.innerHTML = `
+      <path d="M 8,14 Q 16,6 24,14 Q 22,24 10,22 Z" fill="${color}" stroke="#333" stroke-width="0.5"/>
+      <circle cx="14" cy="14" r="3" fill="${fatColor}"/>
+    `;
+  } else if (itemId === 'mutton' || itemId === 'cooked_mutton') {
+    const isCooked = itemId.includes('cooked');
+    const color = isCooked ? '#5d4037' : '#c62828';
+    svg.innerHTML = `
+      <path d="M 8,12 Q 18,6 24,14 Q 20,24 10,20 Z" fill="${color}" stroke="#333" stroke-width="0.5"/>
+      <line x1="6" y1="10" x2="10" y2="13" stroke="#eeeeee" stroke-width="2.5"/>
+    `;
+  } else if (itemId === 'rotten_flesh') {
+    svg.innerHTML = `
+      <path d="M 8,14 Q 16,6 24,14 Q 22,24 10,22 Z" fill="#33691e" stroke="#333" stroke-width="0.5"/>
+      <circle cx="14" cy="14" r="3" fill="#81c784"/>
+    `;
+  } else if (itemId === 'feather') {
+    svg.innerHTML = `
+      <line x1="8" y1="24" x2="22" y2="8" stroke="#bdbdbd" stroke-width="2"/>
+      <path d="M 12,20 Q 20,12 24,6 Q 16,10 10,16 Z" fill="#ffffff" stroke="#e0e0e0" stroke-width="0.5"/>
+    `;
+  } else if (itemId === 'bone') {
+    svg.innerHTML = `
+      <line x1="10" y1="22" x2="22" y2="10" stroke="#eeeeee" stroke-width="4.5" stroke-linecap="square"/>
+      <circle cx="8" cy="24" r="2.5" fill="#e0e0e0"/>
+      <circle cx="24" cy="8" r="2.5" fill="#e0e0e0"/>
+    `;
+  } else if (itemId === 'string') {
+    svg.innerHTML = `
+      <path d="M 8,20 Q 16,8 24,16 Q 18,24 12,18" stroke="#f5f5f5" stroke-width="2.5" fill="none"/>
+    `;
+  } else if (itemId === 'iron_ingot') {
+    svg.innerHTML = `
+      <polygon points="6,12 22,8 26,16 10,20" fill="#cfd8dc" stroke="#90a4ae" stroke-width="0.5"/>
+      <polygon points="6,12 10,20 10,24 6,16" fill="#b0bec5"/>
+    `;
+  } else if (itemId === 'gold_ingot') {
+    svg.innerHTML = `
+      <polygon points="6,12 22,8 26,16 10,20" fill="#ffd54f" stroke="#ffa000" stroke-width="0.5"/>
+      <polygon points="6,12 10,20 10,24 6,16" fill="#ffb300"/>
+    `;
+  } else if (itemId === 'coal' || itemId === 'charcoal') {
+    svg.innerHTML = `
+      <polygon points="10,8 22,6 26,16 18,24 8,20" fill="#212121" stroke="#424242" stroke-width="0.5"/>
+      <polygon points="12,10 18,8 20,14 14,16" fill="#424242"/>
     `;
   } else if (itemId === 'wheat_seeds') {
     svg.innerHTML = `

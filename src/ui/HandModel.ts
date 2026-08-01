@@ -417,6 +417,150 @@ export class HandModel {
       this.itemMesh.position.set(0, 0.08, -0.12);
       this.itemMesh.rotation.set(0.2, 0.3, 0);
       this.handGroup.add(this.itemMesh);
+    } else if (itemId === 'ender_pearl') {
+      // 3D Glowing Teal Ender Pearl Orb
+      const orbGroup = new THREE.Group();
+      const orbGeo = new THREE.SphereGeometry(0.09, 12, 12);
+      const orbMat = new THREE.MeshStandardMaterial({ color: 0x00695c, emissive: 0x004d40, roughness: 0.2 });
+      const orbMesh = new THREE.Mesh(orbGeo, orbMat);
+
+      const coreGeo = new THREE.SphereGeometry(0.05, 8, 8);
+      const coreMat = new THREE.MeshStandardMaterial({ color: 0x80cbc4, emissive: 0x00897b });
+      const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+
+      orbGroup.add(orbMesh);
+      orbGroup.add(coreMesh);
+      orbGroup.position.set(0, 0.08, -0.12);
+      this.itemMesh = orbGroup;
+      this.handGroup.add(this.itemMesh);
+    } else if (itemId === 'raw_porkchop' || itemId === 'cooked_porkchop') {
+      // 3D Porkchop Meat Slice
+      const isCooked = itemId.includes('cooked');
+      const porkGroup = new THREE.Group();
+      const porkGeo = new THREE.BoxGeometry(0.18, 0.07, 0.22);
+      const porkMat = new THREE.MeshStandardMaterial({ color: isCooked ? 0x8d6e63 : 0xf48fb1 });
+      const porkMesh = new THREE.Mesh(porkGeo, porkMat);
+
+      const fatGeo = new THREE.BoxGeometry(0.19, 0.04, 0.05);
+      const fatMat = new THREE.MeshStandardMaterial({ color: isCooked ? 0xd7ccc8 : 0xf8bbd0 });
+      const fatMesh = new THREE.Mesh(fatGeo, fatMat);
+      fatMesh.position.set(0, 0.02, 0.08);
+
+      porkGroup.add(porkMesh);
+      porkGroup.add(fatMesh);
+      porkGroup.position.set(0, 0.08, -0.12);
+      porkGroup.rotation.set(0.3, 0.2, 0);
+      this.itemMesh = porkGroup;
+      this.handGroup.add(this.itemMesh);
+    } else if (itemId === 'raw_chicken' || itemId === 'cooked_chicken') {
+      // 3D Chicken Drumstick
+      const isCooked = itemId.includes('cooked');
+      const chkGroup = new THREE.Group();
+      const drumGeo = new THREE.SphereGeometry(0.08, 10, 10);
+      const drumMat = new THREE.MeshStandardMaterial({ color: isCooked ? 0xd84315 : 0xffcc80 });
+      const drumMesh = new THREE.Mesh(drumGeo, drumMat);
+      drumMesh.scale.set(1.2, 0.8, 1.4);
+
+      const boneGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.14, 6);
+      const boneMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee });
+      const boneMesh = new THREE.Mesh(boneGeo, boneMat);
+      boneMesh.position.set(0, 0, -0.09);
+      boneMesh.rotation.x = Math.PI * 0.5;
+
+      chkGroup.add(drumMesh);
+      chkGroup.add(boneMesh);
+      chkGroup.position.set(0, 0.08, -0.12);
+      chkGroup.rotation.set(0.2, 0.3, 0);
+      this.itemMesh = chkGroup;
+      this.handGroup.add(this.itemMesh);
+    } else if (itemId === 'mutton' || itemId === 'cooked_mutton') {
+      // 3D Mutton Meat Chop
+      const isCooked = itemId.includes('cooked');
+      const mutGroup = new THREE.Group();
+      const mutGeo = new THREE.BoxGeometry(0.16, 0.08, 0.2);
+      const mutMat = new THREE.MeshStandardMaterial({ color: isCooked ? 0x5d4037 : 0xc62828 });
+      const mutMesh = new THREE.Mesh(mutGeo, mutMat);
+
+      mutGroup.add(mutMesh);
+      mutGroup.position.set(0, 0.08, -0.12);
+      mutGroup.rotation.set(0.2, 0.3, 0);
+      this.itemMesh = mutGroup;
+      this.handGroup.add(this.itemMesh);
+    } else if (itemId === 'bow') {
+      // 3D Wooden Bow Frame with String
+      const bowGroup = new THREE.Group();
+      const arcGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.44, 8);
+      const arcMat = new THREE.MeshStandardMaterial({ color: 0x8d6e63 });
+      const arcMesh = new THREE.Mesh(arcGeo, arcMat);
+      arcMesh.rotation.z = 0.2;
+
+      const stringGeo = new THREE.CylinderGeometry(0.005, 0.005, 0.42, 4);
+      const stringMat = new THREE.MeshBasicMaterial({ color: 0xeeeeee });
+      const stringMesh = new THREE.Mesh(stringGeo, stringMat);
+      stringMesh.position.set(-0.06, 0, 0);
+
+      bowGroup.add(arcMesh);
+      bowGroup.add(stringMesh);
+      bowGroup.position.set(0, 0.05, -0.14);
+      bowGroup.rotation.set(-0.2, 0.4, 0);
+      this.itemMesh = bowGroup;
+      this.handGroup.add(this.itemMesh);
+    } else if (itemId === 'arrow') {
+      // 3D Ballistic Arrow
+      const arrowGroup = new THREE.Group();
+      const shaftGeo = new THREE.CylinderGeometry(0.01, 0.01, 0.46, 6);
+      const shaftMat = new THREE.MeshStandardMaterial({ color: 0x6d4c41 });
+      const shaftMesh = new THREE.Mesh(shaftGeo, shaftMat);
+      shaftMesh.rotation.x = Math.PI * 0.5;
+
+      const tipGeo = new THREE.ConeGeometry(0.03, 0.08, 4);
+      const tipMat = new THREE.MeshStandardMaterial({ color: 0x757575 });
+      const tipMesh = new THREE.Mesh(tipGeo, tipMat);
+      tipMesh.position.set(0, 0, 0.25);
+      tipMesh.rotation.x = -Math.PI * 0.5;
+
+      arrowGroup.add(shaftMesh);
+      arrowGroup.add(tipMesh);
+      arrowGroup.position.set(0, 0.05, -0.14);
+      arrowGroup.rotation.set(0.1, 0.2, 0);
+      this.itemMesh = arrowGroup;
+      this.handGroup.add(this.itemMesh);
+    } else if (itemId === 'bone') {
+      // 3D Skeleton Bone
+      const boneGroup = new THREE.Group();
+      const shaftGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.36, 6);
+      const boneMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee });
+      const shaftMesh = new THREE.Mesh(shaftGeo, boneMat);
+      shaftMesh.rotation.z = 0.4;
+
+      const knobGeo = new THREE.SphereGeometry(0.035, 6, 6);
+      const k1 = new THREE.Mesh(knobGeo, boneMat);
+      k1.position.set(-0.07, 0.16, 0);
+      const k2 = new THREE.Mesh(knobGeo, boneMat);
+      k2.position.set(0.07, -0.16, 0);
+
+      boneGroup.add(shaftMesh);
+      boneGroup.add(k1);
+      boneGroup.add(k2);
+      boneGroup.position.set(0, 0.05, -0.14);
+      this.itemMesh = boneGroup;
+      this.handGroup.add(this.itemMesh);
+    } else if (itemId === 'feather') {
+      // 3D White Feather Quill
+      const ftrGeo = new THREE.BoxGeometry(0.01, 0.24, 0.08);
+      const ftrMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 });
+      this.itemMesh = new THREE.Mesh(ftrGeo, ftrMat);
+      this.itemMesh.position.set(0, 0.08, -0.12);
+      this.itemMesh.rotation.set(0.3, 0.2, 0.4);
+      this.handGroup.add(this.itemMesh);
+    } else if (itemId === 'string') {
+      // 3D Spider Thread String Roll
+      const strGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.12, 8);
+      const strMat = new THREE.MeshStandardMaterial({ color: 0xf5f5f5, roughness: 0.9 });
+      this.itemMesh = new THREE.Mesh(strGeo, strMat);
+      this.itemMesh.position.set(0, 0.08, -0.12);
+      this.itemMesh.rotation.set(0.4, 0.2, 0);
+      this.handGroup.add(this.itemMesh);
     } else {
       const genericGeo = new THREE.BoxGeometry(0.15, 0.15, 0.15);
       const genericMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });

@@ -61,19 +61,6 @@ export class MobManager {
           mob.velocity.z += knockDir.z * 6;
         }
       }
-      mob.mesh.traverse((child) => {
-        if (child instanceof THREE.Mesh && child.material) {
-          const mats = Array.isArray(child.material) ? child.material : [child.material];
-          for (const m of mats) {
-            if ('emissive' in m) {
-              (m as THREE.MeshStandardMaterial).emissive.setHex(0xff0000);
-              setTimeout(() => {
-                (m as THREE.MeshStandardMaterial).emissive.setHex(0x000000);
-              }, 150);
-            }
-          }
-        }
-      });
       const dead = mob.takeDamage(damage);
       if (dead) {
         this.despawn(mob);

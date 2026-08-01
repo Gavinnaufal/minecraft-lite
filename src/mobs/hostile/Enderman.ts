@@ -91,6 +91,10 @@ export class Enderman extends Mob {
   private attackTimer = 0;
   private teleTimer = 0;
   private spawnGraceTimer = 2.0;
+  private wanderDirX = 0;
+  private wanderDirZ = 0;
+  private wanderChangeTimer = 0;
+  private stareHoldTimer = 0;
 
   override reset(position: THREE.Vector3): void {
     super.reset(position, 40);
@@ -100,6 +104,8 @@ export class Enderman extends Mob {
     this.attackTimer = 0;
     this.teleTimer = 0;
     this.spawnGraceTimer = 2.0;
+    this.wanderChangeTimer = 0;
+    this.stareHoldTimer = 0;
   }
 
   teleportRandomly(world?: World): void {
@@ -156,10 +162,9 @@ export class Enderman extends Mob {
     if (playerPos) {
       const dist3D = this.position.distanceTo(playerPos);
 
-      // Stare check: Provoke when player crosshair looks directly at Enderman head
-      // Requires: Pointer Lock active, grace timer finished, distance < 25, and dot > 0.985 (tight precision crosshair aim)
+      // Stare check: Requires 0.8s continuous direct crosshair gaze at Enderman head with Pointer Lock active
       const hasPointerLock = typeof document !== 'undefined' && !!document.pointerLockElement;
-      if (!this.isProvoked && this.spawnGraceTimer <= 0 && hasPointerLock && camera && dist3D < 25) {
+      if (!this.isProvoked && this.spawnGraceTimer <= 0 && hasPointerLock && camera && dist3D < 22) {
         const headPos = new THREE.Vector3(this.position.x, this.position.y + 2.65, this.position.z);
         const camPos = camera.position;
         const camDir = new THREE.Vector3();
@@ -168,11 +173,18 @@ export class Enderman extends Mob {
         const toHead = headPos.clone().sub(camPos).normalize();
         const dot = camDir.dot(toHead);
 
-        if (dot > 0.985) {
-          this.isProvoked = true;
-          this.isHostile = true;
-          AudioManager.getInstance().playSFX('click');
+        if (dot > 0.988) { // Tight precision on head/eyes
+          this.stareHoldTimer += deltaTime;
+          if (this.stareHoldTimer >= 0.8) {
+            this.isProvoked = true;
+            this.isHostile = true;
+            AudioManager.getInstance().playSFX('click');
+          }
+        } else {
+          this.stareHoldTimer = Math.max(0, this.stareHoldTimer - deltaTime * 2);
         }
+      } else {
+        this.stareHoldTimer = 0;
       }
 
       // Water weakness: Enderman takes damage and teleports away when touching water
@@ -217,25 +229,37 @@ export class Enderman extends Mob {
           }
         }
       } else {
-        // Unprovoked: Wander peacefully
-        const wanderDx = (Math.random() - 0.5) * 1.5;
-        const wanderDz = (Math.random() - 0.5) * 1.5;
-        const nextX = this.position.x + wanderDx * deltaTime;
-        const nextZ = this.position.z + wanderDz * deltaTime;
+        // Unprovoked: Wander smoothly in a direction, changing every 3-5 seconds (no glitchy spinning!)
+        this.wanderChangeTimer -= deltaTime;
+        if (this.wanderChangeTimer <= 0) {
+          this.wanderChangeTimer = 3.0 + Math.random() * 2.0;
+          if (Math.random() < 0.6) {
+            const angle = Math.random() * Math.PI * 2;
+            this.wanderDirX = Math.cos(angle) * 1.2;
+            this.wanderDirZ = Math.sin(angle) * 1.2;
+          } else {
+            this.wanderDirX = 0;
+            this.wanderDirZ = 0;
+          }
+        }
+
+        const nextX = this.position.x + this.wanderDirX * deltaTime;
+        const nextZ = this.position.z + this.wanderDirZ * deltaTime;
 
         // Water avoidance
         const nextBlock = world?.getBlock(Math.floor(nextX), Math.floor(this.position.y), Math.floor(nextZ));
         if (nextBlock !== 7) {
-          this.velocity.x = wanderDx;
-          this.velocity.z = wanderDz;
-          isMoving = Math.abs(wanderDx) > 0.001 || Math.abs(wanderDz) > 0.001;
+          this.velocity.x = this.wanderDirX;
+          this.velocity.z = this.wanderDirZ;
+          isMoving = Math.abs(this.wanderDirX) > 0.01 || Math.abs(this.wanderDirZ) > 0.01;
 
           if (isMoving) {
-            this.mesh.rotation.y = Math.atan2(wanderDx, wanderDz);
+            this.mesh.rotation.y = Math.atan2(this.wanderDirX, this.wanderDirZ);
           }
         } else {
           this.velocity.x = 0;
           this.velocity.z = 0;
+          this.wanderChangeTimer = 0; // Pick new direction if hitting water
         }
       }
     }

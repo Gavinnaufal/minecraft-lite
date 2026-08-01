@@ -34,16 +34,17 @@ export class Mob {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   update(deltaTime: number, world?: World, _playerPos?: THREE.Vector3, _player?: Player, _mobManager?: MobManager, _camera?: THREE.PerspectiveCamera): void {
+    this.updatePhysics(deltaTime, world);
+  }
+
+  protected updatePhysics(deltaTime: number, world?: World): void {
     if (this.hitFlashTimer > 0) {
       this.hitFlashTimer -= deltaTime;
       if (this.hitFlashTimer <= 0) {
         this.resetMaterials();
       }
     }
-    this.updatePhysics(deltaTime, world);
-  }
 
-  protected updatePhysics(deltaTime: number, world?: World): void {
     if (!world) {
       this.position.y = Math.max(0, this.position.y);
       this.mesh.position.copy(this.position);

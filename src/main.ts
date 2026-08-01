@@ -91,22 +91,23 @@ chunkManager.terrainFiller = (chunk: Chunk) => {
       let h = heightMap.getHeight(wx, wz);
       const biome = biomeGen.getBiome(wx, wz);
 
-      // Lake generation: small-scale noise creates depressions that fill with water.
-      // lakeVal in [0,1]: > 0.72 → carve a lake depression below WATER_LEVEL.
-      const lakeVal = lakeNoise.noise2D(wx / 35, wz / 35);
-      const isLake = lakeVal > 0.72 && biome !== BiomeType.Desert;
-      if (isLake) {
-        // Depth increases towards the center of the noise peak
-        const lakeDepth = (lakeVal - 0.72) / (1.0 - 0.72); // 0..1
-        const depressedH = WATER_LEVEL - 2 - Math.round(lakeDepth * 6);
-        h = Math.min(h, Math.max(1, depressedH));
+      // River generation: iso-line technique on noise creates thin winding bands.
+      // Where noise ≈ 0.5 (within ±0.045), we get a river-like winding path.
+      // Scale 60 = wide gentle curves, depth only 1-2 blocks = shallow stream.
+      const riverVal = lakeNoise.noise2D(wx / 60, wz / 60);
+      const distFromCenter = Math.abs(riverVal - 0.5);
+      const isRiver = distFromCenter < 0.045 && biome !== BiomeType.Desert;
+      if (isRiver) {
+        // Center of river (distFromCenter≈0) is 2 blocks deep, edges are 1 block
+        const riverDepth = 1 + Math.round((1 - distFromCenter / 0.045));
+        h = Math.min(h, WATER_LEVEL - riverDepth);
       }
 
       for (let y = 0; y <= h && y < CHUNK_HEIGHT; y++) {
         const depth = h - y;
         let bid: number;
-        if (isLake && depth <= 2) {
-          bid = 4; // sand lake bed
+        if (isRiver && depth <= 1) {
+          bid = 4; // sand riverbed
         } else if (depth === 0) {
           if (biome === BiomeType.Desert) bid = 4;
           else if (biome === BiomeType.Mountain && h > 80) bid = 3;
@@ -126,12 +127,12 @@ chunkManager.terrainFiller = (chunk: Chunk) => {
       let h = heightMap.getHeight(wx, wz);
       const biome = biomeGen.getBiome(wx, wz);
 
-      // Recalculate lake depression to know actual terrain height
-      const lakeVal = lakeNoise.noise2D(wx / 35, wz / 35);
-      if (lakeVal > 0.72 && biome !== BiomeType.Desert) {
-        const lakeDepth = (lakeVal - 0.72) / (1.0 - 0.72);
-        const depressedH = WATER_LEVEL - 2 - Math.round(lakeDepth * 6);
-        h = Math.min(h, Math.max(1, depressedH));
+      // Recalculate river depression
+      const riverVal = lakeNoise.noise2D(wx / 60, wz / 60);
+      const distFromCenter = Math.abs(riverVal - 0.5);
+      if (distFromCenter < 0.045 && biome !== BiomeType.Desert) {
+        const riverDepth = 1 + Math.round((1 - distFromCenter / 0.045));
+        h = Math.min(h, WATER_LEVEL - riverDepth);
       }
 
       if (h < WATER_LEVEL) {

@@ -44,10 +44,11 @@ Jika user hanya bilang "lanjut" atau "kerjakan checkpoint berikutnya": cek `docs
 
 - TypeScript **strict mode** — hindari `any` kecuali benar-benar tidak terhindarkan (beri komentar alasan jika terpaksa).
 - Ikuti struktur folder di `03_ARSITEKTUR_FOLDER.md` sebagai basis. **Untuk v2.0, folder baru berikut ini SAH/diizinkan** (sudah direncanakan di `08_ROADMAP_V2.md`, bukan penyimpangan):
-  - `src/world/structures/` — village generator & prefab bangunan
+  - `src/entities/` — proyektil & entitas independen (`Arrow.ts`, `ProjectileManager.ts`)
+  - `src/world/structures/` — village generator & prefab bangunan (`VillageGenerator.ts`, `OakHousePrefab.ts`, `VillageLoot.ts`)
   - `src/world/dimension/` — Nether world, dimension manager, portal detector
   - `src/mobs/npc/` — Villager, IronGolem (NPC/neutral, beda kategori dari passive/hostile)
-  - File baru di `src/mobs/hostile/` (Skeleton.ts, Spider.ts, Enderman.ts) dan `src/mobs/passive/` (Pig.ts, Chicken.ts, Goat.ts, Turtle.ts) — mengikuti pola yang sudah ada.
+  - File baru di `src/mobs/hostile/` (`Skeleton.ts`, `Spider.ts`, `Enderman.ts`) dan `src/mobs/passive/` (`Pig.ts`, `Chicken.ts`, `Goat.ts`, `Turtle.ts`) — mengikuti pola yang sudah ada.
   - Di luar daftar ini, tetap berlaku aturan lama: jangan buat struktur folder baru sendiri tanpa konfirmasi user.
 - Penamaan file: PascalCase untuk class (`VillageGenerator.ts`), camelCase untuk util.
 - Gunakan registry pattern (`BlockRegistry.ts`, `ItemRegistry.ts`) untuk blok/item baru — jangan hardcode di banyak tempat. **Untuk ID blok/item baru: baca dulu isi registry saat ini untuk lihat ID yang sudah dipakai, jangan asumsikan/tebak nomor ID kosong.**
@@ -67,6 +68,7 @@ Jika user hanya bilang "lanjut" atau "kerjakan checkpoint berikutnya": cek `docs
   Contoh: `feat(mobs): CP-190 buat Skeleton.ts basis state machine`
 - Untuk fix bug: `fix(<modul>): bugfix terkait CP-<nomor> <deskripsi bug>`
 - Jangan melakukan commit gabungan untuk banyak CP sekaligus.
+- **ATURAN PUSH:** Simpan commit di repositori git **lokal**. Jangan langsung me-push (`git push`) setelah tiap CP selesai — lakukan `git push` ke remote GitHub hanya ketika seluruh rangkaian CP/fase telah selesai total atau diminta eksplisit oleh user.
 
 ---
 
@@ -97,15 +99,16 @@ Jangan lanjut otomatis dan tanyakan dulu ke user jika:
 - Gunakan reasoning effort **tinggi** untuk CP yang melibatkan algoritma kompleks:
   - v1.0: chunk meshing, noise/world generation, collision/physics, AI mob, optimasi performa.
   - v2.0: **seluruh Fase 24 (Nether Portal & Dimension)** tanpa terkecuali, Village generation (Fase 20), Enderman teleport & provokasi (CP202-203), Skeleton projectile (CP192-193), Spider wall-climbing (CP197).
-- Reasoning standar cukup untuk CP setup, UI, boilerplate, dan animal baru yang murni reuse pola Cow.ts (Fase 25).
+- Reasoning standar cukup untuk CP setup, UI, boilerplate, dan animal baru yang murni reuse pola Cow.ts (Fase 23).
 
 ---
 
 ## 8. RIWAYAT BUG PENTING (jangan diulang)
 
-Beberapa bug signifikan yang pernah terjadi di v1.0 dan cara benarnya, sebagai referensi supaya tidak terulang saat menyentuh sistem terkait di v2.0:
+Beberapa bug signifikan yang pernah terjadi di v1.0 & v2.0 dan cara benarnya, sebagai referensi supaya tidak terulang saat menyentuh sistem terkait:
 
 - **Water/leaves tidak ter-render**: gara-gara fungsi `isSolid()` mencampur konsep "solid" dan "opaque" jadi satu. Solusinya: pisahkan `isSolid` (cek `block.solid` saja) dan `isOpaque` (`block.solid && !block.transparent`). Relevan lagi saat menambah blok baru v2.0 (obsidian, netherrack, glowstone, lava, nether_portal) — pastikan properti solid/transparent tiap blok baru didefinisikan dengan benar sejak awal.
 - **`geometry.addGroup()` salah assign material**: karena quad ditulis ke buffer sesuai urutan sweep per-plane (tercampur antar blockId), padahal `addGroup()` butuh quad per-blockId contiguous. Solusinya: kumpulkan quad per-blockId dulu (Map), baru flatten berurutan. Relevan lagi kalau NetherWorld (CP210) punya banyak variasi blok yang saling bersebelahan.
 - **Cave generation terlalu agresif ("swiss cheese effect")**: threshold noise terlalu longgar + depth range terlalu dekat surface. Untuk ravine (CP165-168) dan obsidian cluster (CP206), gunakan threshold ketat sejak awal, jangan mulai dari nilai longgar lalu diperbaiki belakangan.
 - **Raycaster menganggap non-solid block sebagai target valid**: dulu cuma cek `blockId !== 0`, seharusnya cek `block.solid`. Kalau nanti Raycaster.ts disentuh lagi untuk fitur v2.0 (misal target Villager/mob untuk interaksi), pastikan tetap pakai `block.solid` check yang sudah benar, jangan regresi ke `!== 0`.
+- **`takeDamage` return signature**: `takeDamage(amount: number)` di `Mob.ts` mengembalikan `boolean` (artinya `isDead`), bukan `void`. Saat meng-override `takeDamage` di subclass (`Enderman.ts`, dll), selalu kembalikan `boolean` agar type-checking TypeScript `tsc` lolos tanpa error.

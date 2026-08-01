@@ -34,6 +34,7 @@ const ITEM_COLORS: Record<string, number> = {
   arrow: 0x8d6e63,
   string: 0xf5f5f5,
   ender_pearl: 0x00695c,
+  raw_porkchop: 0xf48fb1,
 };
 
 export class ItemDropManager {

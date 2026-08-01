@@ -28,6 +28,7 @@ import { IronGolem } from './mobs/npc/IronGolem';
 import { Skeleton } from './mobs/hostile/Skeleton';
 import { Spider } from './mobs/hostile/Spider';
 import { Enderman } from './mobs/hostile/Enderman';
+import { Pig } from './mobs/passive/Pig';
 import { ProjectileManager } from './entities/ProjectileManager';
 import { ChatBox } from './multiplayer/ChatBox';
 import { TorchLightManager } from './world/TorchLightManager';
@@ -743,6 +744,8 @@ engine.setUpdateCallback((deltaTime) => {
         if (Math.random() < 0.6) {
           itemDropManager.spawnDrop(dropPos, 'ender_pearl', 1);
         }
+      } else if (deadMob instanceof Pig) {
+        itemDropManager.spawnDrop(dropPos, 'raw_porkchop', Math.floor(Math.random() * 2) + 1);
       }
     }
   }

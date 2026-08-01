@@ -43,6 +43,7 @@ const items: ItemType[] = [
   { id: 'arrow', name: 'Arrow', maxStack: 64, isBlock: false },
   { id: 'string', name: 'String', maxStack: 64, isBlock: false },
   { id: 'ender_pearl', name: 'Ender Pearl', maxStack: 16, isBlock: false },
+  { id: 'raw_porkchop', name: 'Raw Porkchop', maxStack: 64, isBlock: false },
 ];
 
 const byId = new Map<string, ItemType>();

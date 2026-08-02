@@ -3,6 +3,7 @@ import type { Inventory } from '../inventory/Inventory';
 import type { Hotbar } from '../inventory/Hotbar';
 import { FurnaceManager, type FurnaceData } from '../inventory/FurnaceManager';
 import { AudioManager } from '../audio/AudioManager';
+import { getSmeltResult } from '../crafting/Recipes';
 
 export class FurnaceScreen {
   private container: HTMLDivElement;
@@ -12,16 +13,6 @@ export class FurnaceScreen {
   private currentCoordKey: { x: number; y: number; z: number } | null = null;
   private currentFurnaceData: FurnaceData | null = null;
   private updateInterval: number | null = null;
-
-  // Recipe lookup table: Input -> Output
-  private static SMELT_RECIPES: Record<string, string> = {
-    raw_iron: 'iron_ingot',
-    raw_beef: 'cooked_beef',
-    beef: 'cooked_beef',
-    raw_porkchop: 'cooked_porkchop',
-    raw_chicken: 'cooked_chicken',
-    mutton: 'cooked_mutton',
-  };
 
   // Fuel duration lookup table (in seconds)
   private static FUEL_VALUES: Record<string, number> = {
@@ -118,7 +109,7 @@ export class FurnaceScreen {
     if (!data) return;
 
     const inputItem = data.input.itemId;
-    const outputRecipe = inputItem ? FurnaceScreen.SMELT_RECIPES[inputItem] : null;
+    const outputRecipe = inputItem ? getSmeltResult(inputItem) : null;
 
     // 1. If currently burning fuel, reduce burn timer
     if (data.fuelTime > 0) {
@@ -334,7 +325,7 @@ export class FurnaceScreen {
       // If input slot is empty, take active item from hotbar if valid
       if (data.input.count === 0) {
         const activeItem = this.hotbar.getActiveItem();
-        if (activeItem.itemId && FurnaceScreen.SMELT_RECIPES[activeItem.itemId]) {
+        if (activeItem.itemId && getSmeltResult(activeItem.itemId)) {
           data.input.itemId = activeItem.itemId;
           data.input.count = activeItem.count;
           this.hotbar.removeItem(activeItem.itemId, activeItem.count);

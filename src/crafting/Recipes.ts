@@ -55,3 +55,23 @@ export const recipes: Recipe[] = [
   // 24. Netherrack to Glowstone (4 netherrack)
   { pattern: [['netherrack', 'netherrack'], ['netherrack', 'netherrack']], result: { itemId: 'glowstone', count: 1 } },
 ];
+
+export interface SmeltingRecipe {
+  input: string;
+  result: { itemId: string; count: number };
+  cookTimeSec?: number;
+}
+
+export const smeltingRecipes: SmeltingRecipe[] = [
+  { input: 'raw_iron', result: { itemId: 'iron_ingot', count: 1 } },
+  { input: 'raw_beef', result: { itemId: 'cooked_beef', count: 1 } },
+  { input: 'beef', result: { itemId: 'cooked_beef', count: 1 } },
+  { input: 'raw_porkchop', result: { itemId: 'cooked_porkchop', count: 1 } },
+  { input: 'raw_chicken', result: { itemId: 'cooked_chicken', count: 1 } },
+  { input: 'mutton', result: { itemId: 'cooked_mutton', count: 1 } },
+];
+
+export function getSmeltResult(inputItemId: string): string | null {
+  const recipe = smeltingRecipes.find((r) => r.input === inputItemId);
+  return recipe ? recipe.result.itemId : null;
+}

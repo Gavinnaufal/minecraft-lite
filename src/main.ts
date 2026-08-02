@@ -394,6 +394,21 @@ blockBreaker.setOnBlockBroken((x, y, z, blockId) => {
     // Wheat Crop drops 1 Wheat + 1-2 Seeds
     itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), 'wheat', 1);
     itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), 'wheat_seeds', Math.floor(Math.random() * 2) + 1);
+  } else if (blockId === 21) {
+    // Coal Ore drops 1 Coal with any tool / bare hands
+    itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), 'coal', 1);
+  } else if (blockId === 22) {
+    // Iron Ore requires minimum Stone Pickaxe (toolType === 'pickaxe' && toolTier >= 2)
+    const activeTool = hotbar.getActiveItem();
+    const toolMeta = activeTool.itemId ? getItemById(activeTool.itemId) : null;
+    const isPickaxe = toolMeta?.toolType === 'pickaxe';
+    const pickaxeTier = isPickaxe && toolMeta?.toolTier !== undefined ? toolMeta.toolTier : 0;
+
+    if (pickaxeTier >= 2) {
+      itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), 'raw_iron', 1);
+    } else {
+      toastSystem.show('Butuh Stone Pickaxe atau lebih tinggi untuk mengambil Raw Iron!', 'warning');
+    }
   } else {
     const itemId = blockIdToItemId(blockId);
     if (itemId) {

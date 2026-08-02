@@ -5,6 +5,7 @@ export interface ItemType {
   isBlock: boolean;
   blockId?: number;
   toolType?: 'pickaxe' | 'axe' | 'shovel' | 'sword' | 'hoe';
+  toolTier?: number; // 1 = Wood, 2 = Stone, 3 = Iron
   maxDurability?: number;
   speedMultiplier?: number;
 }
@@ -20,16 +21,16 @@ const items: ItemType[] = [
   { id: 'plank', name: 'Plank', maxStack: 64, isBlock: true, blockId: 8 },
   { id: 'crafting_table', name: 'Crafting Table', maxStack: 64, isBlock: true, blockId: 9 },
   { id: 'stick', name: 'Stick', maxStack: 64, isBlock: false },
-  { id: 'wooden_pickaxe', name: 'Wooden Pickaxe', maxStack: 1, isBlock: false, toolType: 'pickaxe', maxDurability: 60, speedMultiplier: 2.5 },
-  { id: 'wooden_sword', name: 'Wooden Sword', maxStack: 1, isBlock: false, toolType: 'sword', maxDurability: 60, speedMultiplier: 1.5 },
-  { id: 'wooden_shovel', name: 'Wooden Shovel', maxStack: 1, isBlock: false, toolType: 'shovel', maxDurability: 60, speedMultiplier: 2.5 },
-  { id: 'wooden_axe', name: 'Wooden Axe', maxStack: 1, isBlock: false, toolType: 'axe', maxDurability: 60, speedMultiplier: 2.5 },
-  { id: 'wooden_hoe', name: 'Wooden Hoe', maxStack: 1, isBlock: false, toolType: 'hoe', maxDurability: 60, speedMultiplier: 1.5 },
-  { id: 'stone_pickaxe', name: 'Stone Pickaxe', maxStack: 1, isBlock: false, toolType: 'pickaxe', maxDurability: 130, speedMultiplier: 4.5 },
-  { id: 'stone_sword', name: 'Stone Sword', maxStack: 1, isBlock: false, toolType: 'sword', maxDurability: 130, speedMultiplier: 2.5 },
-  { id: 'stone_axe', name: 'Stone Axe', maxStack: 1, isBlock: false, toolType: 'axe', maxDurability: 130, speedMultiplier: 4.5 },
-  { id: 'stone_shovel', name: 'Stone Shovel', maxStack: 1, isBlock: false, toolType: 'shovel', maxDurability: 130, speedMultiplier: 4.5 },
-  { id: 'stone_hoe', name: 'Stone Hoe', maxStack: 1, isBlock: false, toolType: 'hoe', maxDurability: 130, speedMultiplier: 2.5 },
+  { id: 'wooden_pickaxe', name: 'Wooden Pickaxe', maxStack: 1, isBlock: false, toolType: 'pickaxe', toolTier: 1, maxDurability: 60, speedMultiplier: 2.5 },
+  { id: 'wooden_sword', name: 'Wooden Sword', maxStack: 1, isBlock: false, toolType: 'sword', toolTier: 1, maxDurability: 60, speedMultiplier: 1.5 },
+  { id: 'wooden_shovel', name: 'Wooden Shovel', maxStack: 1, isBlock: false, toolType: 'shovel', toolTier: 1, maxDurability: 60, speedMultiplier: 2.5 },
+  { id: 'wooden_axe', name: 'Wooden Axe', maxStack: 1, isBlock: false, toolType: 'axe', toolTier: 1, maxDurability: 60, speedMultiplier: 2.5 },
+  { id: 'wooden_hoe', name: 'Wooden Hoe', maxStack: 1, isBlock: false, toolType: 'hoe', toolTier: 1, maxDurability: 60, speedMultiplier: 1.5 },
+  { id: 'stone_pickaxe', name: 'Stone Pickaxe', maxStack: 1, isBlock: false, toolType: 'pickaxe', toolTier: 2, maxDurability: 130, speedMultiplier: 4.5 },
+  { id: 'stone_sword', name: 'Stone Sword', maxStack: 1, isBlock: false, toolType: 'sword', toolTier: 2, maxDurability: 130, speedMultiplier: 2.5 },
+  { id: 'stone_axe', name: 'Stone Axe', maxStack: 1, isBlock: false, toolType: 'axe', toolTier: 2, maxDurability: 130, speedMultiplier: 4.5 },
+  { id: 'stone_shovel', name: 'Stone Shovel', maxStack: 1, isBlock: false, toolType: 'shovel', toolTier: 2, maxDurability: 130, speedMultiplier: 4.5 },
+  { id: 'stone_hoe', name: 'Stone Hoe', maxStack: 1, isBlock: false, toolType: 'hoe', toolTier: 2, maxDurability: 130, speedMultiplier: 2.5 },
   { id: 'sandstone', name: 'Sandstone', maxStack: 64, isBlock: true, blockId: 10 },
   { id: 'rotten_flesh', name: 'Rotten Flesh', maxStack: 64, isBlock: false },
   { id: 'torch', name: 'Torch', maxStack: 64, isBlock: true, blockId: 11 },
@@ -55,10 +56,10 @@ const items: ItemType[] = [
   { id: 'bow', name: 'Bow', maxStack: 1, isBlock: false },
   { id: 'coal', name: 'Coal', maxStack: 64, isBlock: false },
   { id: 'gold_ingot', name: 'Gold Ingot', maxStack: 64, isBlock: false },
-  { id: 'iron_sword', name: 'Iron Sword', maxStack: 1, isBlock: false, toolType: 'sword', maxDurability: 250, speedMultiplier: 3.5 },
-  { id: 'iron_pickaxe', name: 'Iron Pickaxe', maxStack: 1, isBlock: false, toolType: 'pickaxe', maxDurability: 250, speedMultiplier: 6.5 },
-  { id: 'iron_axe', name: 'Iron Axe', maxStack: 1, isBlock: false, toolType: 'axe', maxDurability: 250, speedMultiplier: 6.5 },
-  { id: 'iron_shovel', name: 'Iron Shovel', maxStack: 1, isBlock: false, toolType: 'shovel', maxDurability: 250, speedMultiplier: 6.5 },
+  { id: 'iron_sword', name: 'Iron Sword', maxStack: 1, isBlock: false, toolType: 'sword', toolTier: 3, maxDurability: 250, speedMultiplier: 3.5 },
+  { id: 'iron_pickaxe', name: 'Iron Pickaxe', maxStack: 1, isBlock: false, toolType: 'pickaxe', toolTier: 3, maxDurability: 250, speedMultiplier: 6.5 },
+  { id: 'iron_axe', name: 'Iron Axe', maxStack: 1, isBlock: false, toolType: 'axe', toolTier: 3, maxDurability: 250, speedMultiplier: 6.5 },
+  { id: 'iron_shovel', name: 'Iron Shovel', maxStack: 1, isBlock: false, toolType: 'shovel', toolTier: 3, maxDurability: 250, speedMultiplier: 6.5 },
   { id: 'obsidian', name: 'Obsidian', maxStack: 64, isBlock: true, blockId: 15 },
   { id: 'netherrack', name: 'Netherrack', maxStack: 64, isBlock: true, blockId: 16 },
   { id: 'glowstone', name: 'Glowstone', maxStack: 64, isBlock: true, blockId: 17 },

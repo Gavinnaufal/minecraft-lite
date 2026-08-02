@@ -300,11 +300,21 @@ export class FurnaceScreen {
         // Return input item to player
         const itemToGive = data.input.itemId!;
         const countToGive = data.input.count;
-        if (this.hotbar.addItem(itemToGive, countToGive)) {
+        const rem = this.hotbar.addItem(itemToGive, countToGive);
+        if (rem === 0) {
           data.input.itemId = null;
           data.input.count = 0;
-          this.render();
+        } else {
+          const invRem = this.inventory.addItem(itemToGive, rem);
+          if (invRem === 0) {
+            data.input.itemId = null;
+            data.input.count = 0;
+          } else {
+            data.input.count = invRem;
+          }
         }
+        AudioManager.getInstance().playSFX('break');
+        this.render();
       }
     } else if (slotType === 'fuel') {
       // If fuel slot is empty, take active fuel item from hotbar
@@ -320,11 +330,21 @@ export class FurnaceScreen {
         // Return fuel item to player
         const itemToGive = data.fuel.itemId!;
         const countToGive = data.fuel.count;
-        if (this.hotbar.addItem(itemToGive, countToGive)) {
+        const rem = this.hotbar.addItem(itemToGive, countToGive);
+        if (rem === 0) {
           data.fuel.itemId = null;
           data.fuel.count = 0;
-          this.render();
+        } else {
+          const invRem = this.inventory.addItem(itemToGive, rem);
+          if (invRem === 0) {
+            data.fuel.itemId = null;
+            data.fuel.count = 0;
+          } else {
+            data.fuel.count = invRem;
+          }
         }
+        AudioManager.getInstance().playSFX('break');
+        this.render();
       }
     }
   }

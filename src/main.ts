@@ -925,7 +925,7 @@ engine.setUpdateCallback((deltaTime) => {
         inventoryScreen.open();
         wasRightDown = inputManager.isRightMouseDown;
         return;
-      } else if (hitBlockId === 10) { // Furnace block
+      } else if (hitBlockId === 23) { // Furnace block (ID 23)
         furnaceScreen.open(targetHit.blockX, targetHit.blockY, targetHit.blockZ);
         wasRightDown = inputManager.isRightMouseDown;
         return;
@@ -934,11 +934,12 @@ engine.setUpdateCallback((deltaTime) => {
 
     if (activeItem.itemId && activeItem.count > 0) {
       const isFoodItem = [
-        'raw_beef', 'cooked_beef',
-        'raw_porkchop', 'cooked_porkchop',
-        'raw_chicken', 'cooked_chicken',
-        'mutton', 'cooked_mutton',
-        'bread', 'rotten_flesh', 'beef'
+        'cooked_beef',
+        'cooked_porkchop',
+        'cooked_chicken',
+        'cooked_mutton',
+        'bread',
+        'rotten_flesh',
       ].includes(activeItem.itemId);
 
       if (isFoodItem) {

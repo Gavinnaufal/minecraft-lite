@@ -88,5 +88,11 @@
 
 ---
 
-## BLOCKED / BUG
-*(Belum ada entry — akan diisi seiring pengerjaan CP239 ke atas)*
+## BLOCKED / BUG & REFACTOR NOTES
+- [x] **[BUGFIX] Furnace Block ID & Raw Meat Instant-Eat Removal**:
+  - Menambahkan registrasi blok `furnace` yang sah di `BlockRegistry.ts` (ID 23, `solid: true`, `hardness: 3.5`).
+  - Menambahkan item `furnace` di `ItemRegistry.ts` (`isBlock: true`, `blockId: 23`).
+  - Menambahkan resep crafting 8x `stone` → 1x `furnace` di `Recipes.ts`.
+  - Memperbaiki `main.ts`: klik kanan `hitBlockId === 23` untuk membuka `FurnaceScreen`, mengembalikan `sandstone` (ID 10) sebagai blok biasa.
+  - Menutup opsi makan langsung untuk `raw_beef`, `raw_porkchop`, `raw_chicken`, `mutton` di `main.ts` (wajib lewat Furnace UI + Fuel). `rotten_flesh` tetap bisa dimakan mentah.
+  - Memperbarui tabel Block Registry & Crafting Guide di `README.md` agar 100% sinkron dengan `BlockRegistry.ts`.

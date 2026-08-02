@@ -53,26 +53,29 @@ Mini Minecraft adalah game sandbox voxel 3D berkinerja tinggi yang dibangun dari
 | ID | Nama Blok | Tipe / Karakteristik | Drops |
 |---|---|---|---|
 | 0 | `air` | Gas Transparan | - |
-| 1 | `grass` | Solid Opaque | Dirt |
+| 1 | `grass` | Solid Opaque | Grass / Wheat Seeds |
 | 2 | `dirt` | Solid Opaque | Dirt |
-| 3 | `stone` | Solid Opaque | Stone / Cobblestone |
-| 4 | `wood_log` | Solid Opaque | Wood Log |
-| 5 | `leaves` | Transparan Solid | Leaves / Sapling |
-| 6 | `sand` | Solid Opaque | Sand |
+| 3 | `stone` | Solid Opaque | Stone |
+| 4 | `sand` | Solid Opaque | Sand |
+| 5 | `wood_log` | Solid Opaque | Wood Log |
+| 6 | `leaves` | Transparan Solid | Leaves |
 | 7 | `water` | Liquid Fluid | - |
 | 8 | `plank` | Solid Opaque | Plank |
-| 9 | `crafting_table` | Interaktif | Crafting Table |
-| 10 | `furnace` / `chest` | Interaktif | Furnace / Chest |
+| 9 | `crafting_table` | Interaktif (Crafting UI 3x3) | Crafting Table |
+| 10 | `sandstone` | Solid Opaque | Sandstone |
 | 11 | `torch` | Light Source Non-Solid | Torch |
-| 12 | `farmland` | Soil Agriculture | Dirt |
-| 13 | `wheat_crop` | Plant Growth | Wheat / Wheat Seeds |
-| 14 | `sandstone` | Solid Opaque | Sandstone |
+| 12 | `chest` | Interaktif (Chest Storage UI 27-Slot) | Chest + Items |
+| 13 | `farmland` | Soil Agriculture | Dirt |
+| 14 | `wheat_crop` | Plant Growth | Wheat + Wheat Seeds |
 | 15 | `obsidian` | Blast Resistant Solid | Obsidian |
 | 16 | `netherrack` | Nether Substratum | Netherrack |
 | 17 | `glowstone` | Nether Light Source | Glowstone |
 | 18 | `nether_portal` | Dimensional Portal | - |
 | 19 | `lava` | Liquid Fluid Hazard | - |
 | 20 | `soul_sand` | Slowing Soil | Soul Sand |
+| 21 | `coal_ore` | Subterranean Ore | Coal Ore / Coal |
+| 22 | `iron_ore` | Subterranean Ore | Iron Ore / Raw Iron |
+| 23 | `furnace` | Interaktif (Furnace UI 3-Slot) | Furnace |
 
 ---
 
@@ -88,6 +91,7 @@ Buka inventaris dengan **`E`** (2x2 grid) atau gunakan **Crafting Table** (3x3 g
 | 🥢 **Stick** | 4x | `[ Plank ]`<br>`[ Plank ]` | 2x Planks |
 | 🛠️ **Crafting Table** | 1x | `[ Plank ][ Plank ]`<br>`[ Plank ][ Plank ]` | 4x Planks |
 | 📦 **Chest** | 1x | `[ Plank ][ Plank ][ Plank ]`<br>`[ Plank ][   -   ][ Plank ]`<br>`[ Plank ][ Plank ][ Plank ]` | 8x Planks |
+| 🔥 **Furnace** | 1x | `[ Stone ][ Stone ][ Stone ]`<br>`[ Stone ][   -   ][ Stone ]`<br>`[ Stone ][ Stone ][ Stone ]` | 8x Stone |
 | 💡 **Torch** | 4x | `[ Plank / Log ]`<br>`[ Stick ]` | 1x Plank/Log + 1x Stick |
 | 🍞 **Bread** | 1x | `[ Wheat ][ Wheat ][ Wheat ]` | 3x Wheat |
 | 🥪 **Sandstone** | 1x | `[ Sand ][ Sand ]`<br>`[ Sand ][ Sand ]` | 4x Sand |

@@ -54,6 +54,8 @@ export const recipes: Recipe[] = [
   { pattern: [['stone'], ['stick'], ['feather']], result: { itemId: 'arrow', count: 4 } },
   // 24. Netherrack to Glowstone (4 netherrack)
   { pattern: [['netherrack', 'netherrack'], ['netherrack', 'netherrack']], result: { itemId: 'glowstone', count: 1 } },
+  // 25. 8 Stone to Furnace
+  { pattern: [['stone', 'stone', 'stone'], ['stone', null, 'stone'], ['stone', 'stone', 'stone']], result: { itemId: 'furnace', count: 1 } },
 ];
 
 export interface SmeltingRecipe {

@@ -66,6 +66,17 @@ const blockTypes: BlockType[] = [
   { id: 20, name: 'soul_sand', color: 0x4e3629, solid: true, transparent: false, hardness: 0.6 },
   { id: 21, name: 'coal_ore', color: 0x424242, solid: true, transparent: false, hardness: 2.2 },
   { id: 22, name: 'iron_ore', color: 0xb0bec5, solid: true, transparent: false, hardness: 3.2 },
+  {
+    id: 23,
+    name: 'furnace',
+    color: 0x5d4037,
+    solid: true,
+    transparent: false,
+    hardness: 3.5,
+    textureTop: 'stone',
+    textureBottom: 'stone',
+    textureSide: 'stone',
+  },
 ];
 
 const byId = new Map<number, BlockType>();

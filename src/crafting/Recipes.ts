@@ -67,7 +67,6 @@ export interface SmeltingRecipe {
 export const smeltingRecipes: SmeltingRecipe[] = [
   { input: 'raw_iron', result: { itemId: 'iron_ingot', count: 1 } },
   { input: 'raw_beef', result: { itemId: 'cooked_beef', count: 1 } },
-  { input: 'beef', result: { itemId: 'cooked_beef', count: 1 } },
   { input: 'raw_porkchop', result: { itemId: 'cooked_porkchop', count: 1 } },
   { input: 'raw_chicken', result: { itemId: 'cooked_chicken', count: 1 } },
   { input: 'mutton', result: { itemId: 'cooked_mutton', count: 1 } },

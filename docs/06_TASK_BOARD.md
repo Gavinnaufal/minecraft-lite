@@ -20,8 +20,8 @@
 | Fase 14 — Multiplayer | 121–125 | 5 | 100% |
 | Fase 15 — Polish & Release | 126–130 | 5 | 100% |
 | Fase 16 — Feature Expansion | 131–144 | 14 | 100% |
-| Fase 17 — Master Polish | 145–155 | 11 | 100% |
-| **TOTAL** | | **155** | **100%** |
+| Fase 17 — Master Polish | 145–156+EX | 13 | 100% |
+| **TOTAL** | | **157** | **100%** |
 
 Build: ✅ `npm run build` passes (683KB bundle, 802ms)
 
@@ -82,7 +82,7 @@ Build: ✅ `npm run build` passes (683KB bundle, 802ms)
 - [x] CP-44: Implementasi cave generation dasar
 - [x] CP-45: Implementasi seed system
 
-### Fase 4 — Interaksi Blok (9/10)
+### Fase 4 — Interaksi Blok (10/10)
 - [x] CP-46: Buat Raycaster.ts — deteksi blok yang dilihat player
 - [x] CP-47: Implementasi jarak maksimum interaksi (~5 unit)
 - [x] CP-48: Buat BlockBreaker.ts — hapus blok saat klik kiri
@@ -177,7 +177,7 @@ Build: ✅ `npm run build` passes (683KB bundle, 802ms)
 - [x] CP-119: Tambahkan ambient sound
 - [x] CP-120: Tambahkan background music loop + toggle volume di settings
 
-### Fase 14 — Multiplayer (0/5)
+### Fase 14 — Multiplayer (5/5)
 - [x] CP-121: Setup server WebSocket sederhana (Node.js)
 - [x] CP-122: Sinkronisasi posisi player antar client
 - [x] CP-123: Sinkronisasi perubahan blok antar client
@@ -191,7 +191,7 @@ Build: ✅ `npm run build` passes (683KB bundle, 802ms)
 - [x] CP-129: Deploy ke hosting statis
 - [x] CP-130: Tulis README & dokumentasi cara main untuk pemain
 
-### Fase 16 — Feature Expansion (8/8)
+### Fase 16 — Feature Expansion (14/14)
 - [x] CP-131: Structural Compound 3D Body Mesh & Leg Swing Anim for Cow
 - [x] CP-132: Structural Compound 3D Body Mesh & Arm/Leg Anim for Zombie
 - [x] CP-133: Physics Fall Damage System
@@ -207,7 +207,7 @@ Build: ✅ `npm run build` passes (683KB bundle, 802ms)
 - [x] CP-143: Wheat Seeds Drops, Wheat Farming & Bread Food Eating
 - [x] CP-144: Glassmorphic UI/UX Redesign & Custom SVG Vector Icons
 
-### Fase 17 — Master Polish (12/12)
+### Fase 17 — Master Polish (13/13)
 - [x] CP-145: Block Selection Outline Wireframe Box
 - [x] CP-146: Time-based Dynamic Exponential Distance Fog
 - [x] CP-147: Surface-based Footstep Audio System

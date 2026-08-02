@@ -21,7 +21,7 @@
 - [x] CP-240: OreGenerator.ts cluster noise placement
 - [x] CP-241: Ore cluster threshold tuning
 - [x] CP-242: Item baru: raw_iron, coal
-- [x] CP-243: FurnaceScreen 3-slot UI modal + FurnaceManager + SaveManager persistence
+- [x] CP-243: FurnaceScreen 3-slot UI modal + FurnaceManager + SaveManager persistence (Desain v3.0: Memasak daging mentah kini wajib lewat Furnace UI + Fuel 5s, menggantikan instant right-click CP-212)
 - [ ] CP-244: Furnace UI progress bar arrow
 - [ ] CP-245: Smelting recipe raw_iron + fuel → iron_ingot
 - [ ] CP-246: Pickaxe tier requirement check

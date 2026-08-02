@@ -4,7 +4,7 @@
 
 | Fase | CP Range | Selesai | % |
 |---|---|---|---|
-| Fase 26 — Ore Mining & Smelting | 239–248 | 8 | 80% |
+| Fase 26 — Ore Mining & Smelting | 239–248 | 9 | 90% |
 | Fase 27 — Villager Trading System | 249–256 | 0 | 0% |
 | Fase 28 — Animal Breeding & Taming | 257–264 | 0 | 0% |
 | Fase 29 — Armor & Equipment System | 265–272 | 0 | 0% |
@@ -16,7 +16,7 @@
 
 ## CHECKLIST DETAIL V3.0
 
-### Fase 26 — Ore Mining & Smelting (8/10)
+### Fase 26 — Ore Mining & Smelting (9/10)
 - [x] CP-239: BlockRegistry addition: coal_ore, iron_ore
 - [x] CP-240: OreGenerator.ts cluster noise placement
 - [x] CP-241: Ore cluster threshold tuning
@@ -25,7 +25,7 @@
 - [x] CP-244: Furnace UI progress bar arrow SVG animation + fuel burn timer indicator
 - [x] CP-245: Smelting recipe raw_iron + fuel → iron_ingot (Registrasi terpusat di Recipes.ts)
 - [x] CP-246: Pickaxe tier requirement check (iron_ore butuh min Stone Pickaxe tier >= 2)
-- [ ] CP-247: Ore block texture pass
+- [x] CP-247: Ore block texture pass (16x16 pixel art PNG generator untuk coal_ore & iron_ore)
 - [ ] CP-248: Playtest & balance rasio ore
 
 ### Fase 27 — Villager Trading System (0/8)

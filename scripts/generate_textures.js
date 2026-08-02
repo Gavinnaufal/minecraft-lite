@@ -434,6 +434,76 @@ const generators = {
 
   air: () => {
     return new Uint8Array(16 * 16 * 4);
+  },
+
+  coal_ore: () => {
+    const rng = createPRNG('coal_ore');
+    const pixels = new Uint8Array(16 * 16 * 4);
+    const stonePalette = ['#83888c', '#757a7e', '#676b6f', '#93989c', '#595d61', '#4d5154'];
+    const coalPalette = ['#1c1c1c', '#2d2d2d', '#111111', '#383838'];
+
+    const isCoalSpot = (x, y) => {
+      const spotMap = [
+        [3, 3], [4, 3], [3, 4], [4, 4],
+        [9, 2], [10, 2], [10, 3],
+        [12, 7], [13, 7], [12, 8], [13, 8],
+        [5, 11], [6, 11], [6, 12],
+        [2, 12], [2, 13]
+      ];
+      return spotMap.some(([sx, sy]) => sx === x && sy === y);
+    };
+
+    for (let y = 0; y < 16; y++) {
+      for (let x = 0; x < 16; x++) {
+        const i = y * 16 + x;
+        let colHex;
+        if (isCoalSpot(x, y)) {
+          colHex = coalPalette[Math.floor(rng() * coalPalette.length)];
+        } else {
+          const isFracture = (x + y * 2) % 7 === 0 || (x * 3 + y) % 11 === 0;
+          colHex = isFracture
+            ? stonePalette[4 + Math.floor(rng() * 2)]
+            : stonePalette[Math.floor(rng() * 4)];
+        }
+        pixels.set(parseHex(colHex), i * 4);
+      }
+    }
+    return pixels;
+  },
+
+  iron_ore: () => {
+    const rng = createPRNG('iron_ore');
+    const pixels = new Uint8Array(16 * 16 * 4);
+    const stonePalette = ['#83888c', '#757a7e', '#676b6f', '#93989c', '#595d61', '#4d5154'];
+    const ironPalette = ['#d8af97', '#b88267', '#8c593f', '#e5c2b0', '#a06a50'];
+
+    const isIronSpot = (x, y) => {
+      const spotMap = [
+        [2, 3], [3, 3], [3, 4],
+        [8, 4], [9, 4], [8, 5], [9, 5],
+        [13, 2], [13, 3], [14, 3],
+        [5, 10], [6, 10], [6, 11],
+        [11, 11], [11, 12], [12, 12]
+      ];
+      return spotMap.some(([sx, sy]) => sx === x && sy === y);
+    };
+
+    for (let y = 0; y < 16; y++) {
+      for (let x = 0; x < 16; x++) {
+        const i = y * 16 + x;
+        let colHex;
+        if (isIronSpot(x, y)) {
+          colHex = ironPalette[Math.floor(rng() * ironPalette.length)];
+        } else {
+          const isFracture = (x + y * 2) % 7 === 0 || (x * 3 + y) % 11 === 0;
+          colHex = isFracture
+            ? stonePalette[4 + Math.floor(rng() * 2)]
+            : stonePalette[Math.floor(rng() * 4)];
+        }
+        pixels.set(parseHex(colHex), i * 4);
+      }
+    }
+    return pixels;
   }
 };
 

@@ -249,6 +249,7 @@ Setiap checkpoint (CP) dirancang untuk **1 sesi vibe coding** (1 prompt DeepSeek
 ## RINGKASAN
 
 - **Total checkpoint: 155** (130 checkpoint inti + 14 feature expansion + 11 polish CP145-CP155)
+  > *Catatan: realisasi final proyek menambahkan CP-156 (Physics/FOV/Knockback Polish) dan CP-EX (Ocean Biome) di luar rencana checkpoint awal ini. Total aktual v1.0: 157 checkpoint — lihat `docs/06_TASK_BOARD.md` untuk rincian resmi.*
 - MVP inti selesai di **CP102** (save/load) — dari titik ini game sudah "playable end-to-end".
 - CP103–115 = polish & optimasi wajib.
 - CP116–130 = audio, multiplayer & release.

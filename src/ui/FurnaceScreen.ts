@@ -106,11 +106,11 @@ export class FurnaceScreen {
 
     this.updateInterval = window.setInterval(() => {
       if (!this.currentFurnaceData) return;
-      this.processFurnaceTick(0.5);
+      this.processFurnaceTick(0.1);
       if (this.isOpen) {
         this.render();
       }
-    }, 500);
+    }, 100);
   }
 
   private processFurnaceTick(deltaSec: number): void {
@@ -197,43 +197,87 @@ export class FurnaceScreen {
 
     this.container.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h2 style="margin: 0; font-size: 20px; color: #ffcc80;">🔥 Furnace</h2>
+        <h2 style="margin: 0; font-size: 20px; color: #ffcc80; display: flex; align-items: center; gap: 8px;">
+          <span>🔥</span> Furnace
+        </h2>
         <button id="furnace-close-btn" style="background: none; border: none; color: #aaa; font-size: 22px; cursor: pointer;">&times;</button>
       </div>
 
       <!-- FURNACE WORKSPACE -->
-      <div style="display: flex; align-items: center; justify-content: space-around; background: rgba(0,0,0,0.3); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+      <div style="display: flex; align-items: center; justify-content: space-around; background: rgba(0,0,0,0.35); padding: 18px; border-radius: 10px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.08);">
         
-        <!-- LEFT: INPUT & FUEL SLOTS -->
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+        <!-- LEFT: INPUT & FUEL SLOTS + FLAME BURN INDICATOR -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
           <!-- INPUT SLOT -->
-          <div id="furnace-slot-input" style="width: 52px; height: 52px; background: rgba(0,0,0,0.5); border: 2px solid ${inputItem ? '#81c784' : '#555'}; border-radius: 6px; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer;">
+          <div id="furnace-slot-input" style="width: 54px; height: 54px; background: rgba(0,0,0,0.5); border: 2px solid ${inputItem ? '#81c784' : '#555'}; border-radius: 6px; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; transition: border-color 0.2s;">
             ${inputItem ? this.iconHTML(inputItem.id) : '<span style="color: #666; font-size: 11px;">Input</span>'}
             ${data.input.count > 1 ? `<span style="position: absolute; bottom: 2px; right: 4px; font-weight: bold; font-size: 12px; text-shadow: 1px 1px 2px #000;">${data.input.count}</span>` : ''}
           </div>
 
-          <!-- FIRE / FUEL BURN INDICATOR -->
-          <div style="width: 24px; height: 16px; background: #333; border-radius: 4px; overflow: hidden; position: relative;" title="Fuel Burn: ${Math.round(fuelPct)}%">
-            <div style="width: 100%; height: ${fuelPct}%; background: linear-gradient(to top, #ff3d00, #ffea00); position: absolute; bottom: 0; transition: height 0.3s;"></div>
+          <!-- FIRE / FUEL BURN TIMER (CP-244 ANIMATED SVG FLAME) -->
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 2px;" title="Sisa Waktu Fuel: ${Math.ceil(data.fuelTime)}s">
+            <div style="position: relative; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">
+              <!-- Base Unlit Flame SVG -->
+              <svg width="24" height="24" viewBox="0 0 24 24" style="opacity: 0.25;">
+                <path d="M12 2C10.5 5 8 7.5 8 11C8 14.3 10.7 17 14 17C17.3 17 20 14.3 20 11C20 6.5 15.5 3.5 12 2ZM12 22C6.5 22 2 17.5 2 12C2 8 4.5 4.5 8 3C7 6 8.5 9 11 11C11.5 8 13.5 6 15 5C17.5 8 19 11.5 19 14C19 18.4 15.9 22 12 22Z" fill="#ff7043"/>
+              </svg>
+              <!-- Lit Active Burning Flame with Clip Height & Glow -->
+              ${fuelPct > 0 ? `
+              <div style="position: absolute; bottom: 2px; width: 24px; height: ${fuelPct}%; overflow: hidden; display: flex; align-items: flex-end; justify-content: center; filter: drop-shadow(0 0 6px #ff3d00); transition: height 0.1s linear;">
+                <svg width="24" height="24" viewBox="0 0 24 24" style="position: absolute; bottom: 0;">
+                  <path d="M12 2C10.5 5 8 7.5 8 11C8 14.3 10.7 17 14 17C17.3 17 20 14.3 20 11C20 6.5 15.5 3.5 12 2ZM12 22C6.5 22 2 17.5 2 12C2 8 4.5 4.5 8 3C7 6 8.5 9 11 11C11.5 8 13.5 6 15 5C17.5 8 19 11.5 19 14C19 18.4 15.9 22 12 22Z" fill="url(#flameGrad)"/>
+                  <defs>
+                    <linearGradient id="flameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                      <stop offset="0%" stop-color="#ff3d00"/>
+                      <stop offset="50%" stop-color="#ff9100"/>
+                      <stop offset="100%" stop-color="#ffea00"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+              ` : ''}
+            </div>
+            <span style="font-size: 10px; font-weight: bold; color: ${fuelPct > 0 ? '#ffb74d' : '#666'}; font-family: monospace;">
+              ${fuelPct > 0 ? `${Math.ceil(data.fuelTime)}s` : '0s'}
+            </span>
           </div>
 
           <!-- FUEL SLOT -->
-          <div id="furnace-slot-fuel" style="width: 52px; height: 52px; background: rgba(0,0,0,0.5); border: 2px solid ${fuelItem ? '#ff7043' : '#555'}; border-radius: 6px; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer;">
+          <div id="furnace-slot-fuel" style="width: 54px; height: 54px; background: rgba(0,0,0,0.5); border: 2px solid ${fuelItem ? '#ff7043' : '#555'}; border-radius: 6px; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; transition: border-color 0.2s;">
             ${fuelItem ? this.iconHTML(fuelItem.id) : '<span style="color: #666; font-size: 11px;">Fuel</span>'}
             ${data.fuel.count > 1 ? `<span style="position: absolute; bottom: 2px; right: 4px; font-weight: bold; font-size: 12px; text-shadow: 1px 1px 2px #000;">${data.fuel.count}</span>` : ''}
           </div>
         </div>
 
-        <!-- MIDDLE: PROGRESS ARROW (CP-244) -->
-        <div style="display: flex; flex-direction: column; align-items: center; width: 60px;">
-          <div style="width: 50px; height: 14px; background: #333; border-radius: 7px; overflow: hidden; position: relative; border: 1px solid #444;">
-            <div style="width: ${cookPct}%; height: 100%; background: linear-gradient(to right, #4caf50, #81c784); transition: width 0.3s;"></div>
+        <!-- MIDDLE: MINECRAFT PROGRESS ARROW (CP-244 ANIMATED SVG ARROW) -->
+        <div style="display: flex; flex-direction: column; align-items: center; width: 70px;">
+          <div style="position: relative; width: 56px; height: 26px;" title="Proses Peleburan: ${Math.round(cookPct)}%">
+            <!-- Base Background Arrow (Dark Gray) -->
+            <svg width="56" height="26" viewBox="0 0 56 26" style="position: absolute; top: 0; left: 0;">
+              <path d="M 4 8 L 34 8 L 34 2 L 52 13 L 34 24 L 34 18 L 4 18 Z" fill="#2a2a30" stroke="#444" stroke-width="1.5" stroke-linejoin="round"/>
+            </svg>
+
+            <!-- Active Filling Arrow (Gold/Green Gradient overlay) -->
+            <div style="position: absolute; top: 0; left: 0; width: ${cookPct}%; height: 26px; overflow: hidden; transition: width 0.1s linear;">
+              <svg width="56" height="26" viewBox="0 0 56 26">
+                <path d="M 4 8 L 34 8 L 34 2 L 52 13 L 34 24 L 34 18 L 4 18 Z" fill="url(#arrowGrad)" stroke="#81c784" stroke-width="1.5" stroke-linejoin="round"/>
+                <defs>
+                  <linearGradient id="arrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#4caf50"/>
+                    <stop offset="70%" stop-color="#81c784"/>
+                    <stop offset="100%" stop-color="#ffd54f"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
           </div>
-          <span style="font-size: 10px; color: #aaa; margin-top: 4px;">${Math.round(cookPct)}%</span>
+          <span style="font-size: 11px; font-weight: bold; color: ${cookPct > 0 ? '#81c784' : '#888'}; margin-top: 4px; font-family: monospace;">
+            ${Math.round(cookPct)}%
+          </span>
         </div>
 
         <!-- RIGHT: OUTPUT SLOT -->
-        <div id="furnace-slot-output" style="width: 64px; height: 64px; background: rgba(0,0,0,0.6); border: 3px solid ${outputItem ? '#ffd54f' : '#777'}; border-radius: 8px; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer;">
+        <div id="furnace-slot-output" style="width: 64px; height: 64px; background: rgba(0,0,0,0.6); border: 3px solid ${outputItem ? '#ffd54f' : '#777'}; border-radius: 8px; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; transition: border-color 0.2s;">
           ${outputItem ? this.iconHTML(outputItem.id) : '<span style="color: #666; font-size: 12px;">Result</span>'}
           ${data.output.count > 0 ? `<span style="position: absolute; bottom: 2px; right: 6px; font-weight: bold; font-size: 14px; color: #fff; text-shadow: 1px 1px 2px #000;">${data.output.count}</span>` : ''}
         </div>

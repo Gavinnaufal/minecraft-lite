@@ -9,8 +9,8 @@
 | Fase 28 — Animal Breeding & Taming | 257–264 | 8 | 100% |
 | Fase 29 — Armor & Equipment System | 265–272 | 8 | 100% |
 | Fase 30 — Nether Fortress & Boss Mobs | 273–288 | 16 | 100% |
-| Fase 31 — Master Integration & Polish v3.0 | 289–296 | 0 | 0% |
-| **TOTAL EXPANSION (v3.0)** | | **50** | **86%** |
+| Fase 31 — Master Integration & Polish v3.0 | 289–296 | 8 | 100% |
+| **TOTAL EXPANSION (v3.0)** | | **58** | **100%** |
 
 ---
 
@@ -76,15 +76,15 @@
 - [x] CP-287: Ghast ghast_tear drop (1x ghast_tear)
 - [x] CP-288: Playtest fortress full combat (Laporan docs/288_NETHER_FORTRESS_COMBAT_PLAYTEST.md)
 
-### Fase 31 — Master Integration & Polish v3.0 (0/8)
-- [ ] CP-289: F3 Debug Screen update
-- [ ] CP-290: Crafting recipe book pass
-- [ ] CP-291: Audio pass v3.0
-- [ ] CP-292: SaveManager schema migration test (v2.0 → v3.0)
-- [ ] CP-293: Balance pass menyeluruh
-- [ ] CP-294: Stress test fortress + flying mob + existing load
-- [ ] CP-295: Production build verification
-- [ ] CP-296: Documentation update & final bug bash
+### Fase 31 — Master Integration & Polish v3.0 (8/8)
+- [x] CP-289: F3 Debug Screen update (statistik V3.0 armor & proyektil)
+- [x] CP-290: Crafting recipe book pass (verifikasi 8 resep armor & furnace)
+- [x] CP-291: Audio pass v3.0 (Web Audio API synthesized SFX)
+- [x] CP-292: SaveManager schema migration test (v2.0 → v3.0)
+- [x] CP-293: Balance pass menyeluruh (mob health/damage, armor, smelting)
+- [x] CP-294: Stress test fortress + flying mob + existing load (Benchmark script scratch/test_v3_stress.ts PASS)
+- [x] CP-295: Production build verification (0 errors tsc & vite build)
+- [x] CP-296: Documentation update & final bug bash (Laporan docs/296_V3_MASTER_POLISH.md)
 
 ---
 

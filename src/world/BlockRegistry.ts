@@ -99,6 +99,17 @@ const blockTypes: BlockType[] = [
     textureBottom: 'stone',
     textureSide: 'stone',
   },
+  {
+    id: 24,
+    name: 'nether_brick',
+    color: 0x2c1619,
+    solid: true,
+    transparent: false,
+    hardness: 3.0,
+    textureTop: 'netherrack',
+    textureBottom: 'netherrack',
+    textureSide: 'netherrack',
+  },
 ];
 
 const byId = new Map<number, BlockType>();

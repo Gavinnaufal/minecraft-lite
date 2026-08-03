@@ -71,6 +71,16 @@ const items: ItemType[] = [
   { id: 'iron_ore', name: 'Iron Ore', maxStack: 64, isBlock: true, blockId: 22 },
   { id: 'furnace', name: 'Furnace', maxStack: 64, isBlock: true, blockId: 23 },
   { id: 'emerald', name: 'Emerald', maxStack: 64, isBlock: false },
+  // Leather Armor (CP-267)
+  { id: 'leather_helmet', name: 'Leather Helmet', maxStack: 1, isBlock: false, armorDefense: 1, armorSlot: 'helmet', maxDurability: 55 },
+  { id: 'leather_chestplate', name: 'Leather Chestplate', maxStack: 1, isBlock: false, armorDefense: 3, armorSlot: 'chestplate', maxDurability: 80 },
+  { id: 'leather_leggings', name: 'Leather Leggings', maxStack: 1, isBlock: false, armorDefense: 2, armorSlot: 'leggings', maxDurability: 75 },
+  { id: 'leather_boots', name: 'Leather Boots', maxStack: 1, isBlock: false, armorDefense: 1, armorSlot: 'boots', maxDurability: 65 },
+  // Iron Armor (CP-267)
+  { id: 'iron_helmet', name: 'Iron Helmet', maxStack: 1, isBlock: false, armorDefense: 2, armorSlot: 'helmet', maxDurability: 165 },
+  { id: 'iron_chestplate', name: 'Iron Chestplate', maxStack: 1, isBlock: false, armorDefense: 6, armorSlot: 'chestplate', maxDurability: 240 },
+  { id: 'iron_leggings', name: 'Iron Leggings', maxStack: 1, isBlock: false, armorDefense: 5, armorSlot: 'leggings', maxDurability: 225 },
+  { id: 'iron_boots', name: 'Iron Boots', maxStack: 1, isBlock: false, armorDefense: 2, armorSlot: 'boots', maxDurability: 195 },
 ];
 
 const byId = new Map<string, ItemType>();

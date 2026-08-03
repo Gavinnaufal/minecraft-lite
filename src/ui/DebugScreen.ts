@@ -38,6 +38,8 @@ export class DebugScreen {
     biome: string;
     dimension?: string;
     mobsCount: number;
+    armorPoints?: number;
+    projectilesCount?: number;
   }): void {
     if (!this.visible) return;
 
@@ -45,7 +47,7 @@ export class DebugScreen {
 
     this.container.innerHTML = `
       <div style="${bgStyle}">
-        <div style="font-weight: bold; color: #ffffa0;">Minecraft Lite 2.0.0 Expansion (Three.js Voxel Engine)</div>
+        <div style="font-weight: bold; color: #ffffa0;">Minecraft Lite 3.0.0 Master Expansion</div>
         <div>${stats.fps} fps T: 60</div>
         <div style="margin-top: 4px;">XYZ: ${stats.posX.toFixed(3)} / ${stats.posY.toFixed(5)} / ${stats.posZ.toFixed(3)}</div>
         <div>Block: ${Math.floor(stats.posX)} ${Math.floor(stats.posY)} ${Math.floor(stats.posZ)}</div>
@@ -53,12 +55,13 @@ export class DebugScreen {
         <div>Dimension: ${stats.dimension || 'Overworld'}</div>
         <div>Facing: ${stats.facing}</div>
         <div>Biome: ${stats.biome}</div>
-        <div>Local Difficulty: 1.50</div>
+        <div>Armor: ${stats.armorPoints ?? 0} Pts</div>
       </div>
       <div style="${bgStyle} text-align: right;">
         <div style="color: #aaaaaa;">Display: WebGL</div>
         <div>Three.js + TS</div>
-        <div>Entities: ${stats.mobsCount} active</div>
+        <div>Mobs: ${stats.mobsCount} active</div>
+        <div>Projectiles: ${stats.projectilesCount ?? 0} active</div>
         <div style="margin-top: 4px; color: #55ff55;">Mem: 45% 240/512MB</div>
       </div>
     `;

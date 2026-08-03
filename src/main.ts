@@ -711,6 +711,8 @@ engine.setUpdateCallback((deltaTime) => {
     biome: biomeName,
     dimension: DimensionManager.getInstance().currentDimension,
     mobsCount: mobManager.mobs.length,
+    armorPoints: equipmentSlots.getTotalDefense(),
+    projectilesCount: ProjectileManager.getInstance().arrows.length + ProjectileManager.getInstance().fireballs.length,
   });
 
   sky.position.copy(camera.position);

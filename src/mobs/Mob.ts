@@ -12,6 +12,7 @@ export class Mob {
   velocity = new THREE.Vector3();
   isGrounded = false;
   isHostile = false;
+  isFlying = false;
   width = 0.8;
   height = 1.4;
   loveTimer = 0;
@@ -87,6 +88,9 @@ export class Mob {
 
     if (inWater) {
       this.velocity.y = Math.min(this.velocity.y + 20 * deltaTime, 2.5);
+      this.isGrounded = false;
+    } else if (this.isFlying) {
+      // Flying mobs bypass gravity and float in 3D
       this.isGrounded = false;
     } else {
       this.velocity.y += -29.4 * deltaTime;

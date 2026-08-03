@@ -42,6 +42,7 @@ import { ChatBox } from './multiplayer/ChatBox';
 import { TorchLightManager } from './world/TorchLightManager';
 import { DimensionManager, DimensionType } from './world/dimension/DimensionManager';
 import { PortalDetector } from './world/dimension/PortalDetector';
+import { NetherFortressGenerator } from './world/structures/NetherFortressGenerator';
 import { DimensionTransitionOverlay } from './ui/DimensionTransitionOverlay';
 import { NoiseGenerator, seedFromString } from './world/terrain/NoiseGenerator';
 import { HeightMap } from './world/terrain/HeightMap';
@@ -820,6 +821,15 @@ engine.setUpdateCallback((deltaTime) => {
   }
 
   mobManager.update(deltaTime, new THREE.Vector3(player.position.x, player.position.y, player.position.z), player, camera, dayNight.isNight, equipmentSlots);
+  
+  if (DimensionManager.getInstance().isNether()) {
+    const pCX = Math.floor(player.position.x / CHUNK_SIZE_X);
+    const pCZ = Math.floor(player.position.z / CHUNK_SIZE_Z);
+    const fg = NetherFortressGenerator.getInstance();
+    if (fg.shouldGenerateInChunk(pCX, pCZ)) {
+      fg.generateFortressAtChunk(world, pCX, pCZ);
+    }
+  }
   
   // Undead Daylight Burning mechanic (Zombie & Skeleton burn in direct sunlight)
   if (!dayNight.isNight && !DimensionManager.getInstance().isNether()) {

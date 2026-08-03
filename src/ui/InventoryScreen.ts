@@ -1,5 +1,6 @@
 import { Inventory } from '../inventory/Inventory';
 import { Hotbar } from '../inventory/Hotbar';
+import { EquipmentSlots, type ArmorSlotType } from '../inventory/EquipmentSlots';
 import { getItemById } from '../inventory/ItemRegistry';
 import { inputManager } from '../core/InputManager';
 import { checkRecipe } from '../crafting/CraftingSystem';
@@ -10,9 +11,16 @@ export class InventoryScreen {
   private visible = false;
   private readonly inventory: Inventory;
   private readonly hotbar: Hotbar;
+  private readonly equipmentSlots?: EquipmentSlots;
   private dragItem: { itemId: string; count: number; durability?: number } | null = null;
   private dragEl: HTMLDivElement | null = null;
   private tooltipEl: HTMLDivElement | null = null;
+  private armorSlotEls: Record<ArmorSlotType, HTMLDivElement | null> = {
+    helmet: null,
+    chestplate: null,
+    leggings: null,
+    boots: null,
+  };
 
   // Crafting 3x3 Grid
   private craftGrid: (string | null)[][] = [
@@ -23,9 +31,10 @@ export class InventoryScreen {
   private craftSlots: HTMLDivElement[] = [];
   private craftOutput: HTMLDivElement | null = null;
 
-  constructor(inventory: Inventory, hotbar: Hotbar) {
+  constructor(inventory: Inventory, hotbar: Hotbar, equipmentSlots?: EquipmentSlots) {
     this.inventory = inventory;
     this.hotbar = hotbar;
+    this.equipmentSlots = equipmentSlots;
   }
 
   create(): void {
@@ -45,6 +54,35 @@ export class InventoryScreen {
       padding: 24px; display: flex; gap: 24px; border-radius: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
     `;
     this.container.appendChild(panel);
+
+    // Equipment / Armor Column (Far Left)
+    const armorCol = document.createElement('div');
+    armorCol.style.cssText = 'display: flex; flex-direction: column; gap: 8px; background: #8b8b8b; padding: 12px; border: 3px solid #373737; border-radius: 4px; position: relative; margin-right: 4px;';
+    
+    const armorLabel = document.createElement('div');
+    armorLabel.style.cssText = 'position: absolute; top: -24px; left: 0; font-family: monospace; font-size: 14px; color: #222; font-weight: bold; text-shadow: 1px 1px 0 #fff;';
+    armorLabel.textContent = 'Armor';
+    armorCol.appendChild(armorLabel);
+
+    const slotTypes: ArmorSlotType[] = ['helmet', 'chestplate', 'leggings', 'boots'];
+    for (const slotType of slotTypes) {
+      const slotEl = document.createElement('div');
+      slotEl.dataset.slotType = 'armor';
+      slotEl.dataset.armorSlot = slotType;
+      slotEl.style.cssText = `
+        width: 56px; height: 56px; background: #8b8b8b;
+        border-top: 3px solid #373737; border-left: 3px solid #373737;
+        border-bottom: 3px solid #ffffff; border-right: 3px solid #ffffff;
+        display: flex; align-items: center; justify-content: center;
+        font-family: monospace; font-size: 12px; color: #fff; cursor: pointer;
+        position: relative; border-radius: 2px;
+      `;
+      slotEl.addEventListener('mousedown', (e) => this.onArmorSlotClick(e, slotType));
+      slotEl.addEventListener('contextmenu', (e) => e.preventDefault());
+      armorCol.appendChild(slotEl);
+      this.armorSlotEls[slotType] = slotEl;
+    }
+    panel.appendChild(armorCol);
 
     // Left side: crafting grid
     const craftArea = document.createElement('div');
@@ -168,12 +206,50 @@ export class InventoryScreen {
     return el;
   }
 
+  private onArmorSlotClick(e: MouseEvent, slotType: ArmorSlotType): void {
+    e.preventDefault();
+    if (!this.equipmentSlots) return;
+
+    const currentArmor = this.equipmentSlots.getItem(slotType);
+
+    if (this.dragItem) {
+      const itemMeta = getItemById(this.dragItem.itemId);
+      if (itemMeta?.armorSlot === slotType) {
+        const oldArmor = this.equipmentSlots.equip(slotType, this.dragItem.itemId);
+        if (oldArmor && oldArmor.itemId) {
+          this.dragItem = { itemId: oldArmor.itemId, count: 1 };
+        } else {
+          this.dragItem = null;
+        }
+      }
+    } else if (currentArmor.itemId) {
+      const unequipped = this.equipmentSlots.unequip(slotType);
+      if (unequipped && unequipped.itemId) {
+        this.dragItem = { itemId: unequipped.itemId, count: 1 };
+      }
+    }
+    this.refresh();
+  }
+
   private onSlotClick(e: MouseEvent, slotIdx: number, isHotbar: boolean): void {
     e.preventDefault();
     const slot = isHotbar ? this.hotbar.slots[slotIdx] : this.inventory.slots[slotIdx];
 
-    // Shift-Click: Quick Transfer between Hotbar & Inventory
+    // Shift-Click: Auto-equip if armor item, or Quick Transfer between Hotbar & Inventory
     if (e.shiftKey && slot.itemId) {
+      const itemMeta = getItemById(slot.itemId);
+      if (itemMeta?.armorSlot && this.equipmentSlots) {
+        const equipped = this.equipmentSlots.equip(itemMeta.armorSlot, slot.itemId);
+        if (equipped && equipped.itemId) {
+          slot.itemId = equipped.itemId;
+          slot.count = 1;
+        } else {
+          slot.itemId = null;
+          slot.count = 0;
+        }
+        this.refresh();
+        return;
+      }
       if (isHotbar) {
         const rem = this.inventory.addItem(slot.itemId, slot.count, slot.durability);
         slot.count = rem;
@@ -354,6 +430,18 @@ export class InventoryScreen {
 
   refresh(): void {
     if (!this.container) return;
+
+    // Refresh Armor Slots
+    if (this.equipmentSlots) {
+      const slotTypes: ArmorSlotType[] = ['helmet', 'chestplate', 'leggings', 'boots'];
+      for (const st of slotTypes) {
+        const el = this.armorSlotEls[st];
+        if (el) {
+          const item = this.equipmentSlots.getItem(st);
+          this.renderSlot(el, item);
+        }
+      }
+    }
 
     // Collect all slots (0..8 = craft grid, 9 = craft result, 10..36 = inv, 37..45 = hotbar)
     const allSlots = this.container.querySelectorAll<HTMLDivElement>('div[data-slot-type]');

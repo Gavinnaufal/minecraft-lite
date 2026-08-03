@@ -472,7 +472,10 @@ const hud = new HUD(hotbar);
 scene.add(camera);
 const handModel = new HandModel(camera, hotbar);
 
-const inventoryScreen = new InventoryScreen(inventory, hotbar);
+import { EquipmentSlots } from './inventory/EquipmentSlots';
+const equipmentSlots = new EquipmentSlots();
+
+const inventoryScreen = new InventoryScreen(inventory, hotbar, equipmentSlots);
 inventoryScreen.create();
 
 const chestScreen = new ChestScreen(inventory, hotbar);
@@ -629,6 +632,7 @@ engine.setUpdateCallback((deltaTime) => {
     hud.triggerDamageFlash();
   }
   lastPlayerHealth = player.health;
+  hud.updateArmor(equipmentSlots.getTotalDefense());
 
   dayNight.update(deltaTime);
   AudioManager.getInstance().updateAmbience(dayNight.timeOfDay, deltaTime);
@@ -815,7 +819,7 @@ engine.setUpdateCallback((deltaTime) => {
     }
   }
 
-  mobManager.update(deltaTime, new THREE.Vector3(player.position.x, player.position.y, player.position.z), player, camera, dayNight.isNight);
+  mobManager.update(deltaTime, new THREE.Vector3(player.position.x, player.position.y, player.position.z), player, camera, dayNight.isNight, equipmentSlots);
   
   // Undead Daylight Burning mechanic (Zombie & Skeleton burn in direct sunlight)
   if (!dayNight.isNight && !DimensionManager.getInstance().isNether()) {

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { World } from '../world/World';
 import type { Player } from '../player/Player';
 import type { MobManager } from './MobManager';
+import type { EquipmentSlots } from '../inventory/EquipmentSlots';
 import { getBlockById } from '../world/BlockRegistry';
 
 export class Mob {
@@ -51,7 +52,7 @@ export class Mob {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  update(_deltaTime: number, _world?: World, _playerPos?: THREE.Vector3, _player?: Player, _mobManager?: MobManager, _camera?: THREE.PerspectiveCamera, _isNight?: boolean): void {
+  update(_deltaTime: number, _world?: World, _playerPos?: THREE.Vector3, _player?: Player, _mobManager?: MobManager, _camera?: THREE.PerspectiveCamera, _isNight?: boolean, _equipmentSlots?: EquipmentSlots): void {
     this.updatePhysics(_deltaTime, _world);
   }
 

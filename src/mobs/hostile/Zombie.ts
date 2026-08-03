@@ -3,6 +3,7 @@ import { Mob } from '../Mob';
 import { StateMachine, State } from '../ai/StateMachine';
 import type { Player } from '../../player/Player';
 import type { World } from '../../world/World';
+import type { EquipmentSlots } from '../../inventory/EquipmentSlots';
 import { AudioManager } from '../../audio/AudioManager';
 
 const CHASE_SPEED = 2.5;     // unit/detik
@@ -84,7 +85,7 @@ export class Zombie extends Mob {
     this.groanTimer = 4 + Math.random() * 8;
   }
 
-  update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, player?: Player): void {
+  update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, player?: Player, _mobManager?: unknown, _camera?: THREE.PerspectiveCamera, _isNight?: boolean, equipmentSlots?: EquipmentSlots): void {
     let isMoving = false;
 
     if (playerPos) {
@@ -106,7 +107,7 @@ export class Zombie extends Mob {
         if (this.attackTimer >= ATTACK_COOLDOWN) {
           this.attackTimer = 0;
           if (player && player.health > 0) {
-            player.health = Math.max(0, player.health - ATTACK_DAMAGE);
+            player.damage(ATTACK_DAMAGE, equipmentSlots);
             AudioManager.getInstance().playSFX('hit');
           }
         }

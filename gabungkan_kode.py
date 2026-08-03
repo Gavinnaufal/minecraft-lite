@@ -32,16 +32,16 @@ FILE_OUTPUT = "gabungan_kode.txt"
 # 3. Ekstensi file apa saja yang mau dimasukkan.
 #    Tambah/kurangi sesuai kebutuhan project kamu.
 EKSTENSI_DIIZINKAN = [
-    ".js", ".ts", ".jsx", ".tsx",
-    ".html", ".css",
-    ".json",
-    ".py",
-    ".md",
+    ".md"
 ]
 
 # 4. Nama folder yang mau DILEWATI (tidak ikut digabung).
 #    Biasanya folder hasil install/build tidak perlu ikut.
 FOLDER_DILEWATI = [
+     ".js", ".ts", ".jsx", ".tsx",
+    ".html", ".css",
+    ".json",
+    ".py",
     "node_modules",
     ".git",
     "dist",

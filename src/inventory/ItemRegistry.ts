@@ -8,6 +8,8 @@ export interface ItemType {
   toolTier?: number; // 1 = Wood, 2 = Stone, 3 = Iron
   maxDurability?: number;
   speedMultiplier?: number;
+  armorDefense?: number;
+  armorSlot?: 'helmet' | 'chestplate' | 'leggings' | 'boots';
 }
 
 const items: ItemType[] = [

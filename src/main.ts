@@ -34,6 +34,7 @@ import { Skeleton } from './mobs/hostile/Skeleton';
 import { Spider } from './mobs/hostile/Spider';
 import { Enderman } from './mobs/hostile/Enderman';
 import { Blaze } from './mobs/hostile/Blaze';
+import { Ghast } from './mobs/hostile/Ghast';
 import { Pig } from './mobs/passive/Pig';
 import { Chicken } from './mobs/passive/Chicken';
 import { Goat } from './mobs/passive/Goat';
@@ -793,6 +794,15 @@ engine.setUpdateCallback((deltaTime) => {
     if (Math.random() < 0.006) {
       AudioManager.getInstance().playSFX('lava_bubble');
     }
+    if (mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.006) {
+      const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 20, 60);
+      if (spawnPos) {
+        const rand = Math.random();
+        if (rand < 0.45) mobManager.spawn(spawnPos, new Blaze(spawnPos));
+        else if (rand < 0.80) mobManager.spawn(spawnPos, new Ghast(spawnPos));
+        else mobManager.spawn(spawnPos, new Skeleton(spawnPos));
+      }
+    }
   }
 
   // Spawn passive animals during daytime in appropriate biomes (Overworld only)
@@ -923,6 +933,8 @@ engine.setUpdateCallback((deltaTime) => {
         itemDropManager.spawnDrop(dropPos, 'rotten_flesh', Math.floor(Math.random() * 2) + 1);
       } else if (deadMob instanceof Blaze) {
         itemDropManager.spawnDrop(dropPos, 'blaze_rod', Math.floor(Math.random() * 2) + 1);
+      } else if (deadMob instanceof Ghast) {
+        itemDropManager.spawnDrop(dropPos, 'ghast_tear', 1);
       } else if (deadMob instanceof IronGolem) {
         itemDropManager.spawnDrop(dropPos, 'iron_ingot', Math.floor(Math.random() * 3) + 3);
       } else if (deadMob instanceof Skeleton) {

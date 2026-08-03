@@ -27,6 +27,7 @@ import { ItemDropManager } from './world/ItemDropManager';
 import { IronGolem } from './mobs/npc/IronGolem';
 import { Villager } from './mobs/npc/Villager';
 import { isFoodForMob } from './mobs/ai/MobFoodRegistry';
+import { BreedingManager } from './mobs/ai/BreedingManager';
 import { TradingScreen } from './ui/TradingScreen';
 import { VillagerTradingManager } from './economy/VillagerTrading';
 import { Skeleton } from './mobs/hostile/Skeleton';
@@ -685,6 +686,8 @@ engine.setUpdateCallback((deltaTime) => {
   // 3D Block Selection Outline Box
   blockHighlight.update(world, camera);
   VillagerTradingManager.getInstance().update(deltaTime);
+  BreedingManager.getInstance().setParticleSystem(particleSystem);
+  BreedingManager.getInstance().update(deltaTime, mobManager.mobs, mobManager);
 
   // F3 Debug Screen Update
   const facingDir = getFacingDirection(camera);

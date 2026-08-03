@@ -39,6 +39,11 @@ export class MobManager {
     return activeMob;
   }
 
+  addMob(mob: Mob): void {
+    this.mobs.push(mob);
+    this.scene.add(mob.mesh);
+  }
+
   despawn(mob: Mob): void {
     const idx = this.mobs.indexOf(mob);
     if (idx >= 0) {

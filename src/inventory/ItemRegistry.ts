@@ -68,6 +68,7 @@ const items: ItemType[] = [
   { id: 'coal_ore', name: 'Coal Ore', maxStack: 64, isBlock: true, blockId: 21 },
   { id: 'iron_ore', name: 'Iron Ore', maxStack: 64, isBlock: true, blockId: 22 },
   { id: 'furnace', name: 'Furnace', maxStack: 64, isBlock: true, blockId: 23 },
+  { id: 'emerald', name: 'Emerald', maxStack: 64, isBlock: false },
 ];
 
 const byId = new Map<string, ItemType>();

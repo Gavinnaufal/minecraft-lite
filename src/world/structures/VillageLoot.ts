@@ -17,6 +17,7 @@ const VILLAGE_CHEST_LOOT_POOL: LootPoolEntry[] = [
   { itemId: 'stick', minCount: 2, maxCount: 6, chance: 0.4 },
   { itemId: 'wooden_hoe', minCount: 1, maxCount: 1, chance: 0.3 },
   { itemId: 'stone', minCount: 3, maxCount: 8, chance: 0.4 },
+  { itemId: 'emerald', minCount: 1, maxCount: 4, chance: 0.55 },
 ];
 
 export class VillageLoot {

@@ -56,6 +56,15 @@ export const recipes: Recipe[] = [
   { pattern: [['netherrack', 'netherrack'], ['netherrack', 'netherrack']], result: { itemId: 'glowstone', count: 1 } },
   // 25. 8 Stone to Furnace
   { pattern: [['stone', 'stone', 'stone'], ['stone', null, 'stone'], ['stone', 'stone', 'stone']], result: { itemId: 'furnace', count: 1 } },
+  // v3.0 Armor Recipes (CP-268)
+  { pattern: [['leather', 'leather', 'leather'], ['leather', null, 'leather']], result: { itemId: 'leather_helmet', count: 1 } },
+  { pattern: [['leather', null, 'leather'], ['leather', 'leather', 'leather'], ['leather', 'leather', 'leather']], result: { itemId: 'leather_chestplate', count: 1 } },
+  { pattern: [['leather', 'leather', 'leather'], ['leather', null, 'leather'], ['leather', null, 'leather']], result: { itemId: 'leather_leggings', count: 1 } },
+  { pattern: [['leather', null, 'leather'], ['leather', null, 'leather']], result: { itemId: 'leather_boots', count: 1 } },
+  { pattern: [['iron_ingot', 'iron_ingot', 'iron_ingot'], ['iron_ingot', null, 'iron_ingot']], result: { itemId: 'iron_helmet', count: 1 } },
+  { pattern: [['iron_ingot', null, 'iron_ingot'], ['iron_ingot', 'iron_ingot', 'iron_ingot'], ['iron_ingot', 'iron_ingot', 'iron_ingot']], result: { itemId: 'iron_chestplate', count: 1 } },
+  { pattern: [['iron_ingot', 'iron_ingot', 'iron_ingot'], ['iron_ingot', null, 'iron_ingot'], ['iron_ingot', null, 'iron_ingot']], result: { itemId: 'iron_leggings', count: 1 } },
+  { pattern: [['iron_ingot', null, 'iron_ingot'], ['iron_ingot', null, 'iron_ingot']], result: { itemId: 'iron_boots', count: 1 } },
 ];
 
 export interface SmeltingRecipe {

@@ -284,7 +284,7 @@ export class TradingScreen {
       // CP-254: Set 4-second cooldown per Villager
       manager.setCooldown(this.currentVillager, 4);
 
-      // CP-255 Feedback: Sound, Toast, and Emerald Particle Burst
+      // CP-255 Visual & Audio Feedback: Synthesized SFX, Toast Notification, and Emerald Green Particle Burst
       AudioManager.getInstance().playSFX('pop');
       ToastSystem.getInstance().show(`✅ Perdagangan Sukses! (+${recipe.outputs.map((o) => `${o.count}x ${o.itemId}`).join(', ')})`, 'info');
 

@@ -17,7 +17,7 @@ import { gameSettings } from '../core/GameSettings';
 import { DimensionManager } from '../world/dimension/DimensionManager';
 import { FurnaceManager, type FurnaceData } from '../inventory/FurnaceManager';
 
-const SAVE_VERSION = 2;
+const SAVE_VERSION = 3;
 
 export class SaveManager {
   private storage = new StorageAdapter();

@@ -26,10 +26,12 @@
 
 ### B. Distribusi Kepadatan per Chunk (Range & Variance)
 
-| Tipe Ore | Min per Chunk | Max per Chunk | Rata-Rata per Chunk | Target Baseline (09_PROMPT_AI_V2 / V3) | Status Balance |
+| Tipe Ore | Min per Chunk | Max per Chunk | Rata-Rata per Chunk | Target Baseline (Estimasi Kualitatif Analisis Ini) | Status Balance |
 |---|---|---|---|---|---|
 | **Coal Ore** | 16 blok | 38 blok | **24.60 blok** | 15–25 blok / chunk | ✅ Ideal |
 | **Iron Ore** | 5 blok | 18 blok | **11.27 blok** | 6–12 blok / chunk | ✅ Ideal |
+
+> *Catatan: Angka kisaran target pada tabel di atas (15–25 dan 6–12 blok/chunk) merupakan estimasi turunan kuantitatif dari kriteria kualitatif asli CP-241 di `13_PROMPT_AI_V3.md` ("pemain rata-rata menemukan cukup ore untuk 1 set tools dalam eksplorasi gua ~5 menit"), bukan angka numerik yang ter-hardcode pada dokumen rujukan.*
 
 ---
 

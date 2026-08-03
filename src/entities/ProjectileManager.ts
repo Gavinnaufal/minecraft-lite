@@ -4,7 +4,6 @@ import { Fireball } from './Fireball';
 import type { World } from '../world/World';
 import type { Player } from '../player/Player';
 import type { MobManager } from '../mobs/MobManager';
-import type { EquipmentSlots } from '../inventory/EquipmentSlots';
 import { AudioManager } from '../audio/AudioManager';
 
 export class ProjectileManager {

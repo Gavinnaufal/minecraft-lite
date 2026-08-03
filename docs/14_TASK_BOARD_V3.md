@@ -8,9 +8,9 @@
 | Fase 27 — Villager Trading System | 249–256 | 8 | 100% |
 | Fase 28 — Animal Breeding & Taming | 257–264 | 8 | 100% |
 | Fase 29 — Armor & Equipment System | 265–272 | 8 | 100% |
-| Fase 30 — Nether Fortress & Boss Mobs | 273–288 | 0 | 0% |
+| Fase 30 — Nether Fortress & Boss Mobs | 273–288 | 16 | 100% |
 | Fase 31 — Master Integration & Polish v3.0 | 289–296 | 0 | 0% |
-| **TOTAL EXPANSION (v3.0)** | | **34** | **59%** |
+| **TOTAL EXPANSION (v3.0)** | | **50** | **86%** |
 
 ---
 
@@ -58,23 +58,23 @@
 - [x] CP-271: Equip/unequip drag-drop & shift-click auto-equip armor
 - [x] CP-272: Playtest combat balance (Laporan docs/272_ARMOR_COMBAT_PLAYTEST.md)
 
-### Fase 30 — Nether Fortress & Boss Mobs (0/16)
-- [ ] CP-273: BlockRegistry addition: nether_brick
-- [ ] CP-274: NetherFortressGenerator.ts layout
-- [ ] CP-275: Fortress placement rule
-- [ ] CP-276: Fortress bounding box collision
-- [ ] CP-277: Fortress loot chest generation
-- [ ] CP-278: Fortress structure persistence
-- [ ] CP-279: Base class flag isFlying di Mob.ts
-- [ ] CP-280: Flying pathfinding dasar
-- [ ] CP-281: Fireball.ts projectile entity
-- [ ] CP-282: Blaze base class & 3D model
-- [ ] CP-283: Blaze ranged attack state
-- [ ] CP-284: Blaze blaze_rod drop
-- [ ] CP-285: Ghast base class & 3D model
-- [ ] CP-286: Ghast explosive fireball attack
-- [ ] CP-287: Ghast ghast_tear drop
-- [ ] CP-288: Playtest fortress full combat
+### Fase 30 — Nether Fortress & Boss Mobs (16/16)
+- [x] CP-273: BlockRegistry addition: nether_brick (ID 24)
+- [x] CP-274: NetherFortressGenerator.ts layout (corridors, pillars, loot room)
+- [x] CP-275: Fortress placement rule (16x16 chunk grid di Nether)
+- [x] CP-276: Fortress bounding box collision (nether_brick solid AABB)
+- [x] CP-277: Fortress loot chest generation (loot table: blaze_rod, iron_ingot, emerald)
+- [x] CP-278: Fortress structure persistence (disimpan & dipulihkan di world modification)
+- [x] CP-279: Base class flag isFlying di Mob.ts (bypass gravity saat isFlying === true)
+- [x] CP-280: Flying pathfinding dasar (3D target floating navigation)
+- [x] CP-281: Fireball.ts projectile entity & ProjectileManager update
+- [x] CP-282: Blaze base class & 3D model (yellow core + 12 floating rod orbits)
+- [x] CP-283: Blaze ranged attack state (rapid fireball burst)
+- [x] CP-284: Blaze blaze_rod drop (1-2x blaze_rod)
+- [x] CP-285: Ghast base class & 3D model (2.2x scale body + 9 tentacles)
+- [x] CP-286: Ghast explosive fireball attack (large explosive fireball 7.0 HP)
+- [x] CP-287: Ghast ghast_tear drop (1x ghast_tear)
+- [x] CP-288: Playtest fortress full combat (Laporan docs/288_NETHER_FORTRESS_COMBAT_PLAYTEST.md)
 
 ### Fase 31 — Master Integration & Polish v3.0 (0/8)
 - [ ] CP-289: F3 Debug Screen update

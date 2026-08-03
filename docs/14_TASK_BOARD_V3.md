@@ -6,11 +6,11 @@
 |---|---|---|---|
 | Fase 26 — Ore Mining & Smelting | 239–248 | 10 | 100% |
 | Fase 27 — Villager Trading System | 249–256 | 8 | 100% |
-| Fase 28 — Animal Breeding & Taming | 257–264 | 1 | 12% |
+| Fase 28 — Animal Breeding & Taming | 257–264 | 8 | 100% |
 | Fase 29 — Armor & Equipment System | 265–272 | 0 | 0% |
 | Fase 30 — Nether Fortress & Boss Mobs | 273–288 | 0 | 0% |
 | Fase 31 — Master Integration & Polish v3.0 | 289–296 | 0 | 0% |
-| **TOTAL EXPANSION (v3.0)** | | **19** | **33%** |
+| **TOTAL EXPANSION (v3.0)** | | **26** | **45%** |
 
 ---
 
@@ -38,15 +38,15 @@
 - [x] CP-255: Visual feedback trade sukses (synthesized pop SFX & emerald particle burst)
 - [x] CP-256: Playtest full trade chain (Laporan docs/256_TRADE_CHAIN_PLAYTEST.md)
 
-### Fase 28 — Animal Breeding & Taming (1/8)
+### Fase 28 — Animal Breeding & Taming (8/8)
 - [x] CP-257: Item-to-mob food matching (MobFoodRegistry.ts terpusat)
-- [ ] CP-258: Love mode state & heart particle
-- [ ] CP-259: Breeding detection logic
-- [ ] CP-260: Baby mob spawn & scale 0.5x
-- [ ] CP-261: Baby-to-adult growth timer
-- [ ] CP-262: Breeding cooldown per mob
-- [ ] CP-263: SaveManager persist baby growth state
-- [ ] CP-264: Playtest breeding chain
+- [x] CP-258: Love mode state & heart particle (feed mob & spawn 0xff4081 heart burst)
+- [x] CP-259: Breeding detection logic (BreedingManager.ts proximity pairing < 3.5m)
+- [x] CP-260: Baby mob spawn & scale 0.5x model (instansiasi baby mob dari spesialisasi induk)
+- [x] CP-261: Baby-to-adult growth timer (linear scale interpolation 0.5x -> 1.0x selama 60s)
+- [x] CP-262: Breeding cooldown per mob (5-minute / 300s cooldown pada kedua induk)
+- [x] CP-263: SaveManager persist baby growth state (simpan & pulihkan koordinat 3D, isBaby, growthTimer, breedingCooldown)
+- [x] CP-264: Playtest breeding chain (Laporan docs/264_ANIMAL_BREEDING_PLAYTEST.md)
 
 ### Fase 29 — Armor & Equipment System (0/8)
 - [ ] CP-265: EquipmentSlots.ts 4 slot baru

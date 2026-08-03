@@ -7,10 +7,10 @@
 | Fase 26 — Ore Mining & Smelting | 239–248 | 10 | 100% |
 | Fase 27 — Villager Trading System | 249–256 | 8 | 100% |
 | Fase 28 — Animal Breeding & Taming | 257–264 | 8 | 100% |
-| Fase 29 — Armor & Equipment System | 265–272 | 0 | 0% |
+| Fase 29 — Armor & Equipment System | 265–272 | 8 | 100% |
 | Fase 30 — Nether Fortress & Boss Mobs | 273–288 | 0 | 0% |
 | Fase 31 — Master Integration & Polish v3.0 | 289–296 | 0 | 0% |
-| **TOTAL EXPANSION (v3.0)** | | **26** | **45%** |
+| **TOTAL EXPANSION (v3.0)** | | **34** | **59%** |
 
 ---
 
@@ -48,15 +48,15 @@
 - [x] CP-263: SaveManager persist baby growth state (simpan & pulihkan koordinat 3D, isBaby, growthTimer, breedingCooldown)
 - [x] CP-264: Playtest breeding chain (Laporan docs/264_ANIMAL_BREEDING_PLAYTEST.md)
 
-### Fase 29 — Armor & Equipment System (0/8)
-- [ ] CP-265: EquipmentSlots.ts 4 slot baru
-- [ ] CP-266: Inventory Screen UI update
-- [ ] CP-267: Item baru armor leather & iron
-- [ ] CP-268: Crafting recipes armor
-- [ ] CP-269: ArmorSystem.ts damage reduction
-- [ ] CP-270: Armor Bar HUD
-- [ ] CP-271: Equip/unequip drag-drop logic
-- [ ] CP-272: Playtest combat balance
+### Fase 29 — Armor & Equipment System (8/8)
+- [x] CP-265: EquipmentSlots.ts 4 slot baru (helmet, chestplate, leggings, boots)
+- [x] CP-266: Inventory Screen UI update (Armor column UI panel)
+- [x] CP-267: Item baru armor leather & iron (8 item armor baru di ItemRegistry.ts)
+- [x] CP-268: Crafting recipes armor (8 resep crafting di Recipes.ts)
+- [x] CP-269: ArmorSystem.ts damage reduction (4% per defense point, max 80% mitigation)
+- [x] CP-270: Armor Bar HUD (10 ikon armor shield SVG di atas health bar)
+- [x] CP-271: Equip/unequip drag-drop & shift-click auto-equip armor
+- [x] CP-272: Playtest combat balance (Laporan docs/272_ARMOR_COMBAT_PLAYTEST.md)
 
 ### Fase 30 — Nether Fortress & Boss Mobs (0/16)
 - [ ] CP-273: BlockRegistry addition: nether_brick

@@ -33,6 +33,7 @@ import { VillagerTradingManager } from './economy/VillagerTrading';
 import { Skeleton } from './mobs/hostile/Skeleton';
 import { Spider } from './mobs/hostile/Spider';
 import { Enderman } from './mobs/hostile/Enderman';
+import { Blaze } from './mobs/hostile/Blaze';
 import { Pig } from './mobs/passive/Pig';
 import { Chicken } from './mobs/passive/Chicken';
 import { Goat } from './mobs/passive/Goat';
@@ -920,6 +921,8 @@ engine.setUpdateCallback((deltaTime) => {
         if (leatherCount > 0) itemDropManager.spawnDrop(dropPos, 'leather', leatherCount);
       } else if (deadMob instanceof Zombie) {
         itemDropManager.spawnDrop(dropPos, 'rotten_flesh', Math.floor(Math.random() * 2) + 1);
+      } else if (deadMob instanceof Blaze) {
+        itemDropManager.spawnDrop(dropPos, 'blaze_rod', Math.floor(Math.random() * 2) + 1);
       } else if (deadMob instanceof IronGolem) {
         itemDropManager.spawnDrop(dropPos, 'iron_ingot', Math.floor(Math.random() * 3) + 3);
       } else if (deadMob instanceof Skeleton) {

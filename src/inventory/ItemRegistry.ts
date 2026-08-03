@@ -82,6 +82,8 @@ const items: ItemType[] = [
   { id: 'iron_leggings', name: 'Iron Leggings', maxStack: 1, isBlock: false, armorDefense: 5, armorSlot: 'leggings', maxDurability: 225 },
   { id: 'iron_boots', name: 'Iron Boots', maxStack: 1, isBlock: false, armorDefense: 2, armorSlot: 'boots', maxDurability: 195 },
   { id: 'nether_brick', name: 'Nether Brick', maxStack: 64, isBlock: true, blockId: 24 },
+  { id: 'blaze_rod', name: 'Blaze Rod', maxStack: 64, isBlock: false },
+  { id: 'ghast_tear', name: 'Ghast Tear', maxStack: 64, isBlock: false },
 ];
 
 const byId = new Map<string, ItemType>();

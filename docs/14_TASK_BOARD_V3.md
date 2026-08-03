@@ -5,12 +5,12 @@
 | Fase | CP Range | Selesai | % |
 |---|---|---|---|
 | Fase 26 — Ore Mining & Smelting | 239–248 | 10 | 100% |
-| Fase 27 — Villager Trading System | 249–256 | 0 | 0% |
+| Fase 27 — Villager Trading System | 249–256 | 8 | 100% |
 | Fase 28 — Animal Breeding & Taming | 257–264 | 0 | 0% |
 | Fase 29 — Armor & Equipment System | 265–272 | 0 | 0% |
 | Fase 30 — Nether Fortress & Boss Mobs | 273–288 | 0 | 0% |
 | Fase 31 — Master Integration & Polish v3.0 | 289–296 | 0 | 0% |
-| **TOTAL EXPANSION (v3.0)** | | **10** | **17%** |
+| **TOTAL EXPANSION (v3.0)** | | **18** | **31%** |
 
 ---
 
@@ -28,15 +28,15 @@
 - [x] CP-247: Ore block texture pass (16x16 pixel art PNG generator untuk coal_ore & iron_ore)
 - [x] CP-248: Playtest & balance rasio ore (Laporan docs/248_ORE_BALANCE_PLAYTEST.md & script benchmark scripts/simulate_ore_ratio.ts)
 
-### Fase 27 — Villager Trading System (0/8)
-- [ ] CP-249: Item baru: emerald + loot table update
-- [ ] CP-250: TradeTable.ts struktur data
-- [ ] CP-251: VillagerTrading.ts logic terpisah
-- [ ] CP-252: Trading Window UI
-- [ ] CP-253: Trade execution logic
-- [ ] CP-254: Trade cooldown per Villager
-- [ ] CP-255: Visual feedback trade sukses
-- [ ] CP-256: Playtest full trade chain
+### Fase 27 — Villager Trading System (8/8)
+- [x] CP-249: Item baru: emerald + loot table update
+- [x] CP-250: TradeTable.ts struktur data (4 resep trade generik)
+- [x] CP-251: VillagerTrading.ts logic terpisah dari wander AI
+- [x] CP-252: Trading Window UI & right-click Villager detection
+- [x] CP-253: Trade execution logic (deduct inputs & grant outputs)
+- [x] CP-254: Trade cooldown per Villager (4-second anti-spam timer)
+- [x] CP-255: Visual feedback trade sukses (synthesized pop SFX & emerald particle burst)
+- [x] CP-256: Playtest full trade chain (Laporan docs/256_TRADE_CHAIN_PLAYTEST.md)
 
 ### Fase 28 — Animal Breeding & Taming (0/8)
 - [ ] CP-257: Item-to-mob food matching

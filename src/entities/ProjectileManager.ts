@@ -1,13 +1,16 @@
 import * as THREE from 'three';
 import { Arrow } from './Arrow';
+import { Fireball } from './Fireball';
 import type { World } from '../world/World';
 import type { Player } from '../player/Player';
 import type { MobManager } from '../mobs/MobManager';
+import type { EquipmentSlots } from '../inventory/EquipmentSlots';
 import { AudioManager } from '../audio/AudioManager';
 
 export class ProjectileManager {
   private static instance: ProjectileManager | null = null;
   arrows: Arrow[] = [];
+  fireballs: Fireball[] = [];
   private scene?: THREE.Scene;
 
   static getInstance(): ProjectileManager {
@@ -28,6 +31,15 @@ export class ProjectileManager {
       this.scene.add(arrow.mesh);
     }
     return arrow;
+  }
+
+  spawnFireball(position: THREE.Vector3, direction: THREE.Vector3, speed = 14.0, isExplosive = false): Fireball {
+    const fireball = new Fireball(position, direction, speed, isExplosive);
+    this.fireballs.push(fireball);
+    if (this.scene) {
+      this.scene.add(fireball.mesh);
+    }
+    return fireball;
   }
 
   update(deltaTime: number, world?: World, player?: Player, mobManager?: MobManager): void {
@@ -94,6 +106,27 @@ export class ProjectileManager {
         this.arrows.splice(i, 1);
       }
     }
+
+    // 2. Fireballs update loop
+    for (let i = this.fireballs.length - 1; i >= 0; i--) {
+      const fb = this.fireballs[i];
+      fb.update(deltaTime, world);
+
+      // Hit player check
+      if (player && player.health > 0) {
+        const dist = fb.position.distanceTo(new THREE.Vector3(player.position.x, player.position.y + 0.9, player.position.z));
+        if (dist < 1.0) {
+          player.damage(fb.damage);
+          AudioManager.getInstance().playSFX('explosion');
+          fb.shouldRemove = true;
+        }
+      }
+
+      if (fb.shouldRemove) {
+        if (this.scene) this.scene.remove(fb.mesh);
+        this.fireballs.splice(i, 1);
+      }
+    }
   }
 
   clear(): void {
@@ -101,7 +134,11 @@ export class ProjectileManager {
       for (const arrow of this.arrows) {
         this.scene.remove(arrow.mesh);
       }
+      for (const fb of this.fireballs) {
+        this.scene.remove(fb.mesh);
+      }
     }
     this.arrows = [];
+    this.fireballs = [];
   }
 }

@@ -23,6 +23,10 @@ export class VillagerTradingManager {
     return this.getRemainingCooldown(villager) > 0;
   }
 
+  /**
+   * CP-254 Trade Cooldown Per Villager
+   * Prevents spam-trading item duplication exploits.
+   */
   setCooldown(villager: Villager, durationSec: number = 4): void {
     this.cooldowns.set(villager, durationSec);
   }

@@ -95,13 +95,13 @@ Mini Minecraft adalah game sandbox voxel 3D berkinerja tinggi yang dibangun dari
 
 ---
 
-## 📜 Panduan Resep Crafting Item (Complete Recipe Index)
+## 📜 Panduan Resep Crafting & Smelting Item (Complete Index - 30 Resep)
 
-Buka inventaris dengan **`E`** (2x2 grid) atau gunakan **Crafting Table** (3x3 grid).
+Buka inventaris dengan **`E`** (2x2 grid) atau gunakan **Crafting Table** (3x3 grid) dan **Furnace** untuk melebur.
 
-### 1. Komponen Dasar, Blok & Furnace
+### 1. Komponen Dasar, Blok & Furnace (Crafting Table 3x3 / 2x2)
 
-| Hasil Crafting | Jumlah | Kombinasi Pola Grid 3x3 | Bahan Dibutuhkan |
+| Hasil Crafting | Hasil (Qty) | Pola Grid Crafting 3x3 | Bahan Dibutuhkan |
 |---|---|---|---|
 | 🪵 **Plank** | 4x | `[ Wood Log ]` | 1x Wood Log |
 | 🥢 **Stick** | 4x | `[ Plank ]`<br>`[ Plank ]` | 2x Planks |
@@ -113,29 +113,51 @@ Buka inventaris dengan **`E`** (2x2 grid) atau gunakan **Crafting Table** (3x3 g
 | 🥪 **Sandstone** | 1x | `[ Sand ][ Sand ]`<br>`[ Sand ][ Sand ]` | 4x Sand |
 | ✨ **Glowstone** | 1x | `[ Netherrack ][ Netherrack ]`<br>`[ Netherrack ][ Netherrack ]` | 4x Netherrack |
 
-### 2. Peralatan & Senjata (Tools & Weapons)
+### 2. Alat, Senjata & Panah (Tools, Weapons & Ammunition)
 
-| Hasil Crafting | Kombinasi Pola Grid 3x3 | Bahan Dibutuhkan |
-|---|---|---|
-| ⛏️ **Wooden / Stone Pickaxe** | `[ Mat ][ Mat ][ Mat ]`<br>`[  -  ][ Stick ][  -  ]`<br>`[  -  ][ Stick ][  -  ]` | 3x Planks/Stone + 2x Sticks |
-| 🗡️ **Wooden / Stone Sword** | `[ Mat ]`<br>`[ Mat ]`<br>`[ Stick ]` | 2x Planks/Stone + 1x Stick |
-| 🪓 **Wooden / Stone Axe** | `[ Mat ][ Mat ]`<br>`[ Mat ][ Stick ]`<br>`[  -  ][ Stick ]` | 3x Planks/Stone + 2x Sticks |
-| 🧹 **Wooden / Stone Shovel** | `[ Mat ]`<br>`[ Stick ]`<br>`[ Stick ]` | 1x Plank/Stone + 2x Sticks |
-| 🧑‍🌾 **Wooden / Stone Hoe** | `[ Mat ][ Mat ]`<br>`[  -  ][ Stick ]`<br>`[  -  ][ Stick ]` | 2x Planks/Stone + 2x Sticks |
-| ⛏️ **Iron Pickaxe** | `[ Iron ][ Iron ][ Iron ]`<br>`[  -   ][ Stick ][  -   ]`<br>`[  -   ][ Stick ][  -   ]` | 3x Iron Ingot + 2x Sticks |
-| 🗡️ **Iron Sword** | `[ Iron ]`<br>`[ Iron ]`<br>`[ Stick ]` | 2x Iron Ingot + 1x Stick |
-| 🪓 **Iron Axe** | `[ Iron ][ Iron ]`<br>`[ Iron ][ Stick ]`<br>`[  -   ][ Stick ]` | 3x Iron Ingot + 2x Sticks |
-| 🏹 **Bow** | `[  -  ][ Stick ][ String ]`<br>`[ Stick ][  -   ][ String ]`<br>`[  -  ][ Stick ][ String ]` | 3x Stick + 3x String |
-| 🏹 **Arrow** (4x) | `[ Stone ]`<br>`[ Stick ]`<br>`[ Feather ]` | 1x Stone + 1x Stick + 1x Feather |
+| Hasil Crafting | Hasil (Qty) | Pola Grid Crafting 3x3 | Bahan Dibutuhkan |
+|---|---|---|---|
+| ⛏️ **Wooden Pickaxe** | 1x | `[ Plank ][ Plank ][ Plank ]`<br>`[   -   ][ Stick ][   -   ]`<br>`[   -   ][ Stick ][   -   ]` | 3x Planks + 2x Sticks |
+| 🗡️ **Wooden Sword** | 1x | `[ Plank ]`<br>`[ Plank ]`<br>`[ Stick ]` | 2x Planks + 1x Stick |
+| 🪓 **Wooden Axe** | 1x | `[ Plank ][ Plank ]`<br>`[ Plank ][ Stick ]`<br>`[   -   ][ Stick ]` | 3x Planks + 2x Sticks |
+| 🧹 **Wooden Shovel** | 1x | `[ Plank ]`<br>`[ Stick ]`<br>`[ Stick ]` | 1x Plank + 2x Sticks |
+| 🧑‍🌾 **Wooden Hoe** | 1x | `[ Plank ][ Plank ]`<br>`[   -   ][ Stick ]`<br>`[   -   ][ Stick ]` | 2x Planks + 2x Sticks |
+| ⛏️ **Stone Pickaxe** | 1x | `[ Stone ][ Stone ][ Stone ]`<br>`[   -   ][ Stick ][   -   ]`<br>`[   -   ][ Stick ][   -   ]` | 3x Stone + 2x Sticks |
+| 🗡️ **Stone Sword** | 1x | `[ Stone ]`<br>`[ Stone ]`<br>`[ Stick ]` | 2x Stone + 1x Stick |
+| 🪓 **Stone Axe** | 1x | `[ Stone ][ Stone ]`<br>`[ Stone ][ Stick ]`<br>`[   -   ][ Stick ]` | 3x Stone + 2x Sticks |
+| 🧹 **Stone Shovel** | 1x | `[ Stone ]`<br>`[ Stick ]`<br>`[ Stick ]` | 1x Stone + 2x Sticks |
+| 🧑‍🌾 **Stone Hoe** | 1x | `[ Stone ][ Stone ]`<br>`[   -   ][ Stick ]`<br>`[   -   ][ Stick ]` | 2x Stone + 2x Sticks |
+| ⛏️ **Iron Pickaxe** | 1x | `[ Iron ][ Iron ][ Iron ]`<br>`[   -  ][ Stick ][   -  ]`<br>`[   -  ][ Stick ][   -  ]` | 3x Iron Ingot + 2x Sticks |
+| 🗡️ **Iron Sword** | 1x | `[ Iron ]`<br>`[ Iron ]`<br>`[ Stick ]` | 2x Iron Ingot + 1x Stick |
+| 🪓 **Iron Axe** | 1x | `[ Iron ][ Iron ]`<br>`[ Iron ][ Stick ]`<br>`[   -  ][ Stick ]` | 3x Iron Ingot + 2x Sticks |
+| 🧹 **Iron Shovel** | 1x | `[ Iron ]`<br>`[ Stick ]`<br>`[ Stick ]` | 1x Iron Ingot + 2x Sticks |
+| 🏹 **Bow** | 1x | `[  -  ][ Stick ][ String ]`<br>`[ Stick ][  -   ][ String ]`<br>`[  -  ][ Stick ][ String ]` | 3x Sticks + 3x Strings |
+| 🏹 **Arrow** | 4x | `[ Stone ]`<br>`[ Stick ]`<br>`[ Feather ]` | 1x Stone + 1x Stick + 1x Feather |
 
 ### 3. Set Zirah (Armor Sets)
 
-| Hasil Crafting | Kombinasi Pola Grid 3x3 | Bahan Dibutuhkan |
-|---|---|---|
-| 🪖 **Leather / Iron Helmet** | `[ Mat ][ Mat ][ Mat ]`<br>`[ Mat ][  -  ][ Mat ]` | 5x Leather / Iron Ingot |
-| 👕 **Leather / Iron Chestplate** | `[ Mat ][  -  ][ Mat ]`<br>`[ Mat ][ Mat ][ Mat ]`<br>`[ Mat ][ Mat ][ Mat ]` | 8x Leather / Iron Ingot |
-| 👖 **Leather / Iron Leggings** | `[ Mat ][ Mat ][ Mat ]`<br>`[ Mat ][  -  ][ Mat ]`<br>`[ Mat ][  -  ][ Mat ]` | 7x Leather / Iron Ingot |
-| 🥾 **Leather / Iron Boots** | `[ Mat ][  -  ][ Mat ]`<br>`[ Mat ][  -  ][ Mat ]` | 4x Leather / Iron Ingot |
+| Hasil Crafting | Defense | Pola Grid Crafting 3x3 | Bahan Dibutuhkan |
+|---|---|---|---|
+| 🪖 **Leather Helmet** | +1 Def | `[ Leather ][ Leather ][ Leather ]`<br>`[ Leather ][    -    ][ Leather ]` | 5x Leather |
+| 👕 **Leather Chestplate** | +3 Def | `[ Leather ][    -    ][ Leather ]`<br>`[ Leather ][ Leather ][ Leather ]`<br>`[ Leather ][ Leather ][ Leather ]` | 8x Leather |
+| 👖 **Leather Leggings** | +2 Def | `[ Leather ][ Leather ][ Leather ]`<br>`[ Leather ][    -    ][ Leather ]`<br>`[ Leather ][    -    ][ Leather ]` | 7x Leather |
+| 🥾 **Leather Boots** | +1 Def | `[ Leather ][    -    ][ Leather ]`<br>`[ Leather ][    -    ][ Leather ]` | 4x Leather |
+| 🪖 **Iron Helmet** | +2 Def | `[ Iron ][ Iron ][ Iron ]`<br>`[ Iron ][  -   ][ Iron ]` | 5x Iron Ingot |
+| 👕 **Iron Chestplate** | +6 Def | `[ Iron ][  -   ][ Iron ]`<br>`[ Iron ][ Iron ][ Iron ]`<br>`[ Iron ][ Iron ][ Iron ]` | 8x Iron Ingot |
+| 👖 **Iron Leggings** | +5 Def | `[ Iron ][ Iron ][ Iron ]`<br>`[ Iron ][  -   ][ Iron ]`<br>`[ Iron ][  -   ][ Iron ]` | 7x Iron Ingot |
+| 🥾 **Iron Boots** | +2 Def | `[ Iron ][  -   ][ Iron ]`<br>`[ Iron ][  -   ][ Iron ]` | 4x Iron Ingot |
+
+### 4. Resep Peleburan & Memasak (Furnace Smelting & Cooking)
+
+Gunakan **Furnace Block (ID 23)** dengan meletakkan Bahan di slot *Input* atas dan Bahan Bakar (*Coal / Plank / Log*) di slot *Fuel* bawah.
+
+| Bahan Masuk (Input) | Hasil Peleburan (Output) | Waktu Masak | Bahan Bakar Berfungsi |
+|---|---|---|---|
+| 🪨 **Raw Iron** | 🪙 **Iron Ingot** (1x) | 5 Detik | Coal / Plank / Wood Log |
+| 🥩 **Raw Beef** | 🍖 **Cooked Beef** (1x) | 5 Detik | Coal / Plank / Wood Log |
+| 🥩 **Raw Porkchop** | 🍖 **Cooked Porkchop** (1x) | 5 Detik | Coal / Plank / Wood Log |
+| 🍗 **Raw Chicken** | 🍗 **Cooked Chicken** (1x) | 5 Detik | Coal / Plank / Wood Log |
+| 🥩 **Mutton** | 🍖 **Cooked Mutton** (1x) | 5 Detik | Coal / Plank / Wood Log |
 
 ---
 

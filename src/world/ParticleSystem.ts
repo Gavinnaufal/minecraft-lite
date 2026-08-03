@@ -45,6 +45,34 @@ export class ParticleSystem {
     }
   }
 
+  spawnHeartParticles(position: THREE.Vector3): void {
+    const mat = new THREE.MeshBasicMaterial({ color: 0xff4081, transparent: true, opacity: 0.95 });
+
+    for (let i = 0; i < 6; i++) {
+      const mesh = new THREE.Mesh(this.particleGeo, mat);
+      mesh.position.set(
+        position.x + (Math.random() - 0.5) * 0.7,
+        position.y + Math.random() * 0.5,
+        position.z + (Math.random() - 0.5) * 0.7,
+      );
+
+      const velocity = new THREE.Vector3(
+        (Math.random() - 0.5) * 0.4,
+        0.8 + Math.random() * 0.6,
+        (Math.random() - 0.5) * 0.4,
+      );
+
+      this.scene.add(mesh);
+      this.particles.push({
+        mesh,
+        velocity,
+        life: 0.8 + Math.random() * 0.4,
+        maxLife: 1.2,
+        useGravity: false,
+      });
+    }
+  }
+
   spawnBlockBreakParticles(position: THREE.Vector3, colorHex = 0x8d6e63): void {
     const mat = new THREE.MeshBasicMaterial({ color: colorHex });
 

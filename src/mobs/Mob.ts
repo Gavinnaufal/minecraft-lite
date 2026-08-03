@@ -13,6 +13,10 @@ export class Mob {
   isHostile = false;
   width = 0.8;
   height = 1.4;
+  loveTimer = 0;
+  breedingCooldown = 0;
+  isBaby = false;
+  growthTimer = 0; // In seconds, grows up when target reached (e.g. 60s)
   private hitFlashTimer = 0;
   private originalMaterials = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>();
 
@@ -24,11 +28,25 @@ export class Mob {
     this.mesh.position.copy(position);
   }
 
+  isInLove(): boolean {
+    return this.loveTimer > 0;
+  }
+
+  isBabyMob(): boolean {
+    return this.isBaby;
+  }
+
+  canBreed(): boolean {
+    return !this.isBaby && this.loveTimer <= 0 && this.breedingCooldown <= 0;
+  }
+
   reset(position: THREE.Vector3, maxHealth = 10): void {
     this.position.copy(position);
     this.velocity.set(0, 0, 0);
     this.health = maxHealth;
     this.isGrounded = false;
+    this.loveTimer = 0;
+    this.breedingCooldown = 0;
     this.mesh.position.copy(position);
   }
 
@@ -38,6 +56,13 @@ export class Mob {
   }
 
   protected updatePhysics(deltaTime: number, world?: World): void {
+    if (this.loveTimer > 0) {
+      this.loveTimer -= deltaTime;
+    }
+    if (this.breedingCooldown > 0) {
+      this.breedingCooldown -= deltaTime;
+    }
+
     if (this.hitFlashTimer > 0) {
       this.hitFlashTimer -= deltaTime;
       if (this.hitFlashTimer <= 0) {

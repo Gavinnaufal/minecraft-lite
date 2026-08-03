@@ -26,6 +26,7 @@ import { ParticleSystem } from './world/ParticleSystem';
 import { ItemDropManager } from './world/ItemDropManager';
 import { IronGolem } from './mobs/npc/IronGolem';
 import { Villager } from './mobs/npc/Villager';
+import { isFoodForMob } from './mobs/ai/MobFoodRegistry';
 import { TradingScreen } from './ui/TradingScreen';
 import { VillagerTradingManager } from './economy/VillagerTrading';
 import { Skeleton } from './mobs/hostile/Skeleton';
@@ -941,6 +942,32 @@ engine.setUpdateCallback((deltaTime) => {
         tradingScreen.open(targetMob);
         wasRightDown = inputManager.isRightMouseDown;
         return;
+      }
+      const activeItem = hotbar.getActiveItem();
+      if (activeItem.itemId && isFoodForMob(targetMob, activeItem.itemId)) {
+        if (targetMob.canBreed()) {
+          targetMob.loveTimer = 15;
+          hotbar.removeItem(activeItem.itemId, 1);
+          handModel.triggerSwing();
+          AudioManager.getInstance().playSFX('eat');
+          particleSystem.spawnHeartParticles(targetMob.position.clone().add(new THREE.Vector3(0, 1.2, 0)));
+          ToastSystem.getInstance().show(`❤️ ${targetMob.constructor.name} memasuki Love Mode!`, 'success');
+          wasRightDown = inputManager.isRightMouseDown;
+          return;
+        } else if (targetMob.isBabyMob()) {
+          targetMob.growthTimer += 15;
+          hotbar.removeItem(activeItem.itemId, 1);
+          handModel.triggerSwing();
+          AudioManager.getInstance().playSFX('eat');
+          particleSystem.spawnHeartParticles(targetMob.position.clone().add(new THREE.Vector3(0, 0.8, 0)));
+          ToastSystem.getInstance().show(`🌾 Memberi makan ${targetMob.constructor.name} kecil!`, 'info');
+          wasRightDown = inputManager.isRightMouseDown;
+          return;
+        } else if (targetMob.isInLove()) {
+          ToastSystem.getInstance().show(`${targetMob.constructor.name} sudah dalam Love Mode!`, 'info');
+        } else if (targetMob.breedingCooldown > 0) {
+          ToastSystem.getInstance().show(`⏳ ${targetMob.constructor.name} sedang cooldown breeding!`, 'warning');
+        }
       }
     }
 

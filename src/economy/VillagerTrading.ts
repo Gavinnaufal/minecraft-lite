@@ -64,6 +64,11 @@ export class VillagerTradingManager {
     return true;
   }
 
+  /**
+   * CP-253 Trade Execution Logic
+   * Validates if player has required input items across Inventory & Hotbar,
+   * deducts inputs, and grants output items.
+   */
   executeTrade(recipe: TradeRecipe, inventory: Inventory, hotbar: Hotbar): boolean {
     if (!this.canAffordTrade(recipe, inventory, hotbar)) return false;
 

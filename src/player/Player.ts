@@ -1,3 +1,6 @@
+import type { EquipmentSlots } from '../inventory/EquipmentSlots';
+import { ArmorSystem } from '../inventory/ArmorSystem';
+
 export class Player {
   position = { x: 0, y: 60, z: 0 };
   velocity = { x: 0, y: 0, z: 0 };
@@ -6,6 +9,11 @@ export class Player {
   readonly width = 0.6;
   readonly height = 1.8;
   readonly eyeHeight = 1.6;
+
+  damage(rawAmount: number, equipment?: EquipmentSlots): void {
+    const finalDamage = ArmorSystem.getInstance().calculateMitigatedDamage(rawAmount, equipment);
+    this.health = Math.max(0, this.health - finalDamage);
+  }
 
   getAABB() {
     const hw = this.width / 2;

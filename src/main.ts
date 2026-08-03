@@ -26,6 +26,8 @@ import { ParticleSystem } from './world/ParticleSystem';
 import { ItemDropManager } from './world/ItemDropManager';
 import { IronGolem } from './mobs/npc/IronGolem';
 import { Villager } from './mobs/npc/Villager';
+import { TradingScreen } from './ui/TradingScreen';
+import { VillagerTradingManager } from './economy/VillagerTrading';
 import { Skeleton } from './mobs/hostile/Skeleton';
 import { Spider } from './mobs/hostile/Spider';
 import { Enderman } from './mobs/hostile/Enderman';
@@ -476,6 +478,9 @@ chestScreen.create();
 
 const furnaceScreen = new FurnaceScreen(inventory, hotbar);
 
+const tradingScreen = new TradingScreen(inventory, hotbar, particleSystem);
+tradingScreen.create();
+
 const pauseMenu = new PauseMenu(saveManager, settingsMenu, () => {
   inputManager.requestPointerLock();
 });
@@ -484,7 +489,7 @@ pauseMenu.create();
 mainMenu.create();
 
 canvas.addEventListener('click', () => {
-  if (!mainMenu.isOpen && !pauseMenu.isOpen && !inventoryScreen.isOpen && !chestScreen.isOpen && !furnaceScreen.getIsOpen()) {
+  if (!mainMenu.isOpen && !pauseMenu.isOpen && !inventoryScreen.isOpen && !chestScreen.isOpen && !furnaceScreen.getIsOpen() && !tradingScreen.isOpen) {
     inputManager.requestPointerLock();
   }
 });
@@ -495,6 +500,8 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     if (chatBox.visible) {
       chatBox.close();
+    } else if (tradingScreen.isOpen) {
+      tradingScreen.close();
     } else if (furnaceScreen.getIsOpen()) {
       furnaceScreen.close();
     } else if (chestScreen.isOpen) {
@@ -676,6 +683,7 @@ engine.setUpdateCallback((deltaTime) => {
 
   // 3D Block Selection Outline Box
   blockHighlight.update(world, camera);
+  VillagerTradingManager.getInstance().update(deltaTime);
 
   // F3 Debug Screen Update
   const facingDir = getFacingDirection(camera);
@@ -927,6 +935,15 @@ engine.setUpdateCallback((deltaTime) => {
 
   // Continuous right click handling for block placement & interaction
   if (inputManager.isRightMouseDown && !wasRightDown) {
+    if (hitMobIdx >= 0) {
+      const targetMob = mobManager.mobs[hitMobIdx];
+      if (targetMob instanceof Villager) {
+        tradingScreen.open(targetMob);
+        wasRightDown = inputManager.isRightMouseDown;
+        return;
+      }
+    }
+
     const targetHit = blockBreaker.getTarget(camera);
     const activeItem = hotbar.getActiveItem();
 

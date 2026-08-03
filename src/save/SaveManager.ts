@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { StorageAdapter } from './StorageAdapter';
 import type { Player } from '../player/Player';
 import type { Inventory } from '../inventory/Inventory';
@@ -5,6 +6,13 @@ import type { Hotbar } from '../inventory/Hotbar';
 import type { DayNightCycle } from '../environment/DayNightCycle';
 import type { World, BlockModification } from '../world/World';
 import type { ChunkManager } from '../world/ChunkManager';
+import type { MobManager } from '../mobs/MobManager';
+import type { Mob } from '../mobs/Mob';
+import { Cow } from '../mobs/passive/Cow';
+import { Pig } from '../mobs/passive/Pig';
+import { Chicken } from '../mobs/passive/Chicken';
+import { Goat } from '../mobs/passive/Goat';
+import { Turtle } from '../mobs/passive/Turtle';
 import { gameSettings } from '../core/GameSettings';
 import { DimensionManager } from '../world/dimension/DimensionManager';
 import { FurnaceManager, type FurnaceData } from '../inventory/FurnaceManager';
@@ -19,6 +27,7 @@ export class SaveManager {
   private inventory: Inventory;
   private hotbar: Hotbar;
   private dayNight: DayNightCycle;
+  private mobManager?: MobManager;
   private autoSaveInterval: ReturnType<typeof setInterval> | null = null;
   private getSeed: () => number;
 
@@ -30,6 +39,7 @@ export class SaveManager {
     hotbar: Hotbar,
     dayNight: DayNightCycle,
     getSeed: () => number,
+    mobManager?: MobManager,
   ) {
     this.chunkManager = chunkManager;
     this.world = world;
@@ -38,6 +48,7 @@ export class SaveManager {
     this.hotbar = hotbar;
     this.dayNight = dayNight;
     this.getSeed = getSeed;
+    this.mobManager = mobManager;
   }
 
   async init(): Promise<void> {
@@ -61,6 +72,16 @@ export class SaveManager {
       timeOfDay: this.dayNight.timeOfDay,
       modifiedBlocks: this.world.getModifiedBlocks(),
       furnaces: FurnaceManager.getInstance().getAllFurnaces(),
+      mobsData: this.mobManager ? this.mobManager.mobs.map((m) => ({
+        type: m.constructor.name,
+        x: m.position.x,
+        y: m.position.y,
+        z: m.position.z,
+        isBaby: m.isBaby,
+        growthTimer: m.growthTimer,
+        loveTimer: m.loveTimer,
+        breedingCooldown: m.breedingCooldown,
+      })) : [],
     };
     await this.storage.saveData('world', data);
   }
@@ -77,12 +98,47 @@ export class SaveManager {
       timeOfDay: number;
       modifiedBlocks?: BlockModification[];
       furnaces?: Record<string, FurnaceData>;
+      mobsData?: {
+        type: string;
+        x: number;
+        y: number;
+        z: number;
+        isBaby: boolean;
+        growthTimer: number;
+        loveTimer: number;
+        breedingCooldown: number;
+      }[];
     }>('world');
 
     if (!data) return null;
 
     if (data.furnaces) {
       FurnaceManager.getInstance().loadFurnaces(data.furnaces);
+    }
+
+    if (data.mobsData && this.mobManager) {
+      this.mobManager.clearAllMobs();
+      for (const item of data.mobsData) {
+        const pos = new THREE.Vector3(item.x, item.y, item.z);
+        let mob: Mob | null = null;
+        if (item.type === 'Cow') mob = new Cow(pos);
+        else if (item.type === 'Pig') mob = new Pig(pos);
+        else if (item.type === 'Chicken') mob = new Chicken(pos);
+        else if (item.type === 'Goat') mob = new Goat(pos);
+        else if (item.type === 'Turtle') mob = new Turtle(pos);
+
+        if (mob) {
+          mob.isBaby = item.isBaby;
+          mob.growthTimer = item.growthTimer;
+          mob.loveTimer = item.loveTimer;
+          mob.breedingCooldown = item.breedingCooldown;
+          if (mob.isBaby) {
+            const progress = Math.min(1.0, 0.5 + 0.5 * (mob.growthTimer / 60));
+            mob.mesh.scale.set(progress, progress, progress);
+          }
+          this.mobManager.addMob(mob);
+        }
+      }
     }
 
     // v1.0 -> v2.0 migration: add default dimension if missing

@@ -337,7 +337,7 @@ for (let i = 0; i < 14; i++) {
 }
 
 // Save/Load (async, non-blocking)
-const saveManager = new SaveManager(chunkManager, world, player, inventory, hotbar, dayNight, () => worldSeed);
+const saveManager = new SaveManager(chunkManager, world, player, inventory, hotbar, dayNight, () => worldSeed, mobManager);
 saveManager.init().then(() => saveManager.load()).then((savedSeed) => {
   if (savedSeed !== null) {
     if (savedSeed !== worldSeed) {

@@ -44,6 +44,13 @@ export class MobManager {
     this.scene.add(mob.mesh);
   }
 
+  clearAllMobs(): void {
+    for (const mob of this.mobs) {
+      this.scene.remove(mob.mesh);
+    }
+    this.mobs = [];
+  }
+
   despawn(mob: Mob): void {
     const idx = this.mobs.indexOf(mob);
     if (idx >= 0) {

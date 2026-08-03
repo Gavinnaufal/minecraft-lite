@@ -12,6 +12,9 @@ const SVG_ICONS = {
   heartFull: `<svg width="18" height="18" viewBox="0 0 24 24" fill="#ff3333" stroke="#990000" stroke-width="1.2" style="vertical-align: middle; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.78-8.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`,
   heartHalf: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff8833" stroke-width="1.2" style="vertical-align: middle; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.78-8.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="url(#halfGrad)"></path><defs><linearGradient id="halfGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="50%" stop-color="#ff3333"/><stop offset="50%" stop-color="rgba(0,0,0,0.3)"/></linearGradient></defs></svg>`,
   heartEmpty: `<svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(30,30,40,0.5)" stroke="rgba(255,255,255,0.2)" stroke-width="1.2" style="vertical-align: middle; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.78-8.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`,
+  shieldFull: `<svg width="18" height="18" viewBox="0 0 24 24" fill="#90a4ae" stroke="#37474f" stroke-width="1.2" style="vertical-align: middle; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
+  shieldHalf: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#37474f" stroke-width="1.2" style="vertical-align: middle; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="url(#shieldHalfGrad)"></path><defs><linearGradient id="shieldHalfGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="50%" stop-color="#90a4ae"/><stop offset="50%" stop-color="rgba(0,0,0,0.3)"/></linearGradient></defs></svg>`,
+  shieldEmpty: `<svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(30,30,40,0.4)" stroke="rgba(255,255,255,0.2)" stroke-width="1.2" style="vertical-align: middle; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
   bubbleFull: `<svg width="15" height="15" viewBox="0 0 24 24" fill="#00e5ff" stroke="#00838f" stroke-width="1.5" style="vertical-align: middle; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.8));"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="9" r="2.5" fill="#ffffff"/></svg>`,
   bubbleEmpty: `<svg width="15" height="15" viewBox="0 0 24 24" fill="rgba(0,50,80,0.3)" stroke="rgba(0,229,255,0.3)" stroke-width="1.5" style="vertical-align: middle; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.8));"><circle cx="12" cy="12" r="9"/></svg>`,
 };
@@ -206,6 +209,44 @@ export class HUD {
       this.bubbleEls.push(bubble);
     }
     document.body.appendChild(this.oxygenContainer);
+
+    // Armor Bar Container (10 shield SVG icons = 20 Armor Points)
+    this.armorContainer = document.createElement('div');
+    this.armorContainer.style.cssText = `
+      position: fixed; bottom: 98px; left: calc(50% - 105px);
+      display: flex; gap: 3px; z-index: 100; pointer-events: none;
+      opacity: 0; transition: opacity 0.3s ease;
+    `;
+    for (let i = 0; i < 10; i++) {
+      const shield = document.createElement('span');
+      shield.style.cssText = 'display: flex; align-items: center; justify-content: center;';
+      shield.innerHTML = SVG_ICONS.shieldEmpty;
+      this.armorContainer.appendChild(shield);
+      this.shieldEls.push(shield);
+    }
+    document.body.appendChild(this.armorContainer);
+  }
+
+  private armorContainer: HTMLDivElement;
+  private shieldEls: HTMLSpanElement[] = [];
+
+  updateArmor(totalDefense: number): void {
+    if (totalDefense > 0) {
+      this.armorContainer.style.opacity = '1';
+      const fullShields = Math.floor(totalDefense / 2);
+      const hasHalf = totalDefense % 2 === 1;
+      for (let i = 0; i < 10; i++) {
+        if (i < fullShields) {
+          this.shieldEls[i].innerHTML = SVG_ICONS.shieldFull;
+        } else if (i === fullShields && hasHalf) {
+          this.shieldEls[i].innerHTML = SVG_ICONS.shieldHalf;
+        } else {
+          this.shieldEls[i].innerHTML = SVG_ICONS.shieldEmpty;
+        }
+      }
+    } else {
+      this.armorContainer.style.opacity = '0';
+    }
   }
 
   setSubmergedState(isSubmerged: boolean, oxygen = 20.0): void {

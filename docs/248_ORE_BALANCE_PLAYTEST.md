@@ -56,3 +56,10 @@ Dalam simulasi eksplorasi gua standar selama ~5 menit (mencakup area penjelajaha
    Script [`scripts/simulate_ore_ratio.ts`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/scripts/simulate_ore_ratio.ts) disimpan secara permanen di folder `scripts/` sebagai perkakas benchmark otomatis untuk *playtest regression* di masa depan.
 3. **Kesiapan Fase:**
    Fase 26 (Ore Mining & Smelting) kini telah **100% selesai** (10/10 Checkpoint).
+
+---
+
+## 5. Fix Susulan: Mekanisme Fallback Peti Desa (Village Loot Chest Fallback)
+
+Sebagai langkah mitigasi tambahan terhadap variasi statistik antar seed dunia yang ekstrem (di mana pemain pada seed buruk dapat menemukan besi dalam jumlah minim pada 1–2 chunk awal), item `raw_iron` (1–3x, 70% chance) dan `iron_ingot` (1–2x, 50% chance) ditambahkan secara permanen ke dalam `VILLAGE_CHEST_LOOT_POOL` di [`src/world/structures/VillageLoot.ts`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/world/structures/VillageLoot.ts). Hal ini menjamin pemain selalu memiliki akses awal ke besi dari eksplorasi Starter Village tanpa bergantung sepenuhnya pada generasi ore bawah tanah.
+

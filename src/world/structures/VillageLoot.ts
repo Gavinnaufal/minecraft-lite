@@ -18,6 +18,9 @@ const VILLAGE_CHEST_LOOT_POOL: LootPoolEntry[] = [
   { itemId: 'wooden_hoe', minCount: 1, maxCount: 1, chance: 0.3 },
   { itemId: 'stone', minCount: 3, maxCount: 8, chance: 0.4 },
   { itemId: 'emerald', minCount: 1, maxCount: 4, chance: 0.55 },
+  // CP-248 Iron Ore Seed Variance Fallback
+  { itemId: 'raw_iron', minCount: 1, maxCount: 3, chance: 0.7 },
+  { itemId: 'iron_ingot', minCount: 1, maxCount: 2, chance: 0.5 },
 ];
 
 export class VillageLoot {

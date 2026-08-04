@@ -19,75 +19,72 @@ export function generateTrees(
   const chunkMinWX = chunk.chunkX * CHUNK_SIZE_X;
   const chunkMinWZ = chunk.chunkZ * CHUNK_SIZE_Z;
 
-  const searchMinWX = chunkMinWX - 2;
-  const searchMaxWX = chunkMinWX + CHUNK_SIZE_X + 1;
-  const searchMinWZ = chunkMinWZ - 2;
-  const searchMaxWZ = chunkMinWZ + CHUNK_SIZE_Z + 1;
+  for (let lz = 0; lz < CHUNK_SIZE_Z; lz++) {
+    for (let lx = 0; lx < CHUNK_SIZE_X; lx++) {
+      const wx = chunkMinWX + lx;
+      const wz = chunkMinWZ + lz;
 
-  for (let wz = searchMinWZ; wz <= searchMaxWZ; wz++) {
-    for (let wx = searchMinWX; wx <= searchMaxWX; wx++) {
+      // 1. Biome & Density Check
       if (biomeGen.getBiome(wx, wz) !== BiomeType.Forest) continue;
       if (hash(wx, wz) > 0.04) continue;
 
-      const surfaceY = heightMap.getHeight(wx, wz);
-      // Strictly require trunk base to be at least 2 blocks above water level
-      if (surfaceY <= WATER_LEVEL + 1) continue;
-
-      const trunkHeight = 4 + Math.floor(hash(wx + 999, wz) * 2);
-
-      const isTrunkInChunk = (
-        wx >= chunkMinWX && wx < chunkMinWX + CHUNK_SIZE_X &&
-        wz >= chunkMinWZ && wz < chunkMinWZ + CHUNK_SIZE_Z
-      );
-
-      if (isTrunkInChunk) {
-        const localX = wx - chunkMinWX;
-        const localZ = wz - chunkMinWZ;
-
-        let actualSurfaceY = -1;
-        for (let y = CHUNK_HEIGHT - 1; y >= 0; y--) {
-          const b = chunk.getBlock(localX, y, localZ);
-          if (b !== 0 && b !== 7) {
-            actualSurfaceY = y;
-            break;
-          }
-        }
-
-        if (actualSurfaceY <= WATER_LEVEL + 1) continue;
-        const groundBid = chunk.getBlock(localX, actualSurfaceY, localZ);
-        if (groundBid !== 1 && groundBid !== 2) continue; // Only grow on grass or dirt
-
-        for (let ty = 1; ty <= trunkHeight; ty++) {
-          const y = actualSurfaceY + ty;
-          if (y >= CHUNK_HEIGHT) break;
-          chunk.setBlock(localX, y, localZ, 5); // wood_log
+      // 2. Find actual surface Y in current chunk
+      let actualSurfaceY = -1;
+      for (let y = CHUNK_HEIGHT - 1; y >= 0; y--) {
+        const b = chunk.getBlock(lx, y, lz);
+        if (b !== 0 && b !== 7) {
+          actualSurfaceY = y;
+          break;
         }
       }
 
-      const leafBase = surfaceY + trunkHeight - 1;
+      // 3. Strictly require trunk base to be on deep solid land (no shorelines, cliffs, or overhangs)
+      if (actualSurfaceY <= WATER_LEVEL + 2) continue;
+
+      const groundBid = chunk.getBlock(lx, actualSurfaceY, lz);
+      if (groundBid !== 1 && groundBid !== 2) continue; // Must be Grass (1) or Dirt (2)
+
+      // Ensure solid foundation 1 and 2 blocks beneath the surface (prevents floating logs on cliff overhangs/caves)
+      if (actualSurfaceY < 2) continue;
+      const subGround1 = chunk.getBlock(lx, actualSurfaceY - 1, lz);
+      const subGround2 = chunk.getBlock(lx, actualSurfaceY - 2, lz);
+      if (subGround1 === 0 || subGround1 === 7 || subGround2 === 0 || subGround2 === 7) continue;
+
+      // 4. Valid Tree Anchor Confirmed: Place Trunk Logs
+      const trunkHeight = 4 + Math.floor(hash(wx + 999, wz) * 2);
+      for (let ty = 1; ty <= trunkHeight; ty++) {
+        const y = actualSurfaceY + ty;
+        if (y >= CHUNK_HEIGHT) break;
+        chunk.setBlock(lx, y, lz, 5); // wood_log (Block ID 5)
+      }
+
+      // 5. Place Attached Leaf Canopy (Only around validated solid trunk)
+      const leafBaseY = actualSurfaceY + trunkHeight - 1;
       for (let dy = 0; dy < 3; dy++) {
-        for (let dz = -1; dz <= 1; dz++) {
-          for (let dx = -1; dx <= 1; dx++) {
-            if (dx === 0 && dz === 0 && dy < 2) continue;
+        for (let dz = -2; dz <= 2; dz++) {
+          for (let dx = -2; dx <= 2; dx++) {
+            // Corner trimming for natural crown shape
+            if (Math.abs(dx) === 2 && Math.abs(dz) === 2) continue;
+            if (dx === 0 && dz === 0 && dy < 2) continue; // Trunk occupies center
 
             const leafWX = wx + dx;
             const leafWZ = wz + dz;
-            const ly = leafBase + dy;
+            const ly = leafBaseY + dy;
 
-            // Strictly check that leaf column ground is solid land (not over water/river)
+            // Never place leaves if the column ground is water or shoreline
             const leafGroundY = heightMap.getHeight(leafWX, leafWZ);
             if (leafGroundY <= WATER_LEVEL + 1) continue;
 
+            const targetLX = lx + dx;
+            const targetLZ = lz + dz;
+
             if (
-              leafWX >= chunkMinWX && leafWX < chunkMinWX + CHUNK_SIZE_X &&
-              leafWZ >= chunkMinWZ && leafWZ < chunkMinWZ + CHUNK_SIZE_Z &&
+              targetLX >= 0 && targetLX < CHUNK_SIZE_X &&
+              targetLZ >= 0 && targetLZ < CHUNK_SIZE_Z &&
               ly >= 0 && ly < CHUNK_HEIGHT
             ) {
-              const localLX = leafWX - chunkMinWX;
-              const localLZ = leafWZ - chunkMinWZ;
-              const currentBid = chunk.getBlock(localLX, ly, localLZ);
-              if (currentBid === 0) {
-                chunk.setBlock(localLX, ly, localLZ, 6); // leaves
+              if (chunk.getBlock(targetLX, ly, targetLZ) === 0) {
+                chunk.setBlock(targetLX, ly, targetLZ, 6); // leaves (Block ID 6)
               }
             }
           }

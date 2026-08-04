@@ -2,7 +2,7 @@ import { BiomeType } from './BiomeGenerator';
 import { HeightMap } from './HeightMap';
 import { BiomeGenerator } from './BiomeGenerator';
 import type { Chunk } from '../Chunk';
-import { CHUNK_SIZE_X, CHUNK_SIZE_Z, CHUNK_HEIGHT } from '../../utils/constants';
+import { CHUNK_SIZE_X, CHUNK_SIZE_Z, CHUNK_HEIGHT, WATER_LEVEL } from '../../utils/constants';
 
 function hash(x: number, z: number): number {
   let h = (x * 374761393 + z * 668265263) ^ 1274126177;
@@ -30,7 +30,8 @@ export function generateTrees(
       if (hash(wx, wz) > 0.04) continue;
 
       const surfaceY = heightMap.getHeight(wx, wz);
-      if (surfaceY <= 0) continue;
+      // Strictly require trunk base to be at least 2 blocks above water level
+      if (surfaceY <= WATER_LEVEL + 1) continue;
 
       const trunkHeight = 4 + Math.floor(hash(wx + 999, wz) * 2);
 
@@ -52,9 +53,9 @@ export function generateTrees(
           }
         }
 
-        if (actualSurfaceY <= 0) continue;
+        if (actualSurfaceY <= WATER_LEVEL + 1) continue;
         const groundBid = chunk.getBlock(localX, actualSurfaceY, localZ);
-        if (groundBid !== 1 && groundBid !== 2) continue; // Only grow on grass/dirt
+        if (groundBid !== 1 && groundBid !== 2) continue; // Only grow on grass or dirt
 
         for (let ty = 1; ty <= trunkHeight; ty++) {
           const y = actualSurfaceY + ty;
@@ -62,10 +63,6 @@ export function generateTrees(
           chunk.setBlock(localX, y, localZ, 5); // wood_log
         }
       }
-
-      // Only place leaf canopy if trunk is within land or valid surface
-      const groundAtTree = heightMap.getHeight(wx, wz);
-      if (groundAtTree <= 0 || groundAtTree <= 40) continue; // Skip water/river surfaces
 
       const leafBase = surfaceY + trunkHeight - 1;
       for (let dy = 0; dy < 3; dy++) {
@@ -77,6 +74,10 @@ export function generateTrees(
             const leafWZ = wz + dz;
             const ly = leafBase + dy;
 
+            // Strictly check that leaf column ground is solid land (not over water/river)
+            const leafGroundY = heightMap.getHeight(leafWX, leafWZ);
+            if (leafGroundY <= WATER_LEVEL + 1) continue;
+
             if (
               leafWX >= chunkMinWX && leafWX < chunkMinWX + CHUNK_SIZE_X &&
               leafWZ >= chunkMinWZ && leafWZ < chunkMinWZ + CHUNK_SIZE_Z &&
@@ -84,7 +85,8 @@ export function generateTrees(
             ) {
               const localLX = leafWX - chunkMinWX;
               const localLZ = leafWZ - chunkMinWZ;
-              if (chunk.getBlock(localLX, ly, localLZ) === 0) {
+              const currentBid = chunk.getBlock(localLX, ly, localLZ);
+              if (currentBid === 0) {
                 chunk.setBlock(localLX, ly, localLZ, 6); // leaves
               }
             }
@@ -94,4 +96,3 @@ export function generateTrees(
     }
   }
 }
-

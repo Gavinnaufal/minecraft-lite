@@ -19,6 +19,10 @@ export class InventoryScreen {
   private dragItem: { itemId: string; count: number; durability?: number } | null = null;
   private dragEl: HTMLDivElement | null = null;
   private tooltipEl: HTMLDivElement | null = null;
+  private isMouseDown = false;
+  private isRightMouseDown = false;
+  private lastEnteredSlot: HTMLElement | null = null;
+
   private armorSlotEls: Record<ArmorSlotType, HTMLDivElement | null> = {
     helmet: null,
     chestplate: null,
@@ -52,8 +56,17 @@ export class InventoryScreen {
       background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); z-index: 200;
       justify-content: center; align-items: center; flex-direction: column;
     `;
-    this.container.addEventListener('mousedown', (e) => e.stopPropagation());
-    this.container.addEventListener('mouseup', (e) => e.stopPropagation());
+    this.container.addEventListener('mousedown', (e) => {
+      e.stopPropagation();
+      this.isMouseDown = true;
+      if (e.button === 2) this.isRightMouseDown = true;
+    });
+    this.container.addEventListener('mouseup', (e) => {
+      e.stopPropagation();
+      this.isMouseDown = false;
+      if (e.button === 2) this.isRightMouseDown = false;
+      this.lastEnteredSlot = null;
+    });
     this.container.addEventListener('click', (e) => e.stopPropagation());
     this.container.addEventListener('contextmenu', (e) => e.preventDefault());
     document.body.appendChild(this.container);
@@ -121,6 +134,7 @@ export class InventoryScreen {
       `;
       const r = Math.floor(i / 3), c = i % 3;
       el.addEventListener('mousedown', (e) => this.onCraftSlotClick(e, r, c));
+      el.addEventListener('mouseenter', () => this.onSlotMouseEnterCraft(r, c, el));
       el.addEventListener('contextmenu', (e) => e.preventDefault());
       craftGridDiv.appendChild(el);
       this.craftSlots.push(el);
@@ -214,6 +228,7 @@ export class InventoryScreen {
       position: relative; border-radius: 2px;
     `;
     el.addEventListener('mousedown', (e) => this.onSlotClick(e, slotIdx, isHotbar));
+    el.addEventListener('mouseenter', () => this.onSlotMouseEnterInv(slotIdx, isHotbar, el));
     el.addEventListener('contextmenu', (e) => e.preventDefault());
     return el;
   }
@@ -241,6 +256,54 @@ export class InventoryScreen {
       }
     }
     this.refresh();
+  }
+
+  private onSlotMouseEnterInv(slotIdx: number, isHotbar: boolean, el: HTMLElement): void {
+    if (!this.dragItem || !this.isMouseDown || this.lastEnteredSlot === el) return;
+    this.lastEnteredSlot = el;
+
+    const slot = isHotbar ? this.hotbar.slots[slotIdx] : this.inventory.slots[slotIdx];
+    if (this.isRightMouseDown) {
+      // Right-drag mouse over slot: drop 1 item continuously into slot!
+      if (slot.itemId === null) {
+        slot.itemId = this.dragItem.itemId;
+        slot.count = 1;
+        slot.durability = this.dragItem.durability;
+        this.dragItem.count--;
+        if (this.dragItem.count <= 0) this.dragItem = null;
+      } else if (slot.itemId === this.dragItem.itemId) {
+        const max = getItemById(slot.itemId)?.maxStack ?? 64;
+        if (slot.count < max) {
+          slot.count++;
+          this.dragItem.count--;
+          if (this.dragItem.count <= 0) this.dragItem = null;
+        }
+      }
+      this.refresh();
+    }
+  }
+
+  private onSlotMouseEnterCraft(r: number, c: number, el: HTMLElement): void {
+    if (!this.dragItem || !this.isMouseDown || this.lastEnteredSlot === el) return;
+    this.lastEnteredSlot = el;
+
+    const current = this.craftGrid[r][c];
+    if (this.isRightMouseDown) {
+      // Right-drag mouse over craft slot: drop 1 item continuously!
+      if (!current) {
+        this.craftGrid[r][c] = { itemId: this.dragItem.itemId, count: 1 };
+        this.dragItem.count--;
+        if (this.dragItem.count <= 0) this.dragItem = null;
+      } else if (current.itemId === this.dragItem.itemId) {
+        const max = getItemById(current.itemId)?.maxStack ?? 64;
+        if (current.count < max) {
+          current.count++;
+          this.dragItem.count--;
+          if (this.dragItem.count <= 0) this.dragItem = null;
+        }
+      }
+      this.refresh();
+    }
   }
 
   private onSlotClick(e: MouseEvent, slotIdx: number, isHotbar: boolean): void {
@@ -279,7 +342,7 @@ export class InventoryScreen {
 
     if (this.dragItem) {
       if (isRightClick) {
-        // Right click holding item: drop 1 item into slot
+        // Right click holding item: drop EXACTLY 1 item into slot (click 1x = +1, 2x = +2, 3x = +3)
         if (slot.itemId === null) {
           slot.itemId = this.dragItem.itemId;
           slot.count = 1;
@@ -342,10 +405,12 @@ export class InventoryScreen {
     if (this.dragItem) {
       if (!current) {
         if (isRightClick) {
+          // Drop exactly 1 item into craft slot
           this.craftGrid[r][c] = { itemId: this.dragItem.itemId, count: 1 };
           this.dragItem.count--;
           if (this.dragItem.count <= 0) this.dragItem = null;
         } else {
+          // Drop entire stack into craft slot
           this.craftGrid[r][c] = { itemId: this.dragItem.itemId, count: this.dragItem.count };
           this.dragItem = null;
         }
@@ -409,7 +474,6 @@ export class InventoryScreen {
       const totalYield = maxPossibleBatches * recipe.result.count;
 
       if (totalYield > 0) {
-        // Add yield directly into inventory/hotbar or drag cursor
         let rem = this.inventory.addItem(recipe.result.itemId, totalYield);
         if (rem > 0) {
           rem = this.hotbar.addItem(recipe.result.itemId, rem);

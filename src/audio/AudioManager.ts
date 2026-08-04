@@ -27,7 +27,7 @@ export class AudioManager {
     if (!ctx) return;
 
     const masterGain = ctx.createGain();
-    masterGain.gain.value = this._sfxVolume * 0.4;
+    masterGain.gain.value = this._sfxVolume * 0.15;
     masterGain.connect(ctx.destination);
 
     const now = ctx.currentTime;

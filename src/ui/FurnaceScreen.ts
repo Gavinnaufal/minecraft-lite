@@ -9,7 +9,8 @@ export class FurnaceScreen {
   private container: HTMLDivElement;
   private inventory: Inventory;
   private hotbar: Hotbar;
-  private isOpen = false;
+  private _isOpen = false;
+  get isOpen(): boolean { return this._isOpen; }
   private currentCoordKey: { x: number; y: number; z: number } | null = null;
   private currentFurnaceData: FurnaceData | null = null;
   private updateInterval: number | null = null;
@@ -56,9 +57,9 @@ export class FurnaceScreen {
   }
 
   public open(x: number, y: number, z: number): void {
+    this._isOpen = true;
     this.currentCoordKey = { x, y, z };
     this.currentFurnaceData = FurnaceManager.getInstance().getFurnaceData(x, y, z);
-    this.isOpen = true;
     this.container.style.display = 'block';
 
     this.render();
@@ -71,7 +72,7 @@ export class FurnaceScreen {
   }
 
   public close(): void {
-    this.isOpen = false;
+    this._isOpen = false;
     this.container.style.display = 'none';
     if (this.updateInterval !== null) {
       clearInterval(this.updateInterval);
@@ -82,7 +83,7 @@ export class FurnaceScreen {
   }
 
   public getIsOpen(): boolean {
-    return this.isOpen;
+    return this._isOpen;
   }
 
   /** Returns the world coordinates of the currently open furnace, or null */

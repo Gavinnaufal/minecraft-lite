@@ -79,7 +79,7 @@ const blockTypes: BlockType[] = [
   {
     id: 22,
     name: 'iron_ore',
-    color: 0xb0bec5,
+    color: 0xd7a15c,
     solid: true,
     transparent: false,
     hardness: 3.2,

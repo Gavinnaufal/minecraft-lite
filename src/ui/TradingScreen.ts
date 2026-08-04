@@ -63,6 +63,10 @@ export class TradingScreen {
       display: none; align-items: center; justify-content: center;
       z-index: 320; font-family: monospace; user-select: none;
     `;
+    this.container.addEventListener('mousedown', (e) => e.stopPropagation());
+    this.container.addEventListener('mouseup', (e) => e.stopPropagation());
+    this.container.addEventListener('click', (e) => e.stopPropagation());
+    this.container.addEventListener('contextmenu', (e) => e.preventDefault());
 
     const panel = document.createElement('div');
     panel.style.cssText = `

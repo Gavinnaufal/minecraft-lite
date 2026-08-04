@@ -2,9 +2,13 @@ import { Inventory } from '../inventory/Inventory';
 import { Hotbar } from '../inventory/Hotbar';
 import { EquipmentSlots, type ArmorSlotType } from '../inventory/EquipmentSlots';
 import { getItemById } from '../inventory/ItemRegistry';
-import { inputManager } from '../core/InputManager';
 import { checkRecipe } from '../crafting/CraftingSystem';
 import { createItemIcon } from './IconGenerator';
+
+export interface CraftGridSlot {
+  itemId: string;
+  count: number;
+}
 
 export class InventoryScreen {
   private container: HTMLDivElement | null = null;
@@ -22,8 +26,8 @@ export class InventoryScreen {
     boots: null,
   };
 
-  // Crafting 3x3 Grid
-  private craftGrid: (string | null)[][] = [
+  // Crafting 3x3 Grid with Stack Support
+  private craftGrid: (CraftGridSlot | null)[][] = [
     [null, null, null],
     [null, null, null],
     [null, null, null],
@@ -37,6 +41,10 @@ export class InventoryScreen {
     this.equipmentSlots = equipmentSlots;
   }
 
+  get isOpen(): boolean {
+    return this.visible;
+  }
+
   create(): void {
     this.container = document.createElement('div');
     this.container.style.cssText = `
@@ -44,6 +52,10 @@ export class InventoryScreen {
       background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); z-index: 200;
       justify-content: center; align-items: center; flex-direction: column;
     `;
+    this.container.addEventListener('mousedown', (e) => e.stopPropagation());
+    this.container.addEventListener('mouseup', (e) => e.stopPropagation());
+    this.container.addEventListener('click', (e) => e.stopPropagation());
+    this.container.addEventListener('contextmenu', (e) => e.preventDefault());
     document.body.appendChild(this.container);
 
     // Main panel - Minecraft Classic Gray GUI Box
@@ -116,7 +128,7 @@ export class InventoryScreen {
     craftArea.appendChild(craftGridDiv);
 
     const arrow = document.createElement('div');
-    arrow.textContent = '\u2192';
+    arrow.textContent = '➔';
     arrow.style.cssText = 'color: #373737; font-size: 32px; font-weight: bold; margin: 0 6px; text-shadow: 1px 1px 0 #fff;';
     craftArea.appendChild(arrow);
 
@@ -132,7 +144,7 @@ export class InventoryScreen {
     `;
     this.craftOutput.addEventListener('mousedown', (e) => {
       e.preventDefault();
-      this.takeOutput();
+      this.takeOutput(e.shiftKey);
     });
     this.craftOutput.addEventListener('contextmenu', (e) => e.preventDefault());
     craftArea.appendChild(this.craftOutput);
@@ -325,53 +337,118 @@ export class InventoryScreen {
   private onCraftSlotClick(e: MouseEvent, r: number, c: number): void {
     e.preventDefault();
     const current = this.craftGrid[r][c];
+    const isRightClick = e.button === 2;
 
     if (this.dragItem) {
       if (!current) {
-        // Put 1 item from cursor into crafting grid slot
-        this.craftGrid[r][c] = this.dragItem.itemId;
-        this.dragItem.count--;
-        if (this.dragItem.count <= 0) this.dragItem = null;
-      } else if (current === this.dragItem.itemId) {
-        // Already same item
+        if (isRightClick) {
+          this.craftGrid[r][c] = { itemId: this.dragItem.itemId, count: 1 };
+          this.dragItem.count--;
+          if (this.dragItem.count <= 0) this.dragItem = null;
+        } else {
+          this.craftGrid[r][c] = { itemId: this.dragItem.itemId, count: this.dragItem.count };
+          this.dragItem = null;
+        }
+      } else if (current.itemId === this.dragItem.itemId) {
+        const max = getItemById(current.itemId)?.maxStack ?? 64;
+        if (isRightClick) {
+          if (current.count < max) {
+            current.count++;
+            this.dragItem.count--;
+            if (this.dragItem.count <= 0) this.dragItem = null;
+          }
+        } else {
+          const space = max - current.count;
+          const add = Math.min(space, this.dragItem.count);
+          current.count += add;
+          this.dragItem.count -= add;
+          if (this.dragItem.count <= 0) this.dragItem = null;
+        }
       } else {
-        // Swap with cursor item
         const tmp = current;
-        this.craftGrid[r][c] = this.dragItem.itemId;
-        this.dragItem = { itemId: tmp, count: 1 };
+        this.craftGrid[r][c] = { itemId: this.dragItem.itemId, count: this.dragItem.count };
+        this.dragItem = { itemId: tmp.itemId, count: tmp.count };
       }
     } else if (current) {
-      // Pick up 1 item from crafting grid back to cursor
-      this.dragItem = { itemId: current, count: 1 };
-      this.craftGrid[r][c] = null;
+      if (isRightClick && current.count > 1) {
+        const half = Math.ceil(current.count / 2);
+        this.dragItem = { itemId: current.itemId, count: half };
+        current.count -= half;
+      } else {
+        this.dragItem = { itemId: current.itemId, count: current.count };
+        this.craftGrid[r][c] = null;
+      }
     }
     this.refresh();
   }
 
-  private takeOutput(): void {
-    const recipe = checkRecipe(this.craftGrid);
+  private getSimpleCraftGridIds(): (string | null)[][] {
+    return this.craftGrid.map(row => row.map(cell => cell ? cell.itemId : null));
+  }
+
+  private takeOutput(isShiftKey = false): void {
+    const simpleGrid = this.getSimpleCraftGridIds();
+    const recipe = checkRecipe(simpleGrid);
     if (!recipe) return;
 
-    if (this.dragItem) {
-      if (this.dragItem.itemId === recipe.result.itemId) {
-        const max = getItemById(recipe.result.itemId)?.maxStack ?? 64;
-        if (this.dragItem.count + recipe.result.count <= max) {
-          this.dragItem.count += recipe.result.count;
-          this.consumeCraftGrid();
-        }
-      }
-    } else {
-      this.dragItem = { itemId: recipe.result.itemId, count: recipe.result.count };
-      this.consumeCraftGrid();
-    }
-    this.refresh();
-  }
-
-  private consumeCraftGrid(): void {
+    // Calculate max batches available in grid
+    let maxBatches = 64;
     for (let r = 0; r < 3; r++) {
       for (let c = 0; c < 3; c++) {
         if (this.craftGrid[r][c]) {
-          this.craftGrid[r][c] = null;
+          maxBatches = Math.min(maxBatches, this.craftGrid[r][c]!.count);
+        }
+      }
+    }
+
+    const maxStack = getItemById(recipe.result.itemId)?.maxStack ?? 64;
+
+    if (isShiftKey || maxBatches > 1) {
+      // Craft ALL available batches at once (or up to maxStack 64)
+      const maxPossibleBatches = Math.min(maxBatches, Math.floor(maxStack / recipe.result.count));
+      const totalYield = maxPossibleBatches * recipe.result.count;
+
+      if (totalYield > 0) {
+        // Add yield directly into inventory/hotbar or drag cursor
+        let rem = this.inventory.addItem(recipe.result.itemId, totalYield);
+        if (rem > 0) {
+          rem = this.hotbar.addItem(recipe.result.itemId, rem);
+        }
+        if (rem > 0) {
+          if (this.dragItem && this.dragItem.itemId === recipe.result.itemId) {
+            this.dragItem.count += rem;
+          } else if (!this.dragItem) {
+            this.dragItem = { itemId: recipe.result.itemId, count: rem };
+          }
+        }
+        this.consumeCraftGrid(maxPossibleBatches);
+      }
+    } else {
+      // Single Batch Craft
+      if (this.dragItem) {
+        if (this.dragItem.itemId === recipe.result.itemId) {
+          if (this.dragItem.count + recipe.result.count <= maxStack) {
+            this.dragItem.count += recipe.result.count;
+            this.consumeCraftGrid(1);
+          }
+        }
+      } else {
+        this.dragItem = { itemId: recipe.result.itemId, count: recipe.result.count };
+        this.consumeCraftGrid(1);
+      }
+    }
+    this.refresh();
+  }
+
+  private consumeCraftGrid(amount = 1): void {
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) {
+        const slot = this.craftGrid[r][c];
+        if (slot) {
+          slot.count -= amount;
+          if (slot.count <= 0) {
+            this.craftGrid[r][c] = null;
+          }
         }
       }
     }
@@ -402,155 +479,134 @@ export class InventoryScreen {
           }
         }
       }
-      return;
-    }
-
-    if (this.dragEl) this.dragEl.style.display = 'none';
-
-    if (this.tooltipEl) {
-      const target = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
-      const slotEl = target?.closest<HTMLElement>('[data-item-id]');
-      const itemId = slotEl?.dataset.itemId;
-
-      if (itemId) {
-        const itemDef = getItemById(itemId);
-        if (itemDef) {
-          this.tooltipEl.textContent = itemDef.name;
-          this.tooltipEl.style.display = 'block';
-          const left = Math.min(e.clientX + 14, window.innerWidth - 150);
-          const top = Math.min(e.clientY + 14, window.innerHeight - 40);
-          this.tooltipEl.style.left = `${Math.max(8, left)}px`;
-          this.tooltipEl.style.top = `${Math.max(8, top)}px`;
-          return;
-        }
-      }
-      this.tooltipEl.style.display = 'none';
+    } else {
+      if (this.dragEl) this.dragEl.style.display = 'none';
     }
   };
+
+  show(): void {
+    this.visible = true;
+    if (this.container) this.container.style.display = 'flex';
+    this.refresh();
+  }
+
+  open(): void {
+    this.show();
+  }
+
+  hide(): void {
+    this.visible = false;
+    if (this.container) this.container.style.display = 'none';
+    if (this.dragEl) this.dragEl.style.display = 'none';
+    if (this.tooltipEl) this.tooltipEl.style.display = 'none';
+    this.returnCraftGridToInventory();
+  }
+
+  close(): void {
+    this.hide();
+  }
+
+  toggle(): void {
+    if (this.visible) this.hide();
+    else this.show();
+  }
+
+  private returnCraftGridToInventory(): void {
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) {
+        const slot = this.craftGrid[r][c];
+        if (slot) {
+          let rem = this.inventory.addItem(slot.itemId, slot.count);
+          if (rem > 0) this.hotbar.addItem(slot.itemId, rem);
+          this.craftGrid[r][c] = null;
+        }
+      }
+    }
+    if (this.dragItem) {
+      let rem = this.inventory.addItem(this.dragItem.itemId, this.dragItem.count, this.dragItem.durability);
+      if (rem > 0) this.hotbar.addItem(this.dragItem.itemId, rem, this.dragItem.durability);
+      this.dragItem = null;
+    }
+  }
 
   refresh(): void {
     if (!this.container) return;
 
-    // Refresh Armor Slots
+    // Refresh Armor slots
     if (this.equipmentSlots) {
       const slotTypes: ArmorSlotType[] = ['helmet', 'chestplate', 'leggings', 'boots'];
-      for (const st of slotTypes) {
-        const el = this.armorSlotEls[st];
-        if (el) {
-          const item = this.equipmentSlots.getItem(st);
-          this.renderSlot(el, item);
+      for (const slotType of slotTypes) {
+        const slotEl = this.armorSlotEls[slotType];
+        if (!slotEl) continue;
+        slotEl.innerHTML = '';
+        const item = this.equipmentSlots.getItem(slotType);
+        if (item && item.itemId) {
+          slotEl.appendChild(createItemIcon(item.itemId, 38));
+        } else {
+          slotEl.textContent = slotType.substring(0, 3).toUpperCase();
         }
       }
     }
 
-    // Collect all slots (0..8 = craft grid, 9 = craft result, 10..36 = inv, 37..45 = hotbar)
-    const allSlots = this.container.querySelectorAll<HTMLDivElement>('div[data-slot-type]');
-    if (allSlots.length < 46) return;
-
-    // Craft grid (indices 0-8)
-    for (let r = 0; r < 3; r++) {
-      for (let c = 0; c < 3; c++) {
-        const item = this.craftGrid[r][c];
-        this.renderSlot(allSlots[r * 3 + c], item ? { itemId: item, count: 1 } : { itemId: null, count: 0 });
-      }
-    }
-
-    // Craft result (index 9)
-    const recipe = checkRecipe(this.craftGrid);
-    this.renderSlot(allSlots[9], recipe ? { itemId: recipe.result.itemId, count: recipe.result.count } : { itemId: null, count: 0 });
-
-    // Inventory (indices 10-36)
-    for (let i = 0; i < 27; i++) {
-      this.renderSlot(allSlots[10 + i], this.inventory.slots[i]);
-    }
-    // Hotbar (indices 37-45)
+    // Refresh Crafting 3x3 Grid
     for (let i = 0; i < 9; i++) {
-      this.renderSlot(allSlots[37 + i], this.hotbar.slots[i]);
-      allSlots[37 + i].style.borderTopColor = i === this.hotbar.activeSlotIndex ? '#ffffa0' : '#373737';
-      allSlots[37 + i].style.borderLeftColor = i === this.hotbar.activeSlotIndex ? '#ffffa0' : '#373737';
-      allSlots[37 + i].style.borderBottomColor = i === this.hotbar.activeSlotIndex ? '#ffffa0' : '#ffffff';
-      allSlots[37 + i].style.borderRightColor = i === this.hotbar.activeSlotIndex ? '#ffffa0' : '#ffffff';
-    }
-  }
-
-  private renderSlot(el: HTMLDivElement, slot: { itemId: string | null; count: number; durability?: number }): void {
-    el.textContent = '';
-    if (slot.itemId) {
-      el.dataset.itemId = slot.itemId;
-      const icon = createItemIcon(slot.itemId, 38);
-      el.appendChild(icon);
-
-      if (slot.count > 1) {
-        const c = document.createElement('span');
-        c.style.cssText = 'position:absolute;bottom:2px;right:4px;font-size:13px;font-weight:bold;color:#fff;text-shadow:2px 2px 0 #000;';
-        c.textContent = String(slot.count);
-        el.appendChild(c);
+      const r = Math.floor(i / 3), c = i % 3;
+      const el = this.craftSlots[i];
+      if (!el) continue;
+      el.innerHTML = '';
+      const item = this.craftGrid[r][c];
+      if (item) {
+        el.appendChild(createItemIcon(item.itemId, 38));
+        if (item.count > 1) {
+          const countSpan = document.createElement('span');
+          countSpan.style.cssText = 'position:absolute;bottom:2px;right:4px;font-size:12px;font-weight:bold;color:#fff;text-shadow:1px 1px 0 #000;';
+          countSpan.textContent = String(item.count);
+          el.appendChild(countSpan);
+        }
       }
-
-      // Durability Bar
-      const itemDef = getItemById(slot.itemId);
-      if (itemDef?.maxDurability && slot.durability !== undefined) {
-        const ratio = Math.max(0, Math.min(1, slot.durability / itemDef.maxDurability));
-        const color = ratio > 0.5 ? '#4caf50' : ratio > 0.2 ? '#ffeb3b' : '#f44336';
-        const durBar = document.createElement('div');
-        durBar.style.cssText = `
-          position: absolute; bottom: 3px; left: 4px; width: 48px; height: 4px;
-          background: rgba(0,0,0,0.7); border-radius: 1px; overflow: hidden;
-        `;
-        const fill = document.createElement('div');
-        fill.style.cssText = `height: 100%; width: ${ratio * 100}%; background: ${color};`;
-        durBar.appendChild(fill);
-        el.appendChild(durBar);
-      }
-    } else {
-      delete el.dataset.itemId;
     }
-  }
 
-  toggle(): void {
-    this.visible = !this.visible;
-    if (this.container) {
-      this.container.style.display = this.visible ? 'flex' : 'none';
-    }
-    if (!this.visible) {
-      if (this.tooltipEl) this.tooltipEl.style.display = 'none';
-      if (this.dragEl) this.dragEl.style.display = 'none';
-
-      // Return any held drag item back to inventory / hotbar on close
-      if (this.dragItem && this.dragItem.count > 0) {
-        const rem = this.inventory.addItem(this.dragItem.itemId, this.dragItem.count);
-        if (rem > 0) this.hotbar.addItem(this.dragItem.itemId, rem);
-        this.dragItem = null;
-      }
-
-      // Return crafting grid items back to inventory on close
-      for (let r = 0; r < 3; r++) {
-        for (let c = 0; c < 3; c++) {
-          if (this.craftGrid[r][c]) {
-            const rem = this.inventory.addItem(this.craftGrid[r][c]!, 1);
-            if (rem > 0) this.hotbar.addItem(this.craftGrid[r][c]!, rem);
-            this.craftGrid[r][c] = null;
+    // Refresh Output Slot
+    if (this.craftOutput) {
+      this.craftOutput.innerHTML = '';
+      const simpleGrid = this.getSimpleCraftGridIds();
+      const recipe = checkRecipe(simpleGrid);
+      if (recipe) {
+        let maxBatches = 64;
+        for (let r = 0; r < 3; r++) {
+          for (let c = 0; c < 3; c++) {
+            if (this.craftGrid[r][c]) {
+              maxBatches = Math.min(maxBatches, this.craftGrid[r][c]!.count);
+            }
           }
         }
+        const yieldCount = recipe.result.count * (maxBatches > 1 ? maxBatches : 1);
+
+        this.craftOutput.appendChild(createItemIcon(recipe.result.itemId, 44));
+        const countSpan = document.createElement('span');
+        countSpan.style.cssText = 'position:absolute;bottom:2px;right:4px;font-size:13px;font-weight:bold;color:#ffcc00;text-shadow:1px 1px 0 #000;';
+        countSpan.textContent = String(yieldCount);
+        this.craftOutput.appendChild(countSpan);
       }
     }
-    if (this.visible) {
-      this.refresh();
-      if (inputManager.isPointerLocked) document.exitPointerLock();
-    }
-  }
 
-  open(): void {
-    if (!this.visible) {
-      this.toggle();
-    }
-  }
+    // Refresh Inventory slots
+    const invSlots = this.container.querySelectorAll<HTMLDivElement>('[data-slot-type="slot"]');
+    invSlots.forEach((el, idx) => {
+      const isHotbar = idx >= 27;
+      const slotIdx = isHotbar ? idx - 27 : idx;
+      const slot = isHotbar ? this.hotbar.slots[slotIdx] : this.inventory.slots[slotIdx];
+      el.innerHTML = '';
 
-  close(): void {
-    if (this.visible) {
-      this.toggle();
-    }
+      if (slot.itemId) {
+        el.appendChild(createItemIcon(slot.itemId, 38));
+        if (slot.count > 1) {
+          const c = document.createElement('span');
+          c.style.cssText = 'position:absolute;bottom:2px;right:4px;font-size:12px;font-weight:bold;color:#fff;text-shadow:1px 1px 0 #000;';
+          c.textContent = String(slot.count);
+          el.appendChild(c);
+        }
+      }
+    });
   }
-
-  get isOpen(): boolean { return this.visible; }
 }

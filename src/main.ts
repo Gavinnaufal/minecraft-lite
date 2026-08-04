@@ -288,7 +288,11 @@ const mobManager = new MobManager(scene, world);
 ProjectileManager.getInstance().setScene(scene);
 const dayNight = new DayNightCycle();
 
-// Spawn player on terrain surface immediately
+// Spawn player on terrain surface immediately with seed-randomized offset
+const spawnSeedX = Math.round((Math.sin(worldSeed * 0.0001) * 10000) % 400);
+const spawnSeedZ = Math.round((Math.cos(worldSeed * 0.0001) * 10000) % 400);
+player.position.x = spawnSeedX;
+player.position.z = spawnSeedZ;
 const spawnH = heightMap.getHeight(player.position.x, player.position.z);
 player.position.y = spawnH + 2;
 camera.position.set(player.position.x, player.position.y + player.eyeHeight, player.position.z);
@@ -890,8 +894,10 @@ engine.setUpdateCallback((deltaTime) => {
     AudioManager.getInstance().playSFX('footstep_water');
   };
 
-  // Left click mob attack hit
-  if (inputManager.isLeftMouseDown && !wasLeftDown && hitMobIdx >= 0) {
+  const isAnyUIOpen = tradingScreen.isOpen || inventoryScreen.isOpen || furnaceScreen.isOpen || chestScreen.isOpen || pauseMenu.isOpen;
+
+  // Left click mob attack hit (only when no UI is open)
+  if (!isAnyUIOpen && inputManager.isLeftMouseDown && !wasLeftDown && hitMobIdx >= 0) {
     handModel.triggerSwing();
     AudioManager.getInstance().playSFX('hit');
 
@@ -969,8 +975,8 @@ engine.setUpdateCallback((deltaTime) => {
   if (bp > 0) { progressBar.style.display = 'block'; progressFill.style.width = `${bp * 100}%`; }
   else progressBar.style.display = 'none';
 
-  // Continuous right click handling for block placement & interaction
-  if (inputManager.isRightMouseDown && !wasRightDown) {
+  // Continuous right click handling for block placement & interaction (only when no UI is open)
+  if (!isAnyUIOpen && inputManager.isRightMouseDown && !wasRightDown) {
     if (hitMobIdx >= 0) {
       const targetMob = mobManager.mobs[hitMobIdx];
       if (targetMob instanceof Villager) {

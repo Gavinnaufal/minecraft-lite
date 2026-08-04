@@ -63,6 +63,10 @@ export function generateTrees(
         }
       }
 
+      // Only place leaf canopy if trunk is within land or valid surface
+      const groundAtTree = heightMap.getHeight(wx, wz);
+      if (groundAtTree <= 0 || groundAtTree <= 40) continue; // Skip water/river surfaces
+
       const leafBase = surfaceY + trunkHeight - 1;
       for (let dy = 0; dy < 3; dy++) {
         for (let dz = -1; dz <= 1; dz++) {

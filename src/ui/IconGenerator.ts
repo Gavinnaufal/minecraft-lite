@@ -17,6 +17,10 @@ const BLOCK_COLORS: Record<string, { top: string; left: string; right: string }>
   netherrack: { top: '#802626', left: '#6a1b1b', right: '#571414' },
   glowstone: { top: '#ffe082', left: '#ffd54f', right: '#ffc107' },
   soul_sand: { top: '#5d4037', left: '#4e3629', right: '#3e2a1e' },
+  coal_ore: { top: '#424242', left: '#303030', right: '#212121' },
+  iron_ore: { top: '#d7a15c', left: '#b58342', right: '#94662d' },
+  furnace: { top: '#757575', left: '#5d4037', right: '#4e342e' },
+  nether_brick: { top: '#4a2428', left: '#3a1b1e', right: '#2d1417' },
 };
 
 export function createItemIcon(itemId: string, size = 28): HTMLElement {
@@ -62,6 +66,48 @@ export function createItemIcon(itemId: string, size = 28): HTMLElement {
 
   if (itemId === 'stick') {
     svg.innerHTML = `<line x1="8" y1="24" x2="24" y2="8" stroke="#8d6e63" stroke-width="4" stroke-linecap="round"/>`;
+  } else if (itemId === 'emerald') {
+    svg.innerHTML = `
+      <polygon points="16,4 25,11 25,21 16,28 7,21 7,11" fill="#00e676" stroke="#00a152" stroke-width="1"/>
+      <polygon points="16,7 22,12 22,20 16,25 10,20 10,12" fill="#69f0ae"/>
+      <polygon points="16,9 19,13 16,21 13,13" fill="#b9f6ca"/>
+    `;
+  } else if (itemId === 'blaze_rod') {
+    svg.innerHTML = `
+      <rect x="13" y="4" width="6" height="24" rx="2" fill="#ffb300" stroke="#ff6f00" stroke-width="1"/>
+      <line x1="14" y1="6" x2="14" y2="26" stroke="#ffe082" stroke-width="2"/>
+    `;
+  } else if (itemId === 'ghast_tear') {
+    svg.innerHTML = `
+      <path d="M 16,6 Q 24,18 16,26 Q 8,18 16,6 Z" fill="#e0f7fa" stroke="#b2ebf2" stroke-width="1"/>
+      <circle cx="14" cy="16" r="3" fill="#ffffff"/>
+    `;
+  } else if (itemId.includes('helmet')) {
+    const isIron = itemId.includes('iron');
+    const color = isIron ? '#cfd8dc' : '#8d6e63';
+    svg.innerHTML = `
+      <path d="M 8,18 L 8,12 Q 16,4 24,12 L 24,18 Z" fill="${color}" stroke="#333" stroke-width="1"/>
+      <rect x="7" y="16" width="18" height="4" fill="${color}" stroke="#333" stroke-width="0.5"/>
+    `;
+  } else if (itemId.includes('chestplate')) {
+    const isIron = itemId.includes('iron');
+    const color = isIron ? '#cfd8dc' : '#8d6e63';
+    svg.innerHTML = `
+      <path d="M 6,8 L 11,8 L 16,12 L 21,8 L 26,8 L 28,16 L 24,18 L 24,26 L 8,26 L 8,18 L 4,16 Z" fill="${color}" stroke="#333" stroke-width="1"/>
+    `;
+  } else if (itemId.includes('leggings')) {
+    const isIron = itemId.includes('iron');
+    const color = isIron ? '#cfd8dc' : '#8d6e63';
+    svg.innerHTML = `
+      <path d="M 8,6 L 24,6 L 24,26 L 18,26 L 16,14 L 14,14 L 12,26 L 8,26 Z" fill="${color}" stroke="#333" stroke-width="1"/>
+    `;
+  } else if (itemId.includes('boots')) {
+    const isIron = itemId.includes('iron');
+    const color = isIron ? '#cfd8dc' : '#8d6e63';
+    svg.innerHTML = `
+      <rect x="6" y="14" width="8" height="12" rx="1" fill="${color}" stroke="#333" stroke-width="1"/>
+      <rect x="18" y="14" width="8" height="12" rx="1" fill="${color}" stroke="#333" stroke-width="1"/>
+    `;
   } else if (itemId.includes('pickaxe')) {
     const isIron = itemId.includes('iron');
     const isStone = itemId.includes('stone');
@@ -183,9 +229,9 @@ export function createItemIcon(itemId: string, size = 28): HTMLElement {
     `;
   } else if (itemId === 'raw_iron') {
     svg.innerHTML = `
-      <path d="M 8,14 Q 14,6 22,10 Q 26,18 18,24 Q 10,22 8,14 Z" fill="#b0bec5" stroke="#78909c" stroke-width="0.5"/>
-      <circle cx="14" cy="14" r="3" fill="#cfd8dc"/>
-      <circle cx="19" cy="17" r="2" fill="#90a4ae"/>
+      <path d="M 8,14 Q 14,6 22,10 Q 26,18 18,24 Q 10,22 8,14 Z" fill="#d7a15c" stroke="#b58342" stroke-width="0.5"/>
+      <circle cx="14" cy="14" r="3" fill="#ffe0b2"/>
+      <circle cx="19" cy="17" r="2" fill="#94662d"/>
     `;
   } else if (itemId === 'gold_ingot') {
     svg.innerHTML = `
@@ -224,7 +270,7 @@ export function createItemIcon(itemId: string, size = 28): HTMLElement {
       <circle cx="21" cy="10" r="2.5" fill="#ffeb3b"/>
     `;
   } else {
-    svg.innerHTML = `<rect x="6" y="6" width="20" height="20" fill="#9e9e9e" rx="3"/>`;
+    svg.innerHTML = `<rect x="6" y="6" width="20" height="20" fill="#8d6e63" rx="3" stroke="#5d4037" stroke-width="1"/>`;
   }
 
   container.appendChild(svg);

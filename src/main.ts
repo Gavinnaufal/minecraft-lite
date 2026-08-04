@@ -57,7 +57,7 @@ import { BlockPlacer } from './interaction/BlockPlacer';
 import { Inventory } from './inventory/Inventory';
 import { Hotbar } from './inventory/Hotbar';
 import { blockIdToItemId, itemIdToBlockId, getItemById } from './inventory/ItemRegistry';
-import { loadBlockTexture } from './world/BlockRegistry';
+import { loadBlockTexture, getBlockById } from './world/BlockRegistry';
 import { SaveManager } from './save/SaveManager';
 import { MobManager } from './mobs/MobManager';
 import { Cow } from './mobs/passive/Cow';
@@ -382,7 +382,20 @@ const BLOCK_PARTICLE_COLORS: Record<number, number> = {
 blockBreaker.setOnBlockBroken((x, y, z, blockId) => {
   particleSystem.spawnBlockBreakParticles(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), BLOCK_PARTICLE_COLORS[blockId] ?? 0x8d6e63);
 
-  if (blockId === 1) {
+  const blockDef = getBlockById(blockId);
+  if (blockDef?.minPickaxeTier !== undefined) {
+    const activeTool = hotbar.getActiveItem();
+    const toolMeta = activeTool.itemId ? getItemById(activeTool.itemId) : null;
+    const isPickaxe = toolMeta?.toolType === 'pickaxe';
+    const pickaxeTier = isPickaxe && toolMeta?.toolTier !== undefined ? toolMeta.toolTier : 0;
+
+    if (pickaxeTier >= blockDef.minPickaxeTier) {
+      const dropItem = blockId === 22 ? 'raw_iron' : (blockIdToItemId(blockId) ?? 'stone');
+      itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), dropItem, 1);
+    } else {
+      toastSystem.show(`Butuh Pickaxe Tier ${blockDef.minPickaxeTier} atau lebih tinggi untuk mengambil ${blockDef.name}!`, 'warning');
+    }
+  } else if (blockId === 1) {
     // Grass block drops 1 Grass + 35% chance Wheat Seeds
     itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), 'grass', 1);
     if (Math.random() < 0.35) {
@@ -404,18 +417,6 @@ blockBreaker.setOnBlockBroken((x, y, z, blockId) => {
   } else if (blockId === 21) {
     // Coal Ore drops 1 Coal with any tool / bare hands
     itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), 'coal', 1);
-  } else if (blockId === 22) {
-    // Iron Ore requires minimum Stone Pickaxe (toolType === 'pickaxe' && toolTier >= 2)
-    const activeTool = hotbar.getActiveItem();
-    const toolMeta = activeTool.itemId ? getItemById(activeTool.itemId) : null;
-    const isPickaxe = toolMeta?.toolType === 'pickaxe';
-    const pickaxeTier = isPickaxe && toolMeta?.toolTier !== undefined ? toolMeta.toolTier : 0;
-
-    if (pickaxeTier >= 2) {
-      itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), 'raw_iron', 1);
-    } else {
-      toastSystem.show('Butuh Stone Pickaxe atau lebih tinggi untuk mengambil Raw Iron!', 'warning');
-    }
   } else {
     const itemId = blockIdToItemId(blockId);
     if (itemId) {

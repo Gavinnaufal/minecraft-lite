@@ -865,7 +865,7 @@ engine.setUpdateCallback((deltaTime) => {
     }
   }
 
-  ProjectileManager.getInstance().update(deltaTime, world, player, mobManager);
+  ProjectileManager.getInstance().update(deltaTime, world, player, mobManager, equipmentSlots);
 
   blockBreaker.updateOutline(camera);
   blockBreaker.updateBreak(deltaTime, inputManager.isLeftMouseDown, camera, hotbar.getActiveItem());

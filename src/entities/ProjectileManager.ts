@@ -4,6 +4,7 @@ import { Fireball } from './Fireball';
 import type { World } from '../world/World';
 import type { Player } from '../player/Player';
 import type { MobManager } from '../mobs/MobManager';
+import type { EquipmentSlots } from '../inventory/EquipmentSlots';
 import { AudioManager } from '../audio/AudioManager';
 
 export class ProjectileManager {
@@ -41,7 +42,7 @@ export class ProjectileManager {
     return fireball;
   }
 
-  update(deltaTime: number, world?: World, player?: Player, mobManager?: MobManager): void {
+  update(deltaTime: number, world?: World, player?: Player, mobManager?: MobManager, equipmentSlots?: EquipmentSlots): void {
     for (let i = this.arrows.length - 1; i >= 0; i--) {
       const arrow = this.arrows[i];
 
@@ -59,7 +60,7 @@ export class ProjectileManager {
           ay >= py && ay <= py + 1.8 &&
           az >= pz - 0.45 && az <= pz + 0.45
         ) {
-          player.health = Math.max(0, player.health - 3);
+          player.damage(3, equipmentSlots);
           AudioManager.getInstance().playSFX('hit');
           if (this.scene) this.scene.remove(arrow.mesh);
           this.arrows.splice(i, 1);
@@ -115,7 +116,7 @@ export class ProjectileManager {
       if (player && player.health > 0) {
         const dist = fb.position.distanceTo(new THREE.Vector3(player.position.x, player.position.y + 0.9, player.position.z));
         if (dist < 1.0) {
-          player.damage(fb.damage);
+          player.damage(fb.damage, equipmentSlots);
           AudioManager.getInstance().playSFX('explosion');
           fb.shouldRemove = true;
         }

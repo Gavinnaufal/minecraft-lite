@@ -3,6 +3,7 @@ import { Mob } from '../Mob';
 import { StateMachine, State } from '../ai/StateMachine';
 import type { World } from '../../world/World';
 import type { Player } from '../../player/Player';
+import type { EquipmentSlots } from '../../inventory/EquipmentSlots';
 import { getBlockById } from '../../world/BlockRegistry';
 import { AudioManager } from '../../audio/AudioManager';
 
@@ -95,7 +96,7 @@ export class Spider extends Mob {
     return super.takeDamage(amount);
   }
 
-  update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, player?: Player, _mobManager?: any, _camera?: any, isNight: boolean = true): void {
+  update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, player?: Player, _mobManager?: any, _camera?: any, isNight: boolean = true, equipmentSlots?: EquipmentSlots): void {
     let isMoving = false;
 
     if (playerPos) {
@@ -133,7 +134,7 @@ export class Spider extends Mob {
           if (horizDist < 1.6 && dy < 1.5 && this.attackTimer >= 1.2) {
             this.attackTimer = 0;
             if (player && player.health > 0) {
-              player.health = Math.max(0, player.health - 3);
+              player.damage(3, equipmentSlots);
               AudioManager.getInstance().playSFX('hit');
             }
           }

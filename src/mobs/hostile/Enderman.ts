@@ -3,6 +3,7 @@ import { Mob } from '../Mob';
 import type { World } from '../../world/World';
 import type { Player } from '../../player/Player';
 import type { MobManager } from '../MobManager';
+import type { EquipmentSlots } from '../../inventory/EquipmentSlots';
 import { AudioManager } from '../../audio/AudioManager';
 import { getBlockById } from '../../world/BlockRegistry';
 
@@ -152,7 +153,7 @@ export class Enderman extends Mob {
     return isDead;
   }
 
-  update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, player?: Player, _mobManager?: MobManager, camera?: THREE.PerspectiveCamera): void {
+  update(deltaTime: number, world?: World, playerPos?: THREE.Vector3, player?: Player, _mobManager?: MobManager, camera?: THREE.PerspectiveCamera, _isNight?: boolean, equipmentSlots?: EquipmentSlots): void {
     let isMoving = false;
 
     if (this.spawnGraceTimer > 0) {
@@ -223,7 +224,7 @@ export class Enderman extends Mob {
           if (horizDist < 1.6 && dy < 2.5 && this.attackTimer >= 1.0) {
             this.attackTimer = 0;
             if (player && player.health > 0) {
-              player.health = Math.max(0, player.health - 6);
+              player.damage(6, equipmentSlots);
               AudioManager.getInstance().playSFX('hit');
             }
           }

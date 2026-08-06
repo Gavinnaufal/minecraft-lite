@@ -150,7 +150,12 @@ export class VillageGenerator {
     for (const loc of oakHouseLocations) {
       const hWX = villageCX + loc.relX;
       const hWZ = villageCZ + loc.relZ;
-      const groundY = heightMap.getHeight(hWX + 2, hWZ + 2);
+      let groundY = WATER_LEVEL;
+      for (let dx = 0; dx < 5; dx++) {
+        for (let dz = 0; dz < 5; dz++) {
+          groundY = Math.max(groundY, heightMap.getHeight(hWX + dx, hWZ + dz));
+        }
+      }
       if (groundY > WATER_LEVEL) {
         buildOakHousePrefab(chunk, chunkMinWX, chunkMinWZ, hWX, groundY, hWZ);
       }
@@ -159,7 +164,12 @@ export class VillageGenerator {
     for (const loc of stoneHouseLocations) {
       const hWX = villageCX + loc.relX;
       const hWZ = villageCZ + loc.relZ;
-      const groundY = heightMap.getHeight(hWX + 2, hWZ + 2);
+      let groundY = WATER_LEVEL;
+      for (let dx = 0; dx < 6; dx++) {
+        for (let dz = 0; dz < 6; dz++) {
+          groundY = Math.max(groundY, heightMap.getHeight(hWX + dx, hWZ + dz));
+        }
+      }
       if (groundY > WATER_LEVEL) {
         buildStoneHousePrefab(chunk, chunkMinWX, chunkMinWZ, hWX, groundY, hWZ);
       }
@@ -174,7 +184,12 @@ export class VillageGenerator {
     for (const loc of farmLocations) {
       const fWX = villageCX + loc.relX;
       const fWZ = villageCZ + loc.relZ;
-      const groundY = heightMap.getHeight(fWX + 2, fWZ + 3);
+      let groundY = WATER_LEVEL;
+      for (let dx = 0; dx < 4; dx++) {
+        for (let dz = 0; dz < 6; dz++) {
+          groundY = Math.max(groundY, heightMap.getHeight(fWX + dx, fWZ + dz));
+        }
+      }
       if (groundY > WATER_LEVEL) {
         buildFarmPrefab(chunk, chunkMinWX, chunkMinWZ, fWX, groundY, fWZ);
       }

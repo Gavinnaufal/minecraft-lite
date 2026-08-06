@@ -57,14 +57,14 @@ export class StructureManager {
     chunk.setBlock(lx, y, lz, blockId);
     chunk.isDirty = true; // Ensure chunk is re-meshed cleanly with structure blocks
 
-    // If placing a solid floor/foundation block, fill downward if air beneath
-    if (blockId === 3 || blockId === 5) {
-      for (let fillY = y - 1; fillY >= Math.max(1, y - 3); fillY--) {
+    // If placing a solid floor/foundation block, fill downward foundation with stone until hitting solid ground
+    if (blockId === 3 || blockId === 5 || blockId === 8 || blockId === 13) {
+      for (let fillY = y - 1; fillY >= 1; fillY--) {
         const below = chunk.getBlock(lx, fillY, lz);
-        if (below === 0 || below === 7) {
+        if (below === 0 || below === 7 || below === 6) {
           chunk.setBlock(lx, fillY, lz, 3); // Stone foundation
         } else {
-          break;
+          break; // Solid ground reached
         }
       }
     }

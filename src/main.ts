@@ -607,6 +607,29 @@ let wasLeftDown = false;
 let lastPlayerHealth = player.health;
 let footstepTimer = 0;
 let bobbingTimer = 0;
+let currentCaveLightFactor = 1.0;
+
+function isCaveArea(worldInstance: World, px: number, py: number, pz: number): boolean {
+  if (DimensionManager.getInstance().isNether()) return true;
+  const bx = Math.floor(px);
+  const by = Math.floor(py);
+  const bz = Math.floor(pz);
+
+  if (by >= 120) return false;
+
+  let solidCount = 0;
+  for (let checkY = by + 2; checkY < CHUNK_HEIGHT; checkY++) {
+    const bId = worldInstance.getBlock(bx, checkY, bz);
+    if (bId !== 0 && bId !== 7 && bId !== 18) {
+      const block = getBlockById(bId);
+      if (block && block.solid) {
+        solidCount++;
+        if (solidCount >= 2) return true;
+      }
+    }
+  }
+  return false;
+}
 
 function getFacingDirection(cam: THREE.PerspectiveCamera): string {
   const dir = new THREE.Vector3();
@@ -666,6 +689,18 @@ engine.setUpdateCallback((deltaTime) => {
 
   dayNight.update(deltaTime);
   AudioManager.getInstance().updateAmbience(dayNight.timeOfDay, deltaTime);
+
+  // Dynamic Cave Ambient Lighting (CP169-CP171)
+  const inCave = isCaveArea(world, player.position.x, player.position.y + player.eyeHeight, player.position.z);
+  const targetFactor = inCave ? 0.35 : 1.0;
+  currentCaveLightFactor += (targetFactor - currentCaveLightFactor) * Math.min(1.0, deltaTime * 4.0);
+
+  if (!DimensionManager.getInstance().isNether()) {
+    const baseLight = dayNight.lightIntensity;
+    lights.ambient.intensity = Math.max(0.08, 0.45 * baseLight * currentCaveLightFactor);
+    lights.directional.intensity = Math.max(0.05, 1.15 * baseLight * currentCaveLightFactor);
+    lights.hemi.intensity = Math.max(0.08, 0.45 * baseLight * currentCaveLightFactor);
+  }
   playerCamera.update();
   playerController.update(deltaTime, camera);
   playerCollision.checkAndResolve(deltaTime);

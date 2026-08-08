@@ -181,9 +181,9 @@
 | CP166 | ✅ Selesai | `src/main.ts:L230-245` — Tunnel gua 3D noise dalam memotong rongga bawah tanah hingga kedalaman rendah. |
 | CP167 | ✅ Selesai | `src/main.ts:L240-250` — Generasi danau lahar (*lava pool*, `blockId=19`) di bawah elevasi Y=12. |
 | CP168 | ✅ Selesai | `src/main.ts:L245-255` — Klaster obsidian tergenerasi di pertemuan lahar dan air di bawah tanah. |
-| CP169 | ⚠️ Catatan Minor | `src/environment/DayNightCycle.ts` — Didefinisikan untuk dynamic cave lighting, namun fungsi `isCaveArea` tidak terpanggil di render loop (lighting gua mengikuti ambient sky global). |
+| CP169 | ✅ Selesai | `src/main.ts:L611-632` — Fungsi `isCaveArea(world, x, y, z)` memeriksa sky access & keberadaan atap solid di atas player. |
 | CP170 | ✅ Selesai | `src/audio/AudioManager.ts:L394-450` — Soundscape ambient lorong gua bawah tanah terintegrasi pada audio player. |
-| CP171 | ⚠️ Catatan Minor | `src/core/Renderer.ts:L26-36` — Pengurangan intensitas pencahayaan ambient saat player berada di bawah tanah Y<30 belum terhubung secara dinamis. |
+| CP171 | ✅ Selesai | `src/main.ts:L693-703` — Peredupan dinamik `lights.ambient`, `directional`, & `hemi` (faktor 0.35x) aktif otomatis saat player berada di area gua. |
 | CP172 | ✅ Selesai | `src/world/terrain/HeightMap.ts` & `main.ts:L230-245` — Integrasi visual transisi lorong gua & ravine ke kedalaman Y<20 terverifikasi. |
 | CP173 | ✅ Selesai | `src/world/structures/StructureManager.ts:L13-74` & `VillageGenerator.ts:L20-138` — Layout desa grid `96x96` & penjamin Starter Village di grid `(0,0)`. |
 | CP174 | ✅ Selesai | `src/world/structures/prefabs/HousePrefab.ts:L5-72` — Generator rumah kayu Oak (5x5x4) lengkap dengan pilar log & interior. |
@@ -319,11 +319,10 @@
 ## DEEP VERIFICATION
 
 ### 1. CP169-171 (Ambient Light Cave & isCaveArea)
-- **Status**: ⚠️ **Perlu playtest manual / Catatan Temuan (Fungsi Tidak Dipanggil di Render Loop)**
+- **Status**: ✅ **Verified — Selesai & Terintegrasi di Render Loop**
 - **Bukti Kode & Analisis**:
-  - `isCaveArea` atau peredupan pencahayaan ambient khusus gua tidak ada di [`src/core/Renderer.ts`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/core/Renderer.ts) maupun [`src/main.ts`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/main.ts).
-  - Intensitas lampu ambient global dikunci pada `0.45` di [`Renderer.ts:L26`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/core/Renderer.ts#L26) dan hanya berubah berdasarkan waktu siang/malam di [`DayNightCycle.ts:L15`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/environment/DayNightCycle.ts#L15).
-- **Skenario Playtest Manual**: Gali ke dalam tanah hingga elevasi Y=20 pada siang hari. Bagian dalam gua akan tetap terlihat terang karena cahaya sky/ambient global menembus medan tanpa adanya bayangan per-voxel atau peredupan otomatis saat masuk gua.
+  - `isCaveArea(world, x, y, z)` terimplementasi di [`src/main.ts:L611-632`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/main.ts#L611-L632) memindai kolom blok di atas kepala player untuk memverifikasi *sky access*.
+  - Di render update loop [`src/main.ts:L693-703`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/main.ts#L693-L703), setiap frame mendeteksi apakah player berada di dalam gua. Jika ya, intensitas `lights.ambient`, `lights.directional`, dan `lights.hemi` di-lerp secara halus ke pengali `0.35x` (minimum `0.08` floor), sehingga area gua terasa remang alami di siang hari tanpa menjadi gelap gulita.
 
 ### 2. CP213-225 (Dimension Manager & Nether Portal Teleportation)
 - **Status**: ⚠️ **Verified — Konversi 1:8 Konsisten, namun Perlu Playtest Manual untuk Ketinggian Y**

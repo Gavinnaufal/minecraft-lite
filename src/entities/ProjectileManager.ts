@@ -24,6 +24,27 @@ export class ProjectileManager {
     this.scene = scene;
   }
 
+  /**
+   * Helper method to safely dispose WebGL geometries and materials
+   * for Three.js Mesh or Group objects to prevent VRAM memory leaks.
+   */
+  private disposeObject3D(obj: THREE.Object3D): void {
+    obj.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        if (child.geometry) {
+          child.geometry.dispose();
+        }
+        if (child.material) {
+          if (Array.isArray(child.material)) {
+            child.material.forEach((m) => m.dispose());
+          } else {
+            child.material.dispose();
+          }
+        }
+      }
+    });
+  }
+
   spawnArrow(position: THREE.Vector3, direction: THREE.Vector3, speed = 22.0, shooterId?: string): Arrow {
     const arrow = new Arrow(position, direction, speed, shooterId);
     this.arrows.push(arrow);
@@ -63,6 +84,7 @@ export class ProjectileManager {
           player.damage(3, equipmentSlots);
           AudioManager.getInstance().playSFX('hit');
           if (this.scene) this.scene.remove(arrow.mesh);
+          this.disposeObject3D(arrow.mesh);
           this.arrows.splice(i, 1);
           continue;
         }
@@ -90,6 +112,7 @@ export class ProjectileManager {
             mob.applyKnockback(arrow.velocity.clone().normalize(), 5.0);
             AudioManager.getInstance().playSFX('hit');
             if (this.scene) this.scene.remove(arrow.mesh);
+            this.disposeObject3D(arrow.mesh);
             this.arrows.splice(i, 1);
             hitMob = true;
             break;
@@ -103,6 +126,7 @@ export class ProjectileManager {
         if (this.scene) {
           this.scene.remove(arrow.mesh);
         }
+        this.disposeObject3D(arrow.mesh);
         this.arrows.splice(i, 1);
       }
     }
@@ -124,6 +148,7 @@ export class ProjectileManager {
 
       if (fb.shouldRemove) {
         if (this.scene) this.scene.remove(fb.mesh);
+        this.disposeObject3D(fb.mesh);
         this.fireballs.splice(i, 1);
       }
     }
@@ -133,9 +158,11 @@ export class ProjectileManager {
     if (this.scene) {
       for (const arrow of this.arrows) {
         this.scene.remove(arrow.mesh);
+        this.disposeObject3D(arrow.mesh);
       }
       for (const fb of this.fireballs) {
         this.scene.remove(fb.mesh);
+        this.disposeObject3D(fb.mesh);
       }
     }
     this.arrows = [];

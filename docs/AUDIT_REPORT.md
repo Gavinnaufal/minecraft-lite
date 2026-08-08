@@ -181,6 +181,10 @@
 | CP166 | ✅ Selesai | `src/main.ts:L230-245` — Tunnel gua 3D noise dalam memotong rongga bawah tanah hingga kedalaman rendah. |
 | CP167 | ✅ Selesai | `src/main.ts:L240-250` — Generasi danau lahar (*lava pool*, `blockId=19`) di bawah elevasi Y=12. |
 | CP168 | ✅ Selesai | `src/main.ts:L245-255` — Klaster obsidian tergenerasi di pertemuan lahar dan air di bawah tanah. |
+| CP169 | ⚠️ Catatan Minor | `src/environment/DayNightCycle.ts` — Didefinisikan untuk dynamic cave lighting, namun fungsi `isCaveArea` tidak terpanggil di render loop (lighting gua mengikuti ambient sky global). |
+| CP170 | ✅ Selesai | `src/audio/AudioManager.ts:L394-450` — Soundscape ambient lorong gua bawah tanah terintegrasi pada audio player. |
+| CP171 | ⚠️ Catatan Minor | `src/core/Renderer.ts:L26-36` — Pengurangan intensitas pencahayaan ambient saat player berada di bawah tanah Y<30 belum terhubung secara dinamis. |
+| CP172 | ✅ Selesai | `src/world/terrain/HeightMap.ts` & `main.ts:L230-245` — Integrasi visual transisi lorong gua & ravine ke kedalaman Y<20 terverifikasi. |
 | CP173 | ✅ Selesai | `src/world/structures/StructureManager.ts:L13-74` & `VillageGenerator.ts:L20-138` — Layout desa grid `96x96` & penjamin Starter Village di grid `(0,0)`. |
 | CP174 | ✅ Selesai | `src/world/structures/prefabs/HousePrefab.ts:L5-72` — Generator rumah kayu Oak (5x5x4) lengkap dengan pilar log & interior. |
 | CP175 | ✅ Selesai | `src/world/structures/prefabs/StoneHousePrefab.ts:L6-71` — Generator rumah batu Cobblestone (6x6x4) lengkap dengan peti loot & obor. |
@@ -309,3 +313,59 @@
 | CP294 | ✅ Selesai | `scratch/test_v3_stress.ts` — Stress test 50+ mob aktif + Nether Fortress + flying mobs berjalan 60 FPS. |
 | CP295 | ✅ Selesai | `package.json:L8` — Verifikasi `npm run build` (`tsc && vite build`) lulus 100% bersih tanpa error. |
 | CP296 | ✅ Selesai | `README.md` & `docs/296_V3_MASTER_POLISH.md` — Dokumentasi rilis v3.0 lengkap & final bug bash pass. |
+
+---
+
+## DEEP VERIFICATION
+
+### 1. CP169-171 (Ambient Light Cave & isCaveArea)
+- **Status**: ⚠️ **Perlu playtest manual / Catatan Temuan (Fungsi Tidak Dipanggil di Render Loop)**
+- **Bukti Kode & Analisis**:
+  - `isCaveArea` atau peredupan pencahayaan ambient khusus gua tidak ada di [`src/core/Renderer.ts`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/core/Renderer.ts) maupun [`src/main.ts`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/main.ts).
+  - Intensitas lampu ambient global dikunci pada `0.45` di [`Renderer.ts:L26`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/core/Renderer.ts#L26) dan hanya berubah berdasarkan waktu siang/malam di [`DayNightCycle.ts:L15`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/environment/DayNightCycle.ts#L15).
+- **Skenario Playtest Manual**: Gali ke dalam tanah hingga elevasi Y=20 pada siang hari. Bagian dalam gua akan tetap terlihat terang karena cahaya sky/ambient global menembus medan tanpa adanya bayangan per-voxel atau peredupan otomatis saat masuk gua.
+
+### 2. CP213-225 (Dimension Manager & Nether Portal Teleportation)
+- **Status**: ⚠️ **Verified — Konversi 1:8 Konsisten, namun Perlu Playtest Manual untuk Ketinggian Y**
+- **Bukti Kode & Analisis**:
+  - Konversi 1:8 di [`src/world/dimension/DimensionManager.ts:L64-74`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/world/dimension/DimensionManager.ts#L64-L74) konsisten di kedua arah (`Overworld->Nether` membagi 8, `Nether->Overworld` mengali 8) sebelum `setDimension` dipanggil di [`src/main.ts:L1160`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/main.ts#L1160).
+  - **Potensi Edge Case**: Posisi `targetPos.y` disalin mentah tanpa pengecekan ketinggian tanah (*ground Y height check*) di dimensi tujuan ([`src/main.ts:L1160-1172`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/main.ts#L1160-L1172)).
+- **Skenario Playtest Manual**: Buat portal di Overworld pada elevasi gunung tinggi (Y=90). Saat teleportasi ke Nether, player mendarat di Y=90 di Nether yang berisiko terjebak di dalam langit-langit Netherrack solid atau melayang jauh di atas laut lahar.
+
+### 3. CP259-264 (Animal Breeding & Growth System)
+- **Status**: ✅ **Verified — Benar sesuai klaim**
+- **Bukti Kode & Analisis**:
+  - `growthTimer` di-increment setiap frame di [`src/mobs/passive/BreedingManager.ts:L50`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/mobs/passive/BreedingManager.ts#L50) (`mob.growthTimer += deltaTime`) dan melacak skala pertumbuhan linier `0.5x` ke `1.0x` selama 60 detik ([`BreedingManager.ts:L51-56`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/mobs/passive/BreedingManager.ts#L51-L56)).
+  - `loveTimer` dan `breedingCooldown` di-decrement setiap frame di [`src/mobs/Mob.ts:L61-66`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/mobs/Mob.ts#L61-L66).
+  - Deteksi kedekatan 2 induk in-love berjarak < 3.5 unit di-loop di [`BreedingManager.ts:L74-84`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/mobs/passive/BreedingManager.ts#L74-L84).
+
+### 4. CP269 (Armor Damage Reduction)
+- **Status**: ✅ **Verified — Benar sesuai klaim**
+- **Bukti Kode & Analisis**:
+  - Formula mitigasi damage `calculateMitigatedDamage()` di [`src/inventory/ArmorSystem.ts:L19-29`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/inventory/ArmorSystem.ts#L19-L29) menghitung 4% per defense point (maksimal 80%) dan dipanggil via `player.damage(rawAmount, equipmentSlots)` di [`src/player/Player.ts:L13-16`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/player/Player.ts#L13-L16).
+  - Terintegrasi penuh pada serangan Zombie ([`Zombie.ts:L110`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/mobs/hostile/Zombie.ts#L110)), Spider ([`Spider.ts:L130`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/mobs/hostile/Spider.ts#L130)), Enderman ([`Enderman.ts:L180`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/mobs/hostile/Enderman.ts#L180)), panah Skeleton ([`ProjectileManager.ts:L63`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/entities/ProjectileManager.ts#L63)), dan fireball Blaze/Ghast ([`ProjectileManager.ts:L119`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/entities/ProjectileManager.ts#L119)).
+  - **Catatan**: Fall Damage ([`PlayerController.ts:L137`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/player/PlayerController.ts#L137)) dan Drowning Damage ([`PlayerController.ts:L108`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/player/PlayerController.ts#L108)) me-bypass armor (`player.health -= damage`), sesuai standar mekanik Minecraft vanilla.
+
+### 5. CP250-254 (Villager Trading Cooldown & Anti-Spam)
+- **Status**: ✅ **Verified — Benar sesuai klaim**
+- **Bukti Kode & Analisis**:
+  - Cooldown 4 detik diverifikasi SEBELUM transaksi dieksekusi di [`src/ui/TradingScreen.ts:L277-282`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/ui/TradingScreen.ts#L277-L282) (`manager.isCooldownActive(villager)`).
+  - Tombol UI "Tukar" di-disable pada render loop `16ms` di [`TradingScreen.ts:L161-164`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/ui/TradingScreen.ts#L161-L164) jika cooldown aktif. `setCooldown(villager, 4)` dipanggil tepat setelah `executeTrade` sukses di [`TradingScreen.ts:L289`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/ui/TradingScreen.ts#L289).
+
+### 6. CP243-245 (Furnace Smelting Fuel & Capacity Checks)
+- **Status**: ✅ **Verified — Benar sesuai klaim**
+- **Bukti Kode & Analisis**:
+  - Fuel (`fuelTime`) dikonsumsi bertahap seiring waktu via `data.fuelTime -= deltaSec` setiap tick 100ms di [`src/ui/FurnaceScreen.ts:L116-119`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/ui/FurnaceScreen.ts#L116-L119).
+  - Pengecekan kapasitas output slot (`canOutputFit`) dilakukan di [`FurnaceScreen.ts:L128-130`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/ui/FurnaceScreen.ts#L128-L130) sebelum mengonsumsi bahan bakar baru dan di [`FurnaceScreen.ts:L146-150`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/ui/FurnaceScreen.ts#L146-L150) sebelum menambah progress memasak. Jika output penuh (64 item) atau beda jenis item, peleburan berhenti dan fuel tidak terbuang.
+
+### 7. CP274-287 (Nether Fortress Mesh & Projectile Cleanup)
+- **Status**: ✅ **Verified — Fortress & Memory Cleanup Selesai**
+- **Bukti Kode & Analisis**:
+  - Fortress Mesh: [`src/world/structures/NetherFortressGenerator.ts:L29-75`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/world/structures/NetherFortressGenerator.ts#L29-L75) menempatkan `nether_brick` (ID 24) yang solid & opaque di `BlockRegistry.ts:L75`. Kolisi AABB & meshing chunk solid tanpa dinding bolong.
+  - **Pembersihan Memori WebGL**: Terimplementasi method `disposeObject3D()` di [`src/entities/ProjectileManager.ts:L33-47`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/entities/ProjectileManager.ts#L33-L47). Setiap kali proyektil (Arrow / Fireball) hancur karena hit, timeout, atau dipanggil `clear()`, method `geometry.dispose()` dan `material.dispose()` dipanggil secara menyeluruh untuk mencegah penumpukan VRAM GPU.
+
+### 8. CP240-241 (Ore Generation Depth Range & Thresholds)
+- **Status**: ✅ **Verified — Benar sesuai klaim**
+- **Bukti Kode & Analisis**:
+  - `COAL_THRESHOLD` dikunci pada `0.958` (Y 5-60) dan `IRON_THRESHOLD` pada `0.972` (Y 5-40) di [`src/world/ores/OreGenerator.ts:L15-20`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/world/ores/OreGenerator.ts#L15-L20).
+  - Pengecekan di [`OreGenerator.ts:L40`](file:///C:/project%20gabut%20pas%20pkl/minecraft%20lite/src/world/ores/OreGenerator.ts#L40) (`if (currentBlock !== 3) continue;`) memastikan ore HANYA menggantikan batu solid (`stone`), dan TIDAK PERNAH merusak lapisan rumput, tanah, pasir, atau air di permukaan. Kebal dari *swiss-cheese effect*.

@@ -1,4 +1,8 @@
 import * as THREE from 'three';
+import type { World } from '../World';
+import type { HeightMap } from '../terrain/HeightMap';
+import { getBlockById } from '../BlockRegistry';
+import { CHUNK_HEIGHT } from '../../utils/constants';
 
 export enum DimensionType {
   OVERWORLD = 'overworld',
@@ -72,4 +76,68 @@ export class DimensionManager {
     }
     return result;
   }
+
+  /**
+   * Calculates a safe standing Y coordinate at target (X, Z) in targetDimension.
+   * Ensures player does not spawn inside solid blocks or fall endlessly into void.
+   */
+  findSafeTeleportY(
+    world: World,
+    targetX: number,
+    origY: number,
+    targetZ: number,
+    targetDimension: DimensionType,
+    heightMap?: HeightMap
+  ): number {
+    const tx = Math.floor(targetX);
+    const tz = Math.floor(targetZ);
+    const startY = Math.max(5, Math.min(115, Math.floor(origY)));
+
+    const isSolid = (y: number): boolean => {
+      if (y < 0 || y >= CHUNK_HEIGHT) return true;
+      const bId = world.getBlock(tx, y, tz);
+      if (bId === 0 || bId === 7 || bId === 18) return false;
+      const block = getBlockById(bId);
+      return block ? block.solid : false;
+    };
+
+    const isSafeStand = (y: number): boolean => {
+      if (y <= 2 || y >= CHUNK_HEIGHT - 2) return false;
+      const solidBelow = isSolid(y - 1);
+      const freeFeet = !isSolid(y);
+      const freeHead = !isSolid(y + 1);
+      return solidBelow && freeFeet && freeHead;
+    };
+
+    // 1. Check if original Y is already a safe standing spot
+    if (isSafeStand(startY)) {
+      return startY;
+    }
+
+    // 2. If original Y is inside a solid block, search UPWARDS for first 2-block open space above solid ground
+    if (isSolid(startY) || isSolid(startY + 1)) {
+      for (let y = startY; y <= 115; y++) {
+        if (isSafeStand(y)) {
+          return y;
+        }
+      }
+    }
+
+    // 3. Search DOWNWARDS from Y = 100 to Y = 15 for a safe floor
+    for (let y = 100; y >= 15; y--) {
+      if (isSafeStand(y)) {
+        return y;
+      }
+    }
+
+    // 4. Fallback for Overworld surface height
+    if (targetDimension === DimensionType.OVERWORLD && heightMap) {
+      const h = heightMap.getHeight(tx, tz);
+      return Math.max(5, h + 1);
+    }
+
+    // 5. Fallback default for Nether floor
+    return 35;
+  }
 }
+

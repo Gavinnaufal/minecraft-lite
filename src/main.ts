@@ -46,6 +46,7 @@ import { DimensionManager, DimensionType } from './world/dimension/DimensionMana
 import { PortalDetector } from './world/dimension/PortalDetector';
 import { NetherFortressGenerator } from './world/structures/NetherFortressGenerator';
 import { DimensionTransitionOverlay } from './ui/DimensionTransitionOverlay';
+import { NetherWorldGenerator } from './world/dimension/NetherWorldGenerator';
 import { NoiseGenerator, seedFromString } from './world/terrain/NoiseGenerator';
 import { HeightMap } from './world/terrain/HeightMap';
 import { BiomeGenerator, BiomeType } from './world/terrain/BiomeGenerator';
@@ -97,6 +98,7 @@ function createGenerators(seed: number) {
 let { heightMap, biomeGen, caveNoise, lakeNoise } = createGenerators(worldSeed);
 const villageGen = new VillageGenerator();
 let oreGen = new OreGenerator(worldSeed);
+const netherWorldGen = new NetherWorldGenerator(worldSeed);
 
 // Player & physics
 const player = new Player();
@@ -182,6 +184,26 @@ function getWaterTerrain(wx: number, wz: number) {
 
 chunkManager.terrainFiller = (chunk: Chunk) => {
   chunk.fill(0);
+
+  if (DimensionManager.getInstance().isNether()) {
+    const chunkMinWX = chunk.chunkX * CHUNK_SIZE_X;
+    const chunkMinWZ = chunk.chunkZ * CHUNK_SIZE_Z;
+    for (let lz = 0; lz < CHUNK_SIZE_Z; lz++) {
+      for (let lx = 0; lx < CHUNK_SIZE_X; lx++) {
+        const wx = chunkMinWX + lx;
+        const wz = chunkMinWZ + lz;
+        for (let y = 0; y < CHUNK_HEIGHT; y++) {
+          const bid = netherWorldGen.getBlockId(wx, y, wz);
+          if (bid !== 0) {
+            chunk.setBlock(lx, y, lz, bid);
+          }
+        }
+      }
+    }
+    world.applyModificationsToChunk(chunk);
+    return;
+  }
+
   for (let lz = 0; lz < CHUNK_SIZE_Z; lz++) {
     for (let lx = 0; lx < CHUNK_SIZE_X; lx++) {
       const wx = chunk.chunkX * CHUNK_SIZE_X + lx;
@@ -1161,16 +1183,63 @@ engine.setUpdateCallback((deltaTime) => {
 
       DimensionManager.getInstance().setDimension(nextDimension, scene);
       AudioManager.getInstance().setDimensionAmbience(nextDimension);
-      player.position = targetPos;
 
-      // Auto-generate destination portal frame in target dimension
+      // Unload previous dimension chunks & pre-load target location chunks
+      chunkManager.unloadAllChunks();
+      const { chunkX: tCX, chunkZ: tCZ } = worldToChunkCoord(targetPos.x, 0, targetPos.z);
+      for (let dcx = -1; dcx <= 1; dcx++) {
+        for (let dcz = -1; dcz <= 1; dcz++) {
+          const c = chunkManager.loadChunk(tCX + dcx, tCZ + dcz);
+          if (chunkManager.terrainFiller) {
+            chunkManager.terrainFiller(c);
+          }
+        }
+      }
+
+      // Calculate safe Y standing height at target location in destination dimension
+      const safeY = DimensionManager.getInstance().findSafeTeleportY(
+        world,
+        targetPos.x,
+        targetPos.y,
+        targetPos.z,
+        nextDimension,
+        heightMap
+      );
+      targetPos.y = safeY;
+
+      player.position.x = targetPos.x;
+      player.position.y = targetPos.y;
+      player.position.z = targetPos.z;
+      camera.position.set(targetPos.x, targetPos.y + player.eyeHeight, targetPos.z);
+
+      // Auto-generate destination portal frame in target dimension at safeY
+      const basePX = Math.floor(targetPos.x);
+      const basePY = Math.floor(safeY);
+      const basePZ = Math.floor(targetPos.z);
+
       for (let dy = 0; dy < 5; dy++) {
         for (let dx = 0; dx < 4; dx++) {
           const isBorder = (dx === 0 || dx === 3 || dy === 0 || dy === 4);
           const bId = isBorder ? 15 : 18;
-          world.setBlock(Math.floor(targetPos.x) + dx - 1, Math.floor(targetPos.y) + dy, Math.floor(targetPos.z), bId);
+          world.setBlock(basePX + dx - 1, basePY - 1 + dy, basePZ, bId);
         }
       }
+
+      // Clear air standing room in front and behind portal (dz = -1 and dz = 1)
+      for (let dy = 0; dy < 3; dy++) {
+        for (let dx = 0; dx < 2; dx++) {
+          const px = basePX + dx;
+          const py = basePY + dy;
+          if (world.getBlock(px, py, basePZ - 1) !== 15 && world.getBlock(px, py, basePZ - 1) !== 18) {
+            world.setBlock(px, py, basePZ - 1, 0);
+          }
+          if (world.getBlock(px, py, basePZ + 1) !== 15 && world.getBlock(px, py, basePZ + 1) !== 18) {
+            world.setBlock(px, py, basePZ + 1, 0);
+          }
+        }
+      }
+
+      chunkManager.update(targetPos.x, targetPos.z, gameSettings.renderDistance);
 
       AudioManager.getInstance().playSFX('portal_teleport');
       hud.setDimension(nextDimension);

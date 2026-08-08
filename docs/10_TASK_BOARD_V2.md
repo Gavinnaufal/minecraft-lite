@@ -5,14 +5,14 @@
 | Fase | CP Range | Selesai | % |
 |---|---|---|---|
 | Fase 18 — River & Water Polish | 157–164 | 8 | 100% |
-| Fase 19 — Cave Expansion & Ravines | 165–168 | 4 | 100% |
+| Fase 19 — Cave Expansion & Ravines | 165–172 | 8 | 100% |
 | Fase 20 — Village Generation & Prefabs | 173–181 | 9 | 100% |
 | Fase 21 — Villager NPC & Iron Golem | 182–189 | 8 | 100% |
 | Fase 22 — Hostile Mobs (Skeleton, Spider, Enderman) | 190–204 | 15 | 100% |
 | Fase 23 — Passive Animals & Food | 205–212 | 8 | 100% |
 | Fase 24 — Nether Portal & Dimension | 213–226 | 14 | 100% |
 | Fase 25 — Master Integration & Polish | 227–238 | 12 | 100% |
-| **TOTAL EXPANSION (v2.0)** | | **78** | **100%** |
+| **TOTAL EXPANSION (v2.0)** | | **82** | **100%** |
 
 ---
 
@@ -28,11 +28,15 @@
 - [x] CP-163: Dynamic water spreading
 - [x] CP-164: Tree placement check
 
-### Fase 19 — Cave Expansion & Ravines (4/4)
+### Fase 19 — Cave Expansion & Ravines (8/8)
 - [x] CP-165: Ravine generation in HeightMap
 - [x] CP-166: Deep cave 3D noise tunnels
 - [x] CP-167: Lava pool generation
 - [x] CP-168: Underground obsidian cluster generation
+- [x] CP-169: Dynamic cave ambient lighting detection (`isCaveArea`)
+- [x] CP-170: Cave ambient soundscape integration
+- [x] CP-171: Underground ambient light intensity reduction
+- [x] CP-172: Cave & ravine depth visual transition verification
 
 ### Fase 20 — Village Generation & Prefabs (9/9)
 - [x] CP-173: StructureManager & VillageGenerator layout algorithm

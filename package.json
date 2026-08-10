@@ -1,14 +1,68 @@
 {
   "name": "minecraft-lite",
+  "version": "3.0.0",
+  "description": "Mini Minecraft 3.0 Master Expansion — Game 3D Voxel Sandbox berbasis Three.js, TypeScript, dan Vite dengan fitur Generasi Dunia Prosedural, Penambangan & Peleburan Ore, Perdagangan Villager, Pembiakan Hewan, Zirah Armor, Benteng Nether, Boss Mobs, dan Multiplayer WebSocket.",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
+  "author": "Gavinnaufal",
+  "license": "MIT",
+  "homepage": "https://github.com/Gavinnaufal/minecraft-lite#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gavinnaufal/minecraft-lite.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Gavinnaufal/minecraft-lite/issues"
+  },
+  "keywords": [
+    "minecraft",
+    "threejs",
+    "typescript",
+    "vite",
+    "voxel",
+    "sandbox",
+    "game-engine",
+    "webgl",
+    "procedural-generation",
+    "multiplayer",
+    "nether-dimension",
+    "crafting-system"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write \"src/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\"",
+    "server": "npx tsx server/server.ts"
+  },
+  "gameplay_guide": {
+    "title": "Cara Bermain Mini Minecraft 3.0 Master Expansion",
+    "controls": {
+      "W_A_S_D": "Bergerak (Maju, Kiri, Mundur, Kanan) / Berenang mengarah ke sudut kamera",
+      "Spacebar": "Melompat (Jump) / Berenang naik ke permukaan air",
+      "Shift_or_C": "Berjalan Pelan (Sneak) / Menyelam ke dasar air",
+      "Left_Click": "Memecahkan Blok / Menyerang Mob Musuh",
+      "Right_Click": "Memasang Blok / Membuka Peti / Memasak di Furnace / Membuka Perdagangan Villager / Memberi Pakan Hewan / Mencangkul / Menanam",
+      "Shift_Left_Click": "Memakai Zirah Otomatis (Auto-Equip Armor) dari Inventory ke Slot Armor",
+      "Scroll_or_1_to_9": "Berpindah Slot Hotbar Aktif",
+      "E": "Membuka / Menutup Inventory, Slot Zirah Equipment, & Grid Crafting (3x3)",
+      "F3": "Membuka / Menutup Debug Overlay (FPS, XYZ, Chunk, Bioma, Dimensi, Mobs, Armor, Proyektil)",
+      "T": "Membuka Kotak Chat Multiplayer (In-Game Chat Box)",
+      "Escape": "Membuka Pause Menu / Menutup Layar UI"
+    },
+    "core_mechanics": [
+      "Penambangan Coal Ore (ID 21) & Iron Ore (ID 22) di gua bawah tanah membutuhkan minimal Stone Pickaxe (Tier >= 2).",
+      "Furnace Block (ID 23) interaktif untuk memasak daging mentah (Beef, Porkchop, Chicken, Mutton) & melebur Raw Iron menjadi Iron Ingot (5 detik per item).",
+      "Zirah Armor (Helmet, Chestplate, Leggings, Boots) mengurangi damage yang diterima hingga 80% (4% mitigasi per poin defense).",
+      "Villager Trading menggunakan Emerald sebagai mata uang transaksi untuk mendapatkan item langka.",
+      "Hewan pasif (Cow, Pig, Chicken, Goat, Turtle) dapat dibiakkan menggunakan pakan spesifik (Gandum/Seeds/Bread) untuk melahirkan anak mob.",
+      "Portal Nether dibuat dengan membingkai Obsidian (ID 15) minimal 4x5 lalu dinyalakan dengan Torch/Flint untuk berpindah dimensi."
+    ]
+  },
+  "dependencies": {
+    "simplex-noise": "^4.0.3",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -19,9 +73,5 @@
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.65.0",
     "vite": "^8.1.1"
-  },
-  "dependencies": {
-    "simplex-noise": "^4.0.3",
-    "three": "^0.185.1"
   }
 }

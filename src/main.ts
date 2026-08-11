@@ -182,91 +182,119 @@ function getWaterTerrain(wx: number, wz: number) {
   return { h, isWater, isBeach, biome };
 }
 
-chunkManager.terrainFiller = (chunk: Chunk) => {
-  chunk.fill(0);
-
+const fillChunkStaged = (chunk: Chunk, stage: number): boolean => {
   if (DimensionManager.getInstance().isNether()) {
-    const chunkMinWX = chunk.chunkX * CHUNK_SIZE_X;
-    const chunkMinWZ = chunk.chunkZ * CHUNK_SIZE_Z;
+    if (stage === 1) {
+      chunk.fill(0);
+      const chunkMinWX = chunk.chunkX * CHUNK_SIZE_X;
+      const chunkMinWZ = chunk.chunkZ * CHUNK_SIZE_Z;
+      for (let lz = 0; lz < CHUNK_SIZE_Z; lz++) {
+        for (let lx = 0; lx < CHUNK_SIZE_X; lx++) {
+          const wx = chunkMinWX + lx;
+          const wz = chunkMinWZ + lz;
+          for (let y = 0; y < CHUNK_HEIGHT; y++) {
+            const bid = netherWorldGen.getBlockId(wx, y, wz);
+            if (bid !== 0) {
+              chunk.setBlock(lx, y, lz, bid);
+            }
+          }
+        }
+      }
+      return false;
+    } else if (stage === 2) {
+      world.applyModificationsToChunk(chunk);
+      return true;
+    }
+    return true;
+  }
+
+  // Frame A (Stage 1): Base heightmap + biome + surface layering + water fill
+  if (stage === 1) {
+    chunk.fill(0);
     for (let lz = 0; lz < CHUNK_SIZE_Z; lz++) {
       for (let lx = 0; lx < CHUNK_SIZE_X; lx++) {
-        const wx = chunkMinWX + lx;
-        const wz = chunkMinWZ + lz;
-        for (let y = 0; y < CHUNK_HEIGHT; y++) {
-          const bid = netherWorldGen.getBlockId(wx, y, wz);
-          if (bid !== 0) {
-            chunk.setBlock(lx, y, lz, bid);
+        const wx = chunk.chunkX * CHUNK_SIZE_X + lx;
+        const wz = chunk.chunkZ * CHUNK_SIZE_Z + lz;
+        const { h, isBeach, biome } = getWaterTerrain(wx, wz);
+
+        for (let y = 0; y <= h && y < CHUNK_HEIGHT; y++) {
+          const depth = h - y;
+          let bid: number;
+          if (isBeach && depth <= 2) {
+            bid = 4; // Sand beach or underwater sand bed!
+          } else if (depth === 0) {
+            if (biome === BiomeType.Desert) bid = 4;
+            else if (biome === BiomeType.Mountain && h > 80) bid = 3;
+            else bid = 1; // Grass
+          } else if (depth <= 3) {
+            bid = biome === BiomeType.Desert ? 4 : 2; // Dirt
+          } else {
+            bid = 3; // Stone
+          }
+          chunk.setBlock(lx, y, lz, bid);
+        }
+
+        if (h < WATER_LEVEL) {
+          for (let y = h + 1; y <= WATER_LEVEL && y < CHUNK_HEIGHT; y++) {
+            chunk.setBlock(lx, y, lz, 7); // Water block
           }
         }
       }
     }
+    return false;
+  }
+
+  // Frame B (Stage 2): 3D Cave carving noise
+  if (stage === 2) {
+    for (let lz = 0; lz < CHUNK_SIZE_Z; lz++) {
+      for (let lx = 0; lx < CHUNK_SIZE_X; lx++) {
+        const wx = chunk.chunkX * CHUNK_SIZE_X + lx;
+        const wz = chunk.chunkZ * CHUNK_SIZE_Z + lz;
+        const sh = heightMap.getHeight(wx, wz);
+        for (let y = 8; y < sh - 12 && y < CHUNK_HEIGHT; y++) {
+          const bid = chunk.getBlock(lx, y, lz);
+          if (bid === 0 || bid === 7) continue;
+
+          const depthFromSurface = sh - y;
+          const depthFactor = Math.min(depthFromSurface / 20, 1);
+          const dynamicThreshold = 0.68 - (depthFactor * 0.08);
+
+          if (caveNoise.noise3D(wx / 45, y / 45, wz / 45) > dynamicThreshold) {
+            chunk.setBlock(lx, y, lz, 0);
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  // Frame C (Stage 3): Ore generation & Tree generation
+  if (stage === 3) {
+    oreGen.generateForChunk(chunk);
+    generateTrees(chunk, heightMap, biomeGen);
+    return false;
+  }
+
+  // Frame D (Stage 4): Village structures, Mobs, and World Modifications
+  if (stage === 4) {
+    villageGen.generateForChunk(chunk, heightMap, biomeGen);
+    villageGen.spawnVillageNPCsForChunk(chunk, mobManager, heightMap, biomeGen);
+    spawnNaturalMobsForChunk(chunk, mobManager, heightMap, biomeGen);
     world.applyModificationsToChunk(chunk);
-    return;
+    return true;
   }
 
-  for (let lz = 0; lz < CHUNK_SIZE_Z; lz++) {
-    for (let lx = 0; lx < CHUNK_SIZE_X; lx++) {
-      const wx = chunk.chunkX * CHUNK_SIZE_X + lx;
-      const wz = chunk.chunkZ * CHUNK_SIZE_Z + lz;
-      const { h, isBeach, biome } = getWaterTerrain(wx, wz);
+  return true;
+};
 
-      for (let y = 0; y <= h && y < CHUNK_HEIGHT; y++) {
-        const depth = h - y;
-        let bid: number;
-        if (isBeach && depth <= 2) {
-          bid = 4; // Sand beach or underwater sand bed!
-        } else if (depth === 0) {
-          if (biome === BiomeType.Desert) bid = 4;
-          else if (biome === BiomeType.Mountain && h > 80) bid = 3;
-          else bid = 1; // Grass
-        } else if (depth <= 3) {
-          bid = biome === BiomeType.Desert ? 4 : 2; // Dirt
-        } else {
-          bid = 3; // Stone
-        }
-        chunk.setBlock(lx, y, lz, bid);
-      }
-    }
-  }
-  // Fill water in any column below WATER_LEVEL
-  for (let lz = 0; lz < CHUNK_SIZE_Z; lz++) {
-    for (let lx = 0; lx < CHUNK_SIZE_X; lx++) {
-      const wx = chunk.chunkX * CHUNK_SIZE_X + lx;
-      const wz = chunk.chunkZ * CHUNK_SIZE_Z + lz;
-      const { h } = getWaterTerrain(wx, wz);
+chunkManager.terrainStageFiller = fillChunkStaged;
 
-      if (h < WATER_LEVEL) {
-        for (let y = h + 1; y <= WATER_LEVEL && y < CHUNK_HEIGHT; y++) {
-          chunk.setBlock(lx, y, lz, 7); // Water block
-        }
-      }
-    }
+// Synchronous single-pass wrapper for teleportation/initialization
+chunkManager.terrainFiller = (chunk: Chunk) => {
+  for (let s = 1; s <= 4; s++) {
+    const isDone = fillChunkStaged(chunk, s);
+    if (isDone) break;
   }
-  for (let lz = 0; lz < CHUNK_SIZE_Z; lz++) {
-    for (let lx = 0; lx < CHUNK_SIZE_X; lx++) {
-      const wx = chunk.chunkX * CHUNK_SIZE_X + lx;
-      const wz = chunk.chunkZ * CHUNK_SIZE_Z + lz;
-      const sh = heightMap.getHeight(wx, wz);
-      for (let y = 8; y < sh - 12 && y < CHUNK_HEIGHT; y++) {
-        const bid = chunk.getBlock(lx, y, lz);
-        if (bid === 0 || bid === 7) continue;
-        
-        const depthFromSurface = sh - y;
-        const depthFactor = Math.min(depthFromSurface / 20, 1);
-        const dynamicThreshold = 0.68 - (depthFactor * 0.08);
-        
-        if (caveNoise.noise3D(wx / 45, y / 45, wz / 45) > dynamicThreshold) {
-          chunk.setBlock(lx, y, lz, 0);
-        }
-      }
-    }
-  }
-  oreGen.generateForChunk(chunk);
-  generateTrees(chunk, heightMap, biomeGen);
-  villageGen.generateForChunk(chunk, heightMap, biomeGen);
-  villageGen.spawnVillageNPCsForChunk(chunk, mobManager, heightMap, biomeGen);
-  spawnNaturalMobsForChunk(chunk, mobManager, heightMap, biomeGen);
-  world.applyModificationsToChunk(chunk);
 };
 
 function spawnNaturalMobsForChunk(chunk: Chunk, mobManager: MobManager, heightMap: HeightMap, biomeGen: BiomeGenerator): void {
@@ -1243,7 +1271,7 @@ engine.setUpdateCallback((deltaTime) => {
     previousChunkX = cx; previousChunkZ = cz;
     chunkManager.update(player.position.x, player.position.z, gameSettings.renderDistance);
   } else {
-    chunkManager.processLoadQueue(2);
+    chunkManager.processLoadQueue(1);
   }
 
   // Nether Portal Standing Detection & 3-second Teleport Countdown Timer

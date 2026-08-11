@@ -20,6 +20,8 @@ export class ChunkManager {
   private lastPlayerChunkZ = NaN;
 
   terrainFiller: ((chunk: Chunk) => void) | null = null;
+  terrainStageFiller: ((chunk: Chunk, stage: number) => boolean) | null = null;
+  private activeGenState: { chunk: Chunk; stage: number; cx: number; cz: number } | null = null;
 
   constructor(scene: THREE.Scene) {
     this.scene = scene;
@@ -351,42 +353,63 @@ export class ChunkManager {
     this.processLoadQueue(2);
   }
 
-  processLoadQueue(maxChunksPerFrame = 2): void {
+  processLoadQueue(maxChunksPerFrame = 1): void {
+    // Stage-pipeline time-sliced processing (1 stage step per frame)
+    if (this.activeGenState) {
+      const { chunk, stage, cx, cz } = this.activeGenState;
+      let isDone = true;
+
+      if (this.terrainStageFiller) {
+        isDone = this.terrainStageFiller(chunk, stage);
+      } else if (this.terrainFiller) {
+        this.terrainFiller(chunk);
+        isDone = true;
+      } else {
+        this.fillTestTerrain(chunk);
+        isDone = true;
+      }
+
+      if (!isDone) {
+        this.activeGenState.stage++;
+        return; // Stage step completed for this frame!
+      }
+
+      // Stage pipeline complete for this chunk!
+      this.loadQueue = this.loadQueue.filter((item) => !(item.cx === cx && item.cz === cz));
+      this.activeGenState = null;
+
+      // Mark 4 neighbor chunks dirty
+      const east = this.getChunk(cx + 1, cz);
+      if (east) east.isDirty = true;
+      const west = this.getChunk(cx - 1, cz);
+      if (west) west.isDirty = true;
+      const north = this.getChunk(cx, cz + 1);
+      if (north) north.isDirty = true;
+      const south = this.getChunk(cx, cz - 1);
+      if (south) south.isDirty = true;
+
+      // Mesh the newly completed chunk
+      this.meshChunk(cx, cz);
+      return;
+    }
+
     if (this.loadQueue.length === 0) {
       this.meshDirtyChunks(maxChunksPerFrame);
       return;
     }
 
-    const count = Math.min(maxChunksPerFrame, this.loadQueue.length);
-    const newChunks: Chunk[] = [];
-
-    for (let i = 0; i < count; i++) {
-      const item = this.loadQueue.shift();
-      if (!item) break;
-      if (this.chunks.has(ChunkManager.key(item.cx, item.cz))) continue;
+    // Pick next chunk from queue and start Stage 1
+    while (this.loadQueue.length > 0) {
+      const item = this.loadQueue[0];
+      if (this.chunks.has(ChunkManager.key(item.cx, item.cz))) {
+        this.loadQueue.shift();
+        continue;
+      }
 
       const chunk = this.loadChunk(item.cx, item.cz);
-      if (this.terrainFiller) {
-        this.terrainFiller(chunk);
-      } else {
-        this.fillTestTerrain(chunk);
-      }
-      newChunks.push(chunk);
-    }
-
-    for (const chunk of newChunks) {
-      const east = this.getChunk(chunk.chunkX + 1, chunk.chunkZ);
-      if (east) east.isDirty = true;
-      const west = this.getChunk(chunk.chunkX - 1, chunk.chunkZ);
-      if (west) west.isDirty = true;
-      const north = this.getChunk(chunk.chunkX, chunk.chunkZ + 1);
-      if (north) north.isDirty = true;
-      const south = this.getChunk(chunk.chunkX, chunk.chunkZ - 1);
-      if (south) south.isDirty = true;
-    }
-
-    for (const chunk of newChunks) {
-      this.meshChunk(chunk.chunkX, chunk.chunkZ);
+      this.activeGenState = { chunk, stage: 1, cx: item.cx, cz: item.cz };
+      this.processLoadQueue(maxChunksPerFrame);
+      return;
     }
   }
 

@@ -55,24 +55,50 @@ export class SaveManager {
     await this.storage.open();
   }
 
+  private isSaveInProgress = false;
+
+  private yieldToNextFrame(): Promise<void> {
+    return new Promise((resolve) => {
+      if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(() => resolve());
+      } else {
+        setTimeout(resolve, 0);
+      }
+    });
+  }
+
   async save(): Promise<void> {
-    const data = {
-      saveVersion: SAVE_VERSION,
-      worldSeed: this.getSeed(),
-      dimension: DimensionManager.getInstance().currentDimension,
-      player: {
+    if (this.isSaveInProgress) return;
+    this.isSaveInProgress = true;
+
+    try {
+      // Step 1: Snapshot player state & inventory (Frame 1)
+      const saveVersion = SAVE_VERSION;
+      const worldSeed = this.getSeed();
+      const dimension = DimensionManager.getInstance().currentDimension;
+      const playerPos = {
         x: this.player.position.x,
         y: this.player.position.y,
         z: this.player.position.z,
         health: this.player.health,
-      },
-      inventory: this.inventory.slots,
-      hotbar: this.hotbar.slots,
-      hotbarIndex: this.hotbar.activeSlotIndex,
-      timeOfDay: this.dayNight.timeOfDay,
-      modifiedBlocks: this.world.getModifiedBlocks(),
-      furnaces: FurnaceManager.getInstance().getAllFurnaces(),
-      mobsData: this.mobManager ? this.mobManager.mobs.map((m) => ({
+      };
+      const inventorySlots = this.inventory.slots.map((s) => ({ ...s }));
+      const hotbarSlots = this.hotbar.slots.map((s) => ({ ...s }));
+      const hotbarIndex = this.hotbar.activeSlotIndex;
+      const timeOfDay = this.dayNight.timeOfDay;
+
+      // Yield execution back to main thread render loop
+      await this.yieldToNextFrame();
+
+      // Step 2: Snapshot modified blocks & furnace state (Frame 2)
+      const modifiedBlocks = this.world.getModifiedBlocks();
+      const furnaces = FurnaceManager.getInstance().getAllFurnaces();
+
+      // Yield execution back to main thread render loop
+      await this.yieldToNextFrame();
+
+      // Step 3: Snapshot mob state & persist to IndexedDB (Frame 3)
+      const mobsData = this.mobManager ? this.mobManager.mobs.map((m) => ({
         type: m.constructor.name,
         x: m.position.x,
         y: m.position.y,
@@ -81,9 +107,26 @@ export class SaveManager {
         growthTimer: m.growthTimer,
         loveTimer: m.loveTimer,
         breedingCooldown: m.breedingCooldown,
-      })) : [],
-    };
-    await this.storage.saveData('world', data);
+      })) : [];
+
+      const data = {
+        saveVersion,
+        worldSeed,
+        dimension,
+        player: playerPos,
+        inventory: inventorySlots,
+        hotbar: hotbarSlots,
+        hotbarIndex,
+        timeOfDay,
+        modifiedBlocks,
+        furnaces,
+        mobsData,
+      };
+
+      await this.storage.saveData('world', data);
+    } finally {
+      this.isSaveInProgress = false;
+    }
   }
 
   async load(): Promise<number | null> {

@@ -672,6 +672,11 @@ function findMobIndexFromHitObject(hitObject: THREE.Object3D): number {
   return -1;
 }
 
+const crosshairRay = new THREE.Raycaster();
+crosshairRay.far = 5.0;
+let cachedHitMobIdx = -1;
+let lastMobRaycastTime = 0;
+
 engine.setUpdateCallback((deltaTime) => {
   if (mainMenu.isOpen || pauseMenu.isOpen || inventoryScreen.isOpen || chestScreen.isOpen || furnaceScreen.getIsOpen() || chatBox.visible) {
     return;
@@ -928,19 +933,68 @@ engine.setUpdateCallback((deltaTime) => {
   blockBreaker.updateBreak(deltaTime, inputManager.isLeftMouseDown, camera, hotbar.getActiveItem());
 
   let crosshairState: 'none' | 'block' | 'mob' = 'none';
-  const crosshairRay = new THREE.Raycaster();
-  crosshairRay.setFromCamera(new THREE.Vector2(0, 0), camera);
-  crosshairRay.far = 5.0;
 
-  const mobMeshes = mobManager.mobs.map((m) => m.mesh);
-  const mobHits = mobMeshes.length > 0 ? crosshairRay.intersectObjects(mobMeshes, true) : [];
+  const isClicking = inputManager.isLeftMouseDown || inputManager.isRightMouseDown;
+  const now = performance.now();
 
-  let hitMobIdx = -1;
-  if (mobHits.length > 0) {
-    hitMobIdx = findMobIndexFromHitObject(mobHits[0].object);
-    if (hitMobIdx >= 0) {
-      crosshairState = 'mob';
+  let hitMobIdx = cachedHitMobIdx;
+
+  if (isClicking || now - lastMobRaycastTime >= 50) {
+    lastMobRaycastTime = now;
+    hitMobIdx = -1;
+
+    crosshairRay.setFromCamera(new THREE.Vector2(0, 0), camera);
+
+    const px = player.position.x;
+    const py = player.position.y;
+    const pz = player.position.z;
+    const maxDistSq = 6.5 * 6.5; // Distance pre-filter (6.5 meters)
+
+    const candidateMeshes: THREE.Object3D[] = [];
+
+    for (let i = 0; i < mobManager.mobs.length; i++) {
+      const mob = mobManager.mobs[i];
+      const dx = mob.position.x - px;
+      const dy = mob.position.y - py;
+      const dz = mob.position.z - pz;
+      const distSq = dx * dx + dy * dy + dz * dz;
+
+      if (distSq <= maxDistSq) {
+        // Fast ray-to-mob center vector projection (bounding sphere ~1.5m radius)
+        const rayToMobX = mob.position.x - crosshairRay.ray.origin.x;
+        const rayToMobY = mob.position.y - crosshairRay.ray.origin.y;
+        const rayToMobZ = mob.position.z - crosshairRay.ray.origin.z;
+        const rDir = crosshairRay.ray.direction;
+        const proj = rayToMobX * rDir.x + rayToMobY * rDir.y + rayToMobZ * rDir.z;
+
+        if (proj > 0 && proj <= crosshairRay.far + 1.5) {
+          const closeX = crosshairRay.ray.origin.x + rDir.x * proj;
+          const closeY = crosshairRay.ray.origin.y + rDir.y * proj;
+          const closeZ = crosshairRay.ray.origin.z + rDir.z * proj;
+          const perpX = closeX - mob.position.x;
+          const perpY = closeY - mob.position.y;
+          const perpZ = closeZ - mob.position.z;
+          const perpDistSq = perpX * perpX + perpY * perpY + perpZ * perpZ;
+
+          if (perpDistSq <= 2.25) { // Bounding sphere radius <= 1.5m
+            candidateMeshes.push(mob.mesh);
+          }
+        }
+      }
     }
+
+    if (candidateMeshes.length > 0) {
+      const mobHits = crosshairRay.intersectObjects(candidateMeshes, true);
+      if (mobHits.length > 0) {
+        hitMobIdx = findMobIndexFromHitObject(mobHits[0].object);
+      }
+    }
+
+    cachedHitMobIdx = hitMobIdx;
+  }
+
+  if (hitMobIdx >= 0) {
+    crosshairState = 'mob';
   }
   if (crosshairState === 'none' && blockBreaker.getTarget(camera)) {
     crosshairState = 'block';

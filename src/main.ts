@@ -1393,6 +1393,12 @@ if (import.meta.env.DEV) {
   const win = window as unknown as Record<string, unknown>;
   win.world = world; win.chunkManager = chunkManager; win.camera = camera;
   win.player = player; win.hotbar = hotbar; win.inventory = inventory;
+  win.saveManager = saveManager;
+  win.clearSave = async () => {
+    await saveManager.clearSave();
+    console.log('[Save] Clearing world save data and reloading...');
+    window.location.reload();
+  };
   win.tp = (x: number, y: number, z: number) => {
     player.position.x = x; player.position.y = y; player.position.z = z;
     camera.position.set(x, y + player.eyeHeight, z);
@@ -1408,5 +1414,5 @@ if (import.meta.env.DEV) {
   };
   win.save = () => saveManager.save();
   win.load = () => saveManager.load();
-  console.log('[Debug] Commands: tp, setSeed, save, load, world, hotbar');
+  console.log('[Debug] Helper commands: clearSave(), setSeed(str), tp(x,y,z), save(), load()');
 }

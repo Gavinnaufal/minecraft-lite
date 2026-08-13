@@ -29,12 +29,16 @@ export function buildStoneHousePrefab(
       // 1. Foundation & Floor (y = groundY)
       manager.placeBlockInChunk(chunk, lx, groundY, lz, 3); // Stone floor
 
-      // 2. Stone Walls & Interior (y = groundY + 1 to groundY + height)
+      // 2. Stone Walls, Wood Log Corner Pillars & Interior (y = groundY + 1 to groundY + height)
       for (let dy = 1; dy <= height; dy++) {
         const y = groundY + dy;
+        const isCorner = (dx === 0 || dx === width - 1) && (dz === 0 || dz === depth - 1);
         const isWall = dx === 0 || dx === width - 1 || dz === 0 || dz === depth - 1;
 
-        if (isWall) {
+        if (isCorner) {
+          // Wood log pillars on 4 corners
+          manager.placeBlockInChunk(chunk, lx, y, lz, 5); // wood_log
+        } else if (isWall) {
           // Doorway on front wall (dz === 0, dx === 3, y = 1..2)
           const isDoor = dz === 0 && dx === 3 && (dy === 1 || dy === 2);
           // Windows on side walls (dy === 2)
@@ -51,9 +55,9 @@ export function buildStoneHousePrefab(
         }
       }
 
-      // 3. Stone & Plank Roof (y = groundY + height + 1)
+      // 3. Wooden Plank Roof (y = groundY + height + 1)
       const roofY = groundY + height + 1;
-      manager.placeBlockInChunk(chunk, lx, roofY, lz, 3); // Stone roof
+      manager.placeBlockInChunk(chunk, lx, roofY, lz, 8); // Wooden plank roof
     }
   }
 

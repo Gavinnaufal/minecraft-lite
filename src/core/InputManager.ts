@@ -14,6 +14,7 @@ class InputManager {
 
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('keyup', this.onKeyUp);
+    window.addEventListener('blur', () => this.clearKeys());
     document.addEventListener('mousemove', this.onMouseMove);
     document.addEventListener('mousedown', this.onMouseDown);
     document.addEventListener('mouseup', this.onMouseUp);
@@ -23,7 +24,14 @@ class InputManager {
   static readonly instance = new InputManager();
 
   isKeyPressed(key: string): boolean {
-    return this.keysDown.has(key);
+    if (this.keysDown.has(key)) return true;
+    if (this.keysDown.has(key.toLowerCase())) return true;
+    if (this.keysDown.has(key.toUpperCase())) return true;
+    if (key.length === 1) {
+      const code = 'Key' + key.toUpperCase();
+      if (this.keysDown.has(code)) return true;
+    }
+    return false;
   }
 
   requestPointerLock(): void {
@@ -35,12 +43,32 @@ class InputManager {
     this.mouseDeltaY = 0;
   }
 
+  clearKeys(): void {
+    this.keysDown.clear();
+    this.isLeftMouseDown = false;
+    this.isRightMouseDown = false;
+    this.resetMouseDelta();
+  }
+
   private readonly onKeyDown = (event: KeyboardEvent): void => {
-    this.keysDown.add(event.key);
+    if (event.key) {
+      this.keysDown.add(event.key.toLowerCase());
+      this.keysDown.add(event.key);
+    }
+    if (event.code) {
+      this.keysDown.add(event.code);
+    }
   };
 
   private readonly onKeyUp = (event: KeyboardEvent): void => {
-    this.keysDown.delete(event.key);
+    if (event.key) {
+      this.keysDown.delete(event.key.toLowerCase());
+      this.keysDown.delete(event.key.toUpperCase());
+      this.keysDown.delete(event.key);
+    }
+    if (event.code) {
+      this.keysDown.delete(event.code);
+    }
   };
 
   private readonly onMouseMove = (event: MouseEvent): void => {
@@ -50,7 +78,11 @@ class InputManager {
   };
 
   private readonly onPointerLockChange = (): void => {
+    const wasLocked = this.isPointerLocked;
     this.isPointerLocked = document.pointerLockElement === this.canvas;
+    if (wasLocked && !this.isPointerLocked) {
+      this.clearKeys();
+    }
   };
 
   private readonly onMouseDown = (event: MouseEvent): void => {

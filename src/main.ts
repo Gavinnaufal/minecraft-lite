@@ -561,6 +561,7 @@ window.addEventListener('contextmenu', (e) => e.preventDefault());
 // Hotbar switching & Menu toggling
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
+    inputManager.clearKeys();
     if (chatBox.visible) {
       chatBox.close();
     } else if (tradingScreen.isOpen) {
@@ -577,8 +578,13 @@ window.addEventListener('keydown', (e) => {
     return;
   }
   if (pauseMenu.isOpen || chatBox.visible) return;
-  if (e.key === 'o' || e.key === 'O') { settingsMenu.toggle(); return; }
+  if (e.key === 'o' || e.key === 'O') {
+    inputManager.clearKeys();
+    settingsMenu.toggle();
+    return;
+  }
   if (e.key === 'e' || e.key === 'E') {
+    inputManager.clearKeys();
     if (furnaceScreen.getIsOpen()) furnaceScreen.close();
     else if (chestScreen.isOpen) chestScreen.closeChest();
     else inventoryScreen.toggle();

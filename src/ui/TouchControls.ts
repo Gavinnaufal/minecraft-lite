@@ -9,6 +9,7 @@ export class TouchControls {
   private joystickKnob: HTMLDivElement;
   private jumpButton: HTMLDivElement;
 
+  private isEnabled = false;
   private isVisible = false;
   private joystickTouchId: number | null = null;
   private lookTouchId: number | null = null;
@@ -125,7 +126,6 @@ export class TouchControls {
     document.body.appendChild(this.container);
 
     this.setupEventListeners();
-    this.checkDevice();
   }
 
   static getInstance(): TouchControls {
@@ -135,8 +135,14 @@ export class TouchControls {
     return TouchControls.instance;
   }
 
+  public setEnabled(enabled: boolean): void {
+    this.isEnabled = enabled;
+    const shouldShow = enabled && InputManager.isTouchDevice();
+    this.setVisible(shouldShow);
+  }
+
   public checkDevice(): void {
-    const shouldShow = InputManager.isTouchDevice();
+    const shouldShow = this.isEnabled && InputManager.isTouchDevice();
     if (shouldShow !== this.isVisible) {
       this.setVisible(shouldShow);
     }
@@ -158,17 +164,6 @@ export class TouchControls {
       this.checkDevice();
     });
 
-    // Auto-detect first touch anywhere on screen
-    window.addEventListener(
-      'touchstart',
-      () => {
-        if (!this.isVisible) {
-          this.setVisible(true);
-        }
-      },
-      { passive: true, once: true }
-    );
-
     // Global Touch Listeners on document for multi-touch precision
     document.addEventListener('touchstart', this.onTouchStart, { passive: false });
     document.addEventListener('touchmove', this.onTouchMove, { passive: false });
@@ -176,12 +171,25 @@ export class TouchControls {
     document.addEventListener('touchcancel', this.onTouchCancel, { passive: false });
   }
 
+  private isInteractiveUI(target: HTMLElement | null): boolean {
+    if (!target) return false;
+    const tag = target.tagName?.toLowerCase();
+    if (tag === 'button' || tag === 'input' || tag === 'select' || tag === 'textarea' || tag === 'a') return true;
+    if (target.closest('button, input, select, textarea, a, .mc-button, [role="button"], #main-menu, #pause-menu, #settings-menu, #inventory-screen, #chest-screen, #furnace-screen, #trading-screen, #chat-box')) return true;
+    return false;
+  }
+
   private readonly onTouchStart = (e: TouchEvent): void => {
-    if (!this.isVisible) return;
+    if (!this.isVisible || !this.isEnabled) return;
 
     for (let i = 0; i < e.changedTouches.length; i++) {
       const touch = e.changedTouches[i];
       const target = touch.target as HTMLElement | null;
+
+      // Skip interactive UI elements to avoid blocking clicks on menus/HUD buttons
+      if (this.isInteractiveUI(target)) {
+        continue;
+      }
 
       // 1. Jump Button
       if (this.jumpTouchId === null && (target === this.jumpButton || this.jumpButton.contains(target))) {
@@ -189,7 +197,7 @@ export class TouchControls {
         inputManager.setVirtualKey(' ', true);
         this.jumpButton.style.transform = 'scale(0.9)';
         this.jumpButton.style.background = 'rgba(255, 255, 255, 0.45)';
-        e.preventDefault();
+        if (e.cancelable) e.preventDefault();
         continue;
       }
 
@@ -206,7 +214,7 @@ export class TouchControls {
         this.joystickCenterX = rect.left + rect.width / 2;
         this.joystickCenterY = rect.top + rect.height / 2;
         this.updateJoystickPosition(touch.clientX, touch.clientY);
-        e.preventDefault();
+        if (e.cancelable) e.preventDefault();
         continue;
       }
 
@@ -215,7 +223,7 @@ export class TouchControls {
         this.lookTouchId = touch.identifier;
         this.lastLookX = touch.clientX;
         this.lastLookY = touch.clientY;
-        e.preventDefault();
+        if (e.cancelable) e.preventDefault();
         continue;
       }
     }

@@ -75,21 +75,35 @@ export class MainMenu {
     titleBox.appendChild(splash);
     this.container.appendChild(titleBox);
 
+    this.container.id = 'main-menu';
+
     // Button Box
     const btnBox = document.createElement('div');
-    btnBox.style.cssText = 'display: flex; flex-direction: column; gap: 16px; align-items: center;';
+    btnBox.style.cssText = 'display: flex; flex-direction: column; gap: 16px; align-items: center; width: 100%;';
 
     const makeMcBtn = (label: string, onClick: () => void) => {
       const btn = document.createElement('button');
       btn.className = 'mc-button';
       btn.textContent = label;
+      btn.style.touchAction = 'manipulation';
+      btn.style.maxWidth = '90vw';
+      btn.style.width = '340px';
+
+      let lastTrigger = 0;
+      const trigger = (e?: Event) => {
+        const now = Date.now();
+        if (now - lastTrigger < 300) return;
+        lastTrigger = now;
+        if (e && e.cancelable) e.preventDefault();
+        AudioManager.getInstance().playSFX('place');
+        onClick();
+      };
+
       btn.addEventListener('mouseenter', () => {
         AudioManager.getInstance().playSFX('footstep');
       });
-      btn.addEventListener('click', () => {
-        AudioManager.getInstance().playSFX('place');
-        onClick();
-      });
+      btn.addEventListener('touchend', (e) => trigger(e), { passive: false });
+      btn.addEventListener('click', (e) => trigger(e));
       return btn;
     };
 

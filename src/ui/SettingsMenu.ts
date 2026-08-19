@@ -14,6 +14,7 @@ export class SettingsMenu {
     this.onQuitToMainMenu = onQuitToMainMenu ?? null;
 
     this.container = document.createElement('div');
+    this.container.id = 'settings-menu';
     this.container.style.cssText = `
       display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
       z-index: 550; background: #c6c6c6; border-top: 4px solid #ffffff; border-left: 4px solid #ffffff;
@@ -185,12 +186,22 @@ export class SettingsMenu {
         border-top: 3px solid rgba(255,255,255,0.4); border-left: 3px solid rgba(255,255,255,0.4);
         border-bottom: 3px solid rgba(0,0,0,0.4); border-right: 3px solid rgba(0,0,0,0.4);
         cursor: pointer; text-shadow: 1px 1px 0 #000; text-align: center; border-radius: 2px;
+        touch-action: manipulation;
       `;
       btn.textContent = label;
-      btn.addEventListener('click', () => {
+
+      let lastTrigger = 0;
+      const trigger = (e?: Event) => {
+        const now = Date.now();
+        if (now - lastTrigger < 300) return;
+        lastTrigger = now;
+        if (e && e.cancelable) e.preventDefault();
         AudioManager.getInstance().playSFX('place');
         onClick();
-      });
+      };
+
+      btn.addEventListener('touchend', (e) => trigger(e), { passive: false });
+      btn.addEventListener('click', (e) => trigger(e));
       return btn;
     };
 

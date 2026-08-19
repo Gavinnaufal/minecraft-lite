@@ -25,6 +25,8 @@ export class PauseMenu {
       font-family: monospace; color: #fff; user-select: none;
     `;
 
+    this.container.id = 'pause-menu';
+
     const title = document.createElement('h2');
     title.textContent = 'Game Menu';
     title.style.cssText = 'margin: 0 0 16px 0; font-size: 26px; color: #ffcc00; font-weight: bold; text-shadow: 2px 2px 0 #000; text-transform: uppercase; letter-spacing: 2px;';
@@ -35,7 +37,7 @@ export class PauseMenu {
     this.container.appendChild(this.statusText);
 
     const btnBox = document.createElement('div');
-    btnBox.style.cssText = 'display: flex; flex-direction: column; gap: 12px; align-items: center; width: 320px;';
+    btnBox.style.cssText = 'display: flex; flex-direction: column; gap: 12px; align-items: center; width: 320px; max-width: 90vw;';
 
     const makeMcBtn = (label: string, onClick: () => void) => {
       const btn = document.createElement('button');
@@ -46,8 +48,20 @@ export class PauseMenu {
         border-bottom: 3px solid #3a3a3a; border-right: 3px solid #3a3a3a;
         cursor: pointer; text-shadow: 2px 2px 0 #000; text-align: center; border-radius: 2px;
         transition: background 0.1s, border-color 0.1s, color 0.1s;
+        touch-action: manipulation;
       `;
       btn.textContent = label;
+
+      let lastTrigger = 0;
+      const trigger = (e?: Event) => {
+        const now = Date.now();
+        if (now - lastTrigger < 300) return;
+        lastTrigger = now;
+        if (e && e.cancelable) e.preventDefault();
+        AudioManager.getInstance().playSFX('place');
+        onClick();
+      };
+
       btn.addEventListener('mouseenter', () => {
         btn.style.background = '#808080';
         btn.style.color = '#ffffa0';
@@ -65,10 +79,8 @@ export class PauseMenu {
         btn.style.borderBottomColor = '#3a3a3a';
         btn.style.borderRightColor = '#3a3a3a';
       });
-      btn.addEventListener('click', () => {
-        AudioManager.getInstance().playSFX('place');
-        onClick();
-      });
+      btn.addEventListener('touchend', (e) => trigger(e), { passive: false });
+      btn.addEventListener('click', (e) => trigger(e));
       return btn;
     };
 

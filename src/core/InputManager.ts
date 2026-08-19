@@ -66,7 +66,16 @@ export class InputManager {
   }
 
   requestPointerLock(): void {
-    this.canvas?.requestPointerLock();
+    if (this.canvas?.requestPointerLock) {
+      try {
+        const p = this.canvas.requestPointerLock() as unknown;
+        if (p && typeof (p as Promise<void>).catch === 'function') {
+          (p as Promise<void>).catch(() => {});
+        }
+      } catch {
+        // Pointer lock is not supported or rejected on mobile - fail safely
+      }
+    }
   }
 
   resetMouseDelta(): void {

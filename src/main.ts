@@ -506,12 +506,14 @@ const mainMenu = new MainMenu(settingsMenu, (isLoad) => {
     }).catch(() => {});
   }
   inputManager.requestPointerLock();
+  updateTouchControlsState();
 });
 
 settingsMenu.create(
   () => {
     renderer.setPixelRatio(gameSettings.pixelRatio);
     chunkManager.forceReload(gameSettings.renderDistance, camera.position.x, camera.position.z);
+    updateTouchControlsState();
   },
   () => {
     // Reset World: clear saved data and reload the page for a fresh new seed
@@ -525,6 +527,7 @@ settingsMenu.create(
     // Quit to Main Menu: stop music, show main menu
     AudioManager.getInstance().stopMusic();
     mainMenu.show();
+    updateTouchControlsState();
   },
 );
 
@@ -548,17 +551,33 @@ tradingScreen.create();
 
 const pauseMenu = new PauseMenu(saveManager, settingsMenu, () => {
   inputManager.requestPointerLock();
+  updateTouchControlsState();
 });
 pauseMenu.create();
 
 const touchControls = TouchControls.getInstance();
 
+const updateTouchControlsState = (): void => {
+  const modalOpen =
+    mainMenu.isOpen ||
+    pauseMenu.isOpen ||
+    settingsMenu.isOpen ||
+    inventoryScreen.isOpen ||
+    chestScreen.isOpen ||
+    furnaceScreen.getIsOpen() ||
+    tradingScreen.isOpen ||
+    chatBox.visible;
+  touchControls.setEnabled(!modalOpen);
+};
+
 mainMenu.create();
+touchControls.setEnabled(false); // Touch controls are strictly disabled while Main Menu is active
 
 canvas.addEventListener('click', () => {
   if (!mainMenu.isOpen && !pauseMenu.isOpen && !inventoryScreen.isOpen && !chestScreen.isOpen && !furnaceScreen.getIsOpen() && !tradingScreen.isOpen) {
     inputManager.requestPointerLock();
   }
+  updateTouchControlsState();
 });
 window.addEventListener('contextmenu', (e) => e.preventDefault());
 
@@ -579,12 +598,14 @@ window.addEventListener('keydown', (e) => {
     } else {
       pauseMenu.toggle();
     }
+    updateTouchControlsState();
     return;
   }
   if (pauseMenu.isOpen || chatBox.visible) return;
   if (e.key === 'o' || e.key === 'O') {
     inputManager.clearKeys();
     settingsMenu.toggle();
+    updateTouchControlsState();
     return;
   }
   if (e.key === 'e' || e.key === 'E') {
@@ -592,6 +613,7 @@ window.addEventListener('keydown', (e) => {
     if (furnaceScreen.getIsOpen()) furnaceScreen.close();
     else if (chestScreen.isOpen) chestScreen.closeChest();
     else inventoryScreen.toggle();
+    updateTouchControlsState();
     return;
   }
   const num = parseInt(e.key);

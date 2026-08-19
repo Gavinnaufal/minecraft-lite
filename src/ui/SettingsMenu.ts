@@ -18,8 +18,9 @@ export class SettingsMenu {
       display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
       z-index: 550; background: #c6c6c6; border-top: 4px solid #ffffff; border-left: 4px solid #ffffff;
       border-bottom: 4px solid #555555; border-right: 4px solid #555555;
-      color: #222; font-family: monospace; font-size: 14px; padding: 28px;
-      border-radius: 4px; width: 440px; box-shadow: 0 16px 50px rgba(0,0,0,0.85); user-select: none;
+      color: #222; font-family: monospace; font-size: 14px; padding: 24px;
+      border-radius: 4px; width: 440px; max-width: 92vw; max-height: 88vh;
+      overflow-y: auto; box-sizing: border-box; box-shadow: 0 16px 50px rgba(0,0,0,0.85); user-select: none;
     `;
 
     const title = document.createElement('div');
@@ -94,13 +95,40 @@ export class SettingsMenu {
     this.container.appendChild(musicLabel);
     this.container.appendChild(musicSlider);
 
+    // Resolution / Pixel Ratio (Mobile Performance Optimization)
+    const prLabel = document.createElement('div');
+    prLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: #333;';
+    prLabel.textContent = `Resolution: ${gameSettings.pixelRatio <= 1.0 ? '1.0x (Optimal / High FPS)' : 'Native High-DPI (Crisp / Heavy)'}`;
+
+    const prSelect = document.createElement('select');
+    prSelect.style.cssText = 'width: 100%; margin-bottom: 16px; cursor: pointer; font-family: monospace; font-size: 14px; padding: 6px;';
+    const prOptions = [
+      { val: '1.0', text: '1.0x (Recommended for Mobile / High FPS)' },
+      { val: '2.0', text: 'Native High-DPI (Crisp, Higher GPU Load)' },
+    ];
+    for (const opt of prOptions) {
+      const option = document.createElement('option');
+      option.value = opt.val;
+      option.textContent = opt.text;
+      if (Math.abs(parseFloat(opt.val) - gameSettings.pixelRatio) < 0.2) option.selected = true;
+      prSelect.appendChild(option);
+    }
+    prSelect.addEventListener('change', () => {
+      gameSettings.pixelRatio = parseFloat(prSelect.value);
+      prLabel.textContent = `Resolution: ${gameSettings.pixelRatio <= 1.0 ? '1.0x (Optimal / High FPS)' : 'Native High-DPI (Crisp / Heavy)'}`;
+      this.onChange?.();
+    });
+
+    this.container.appendChild(prLabel);
+    this.container.appendChild(prSelect);
+
     // Particle Detail
     const pdLabel = document.createElement('div');
     pdLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: #333;';
     pdLabel.textContent = `Particle Detail: ${gameSettings.particleDetail.charAt(0).toUpperCase() + gameSettings.particleDetail.slice(1)}`;
 
     const pdSelect = document.createElement('select');
-    pdSelect.style.cssText = 'width: 100%; margin-bottom: 24px; cursor: pointer; font-family: monospace; font-size: 14px; padding: 6px;';
+    pdSelect.style.cssText = 'width: 100%; margin-bottom: 16px; cursor: pointer; font-family: monospace; font-size: 14px; padding: 6px;';
     for (const opt of ['low', 'medium', 'high']) {
       const option = document.createElement('option');
       option.value = opt;
@@ -118,11 +146,11 @@ export class SettingsMenu {
 
     // Item Graphics Style (Independent setting for Items & Hand models)
     const igLabel = document.createElement('div');
-    igLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: #333; margin-top: 12px;';
+    igLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: #333;';
     igLabel.textContent = `Item Graphics Style: ${gameSettings.itemGraphicsStyle === 'fancy' ? 'Fancy (3D High Detail)' : (gameSettings.itemGraphicsStyle === 'voxel' ? 'Voxel Retro (Pixel 3D)' : 'Fast (Simple 2D)')}`;
 
     const igSelect = document.createElement('select');
-    igSelect.style.cssText = 'width: 100%; margin-bottom: 24px; cursor: pointer; font-family: monospace; font-size: 14px; padding: 6px;';
+    igSelect.style.cssText = 'width: 100%; margin-bottom: 20px; cursor: pointer; font-family: monospace; font-size: 14px; padding: 6px;';
     const igOptions = [
       { val: 'fancy', text: 'Fancy (3D High Detail)' },
       { val: 'voxel', text: 'Voxel Retro (Pixel 3D)' },

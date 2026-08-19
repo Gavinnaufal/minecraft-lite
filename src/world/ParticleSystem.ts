@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { gameSettings } from '../core/GameSettings';
 
 interface Particle {
   mesh: THREE.Mesh;
@@ -17,10 +18,17 @@ export class ParticleSystem {
     this.scene = scene;
   }
 
+  private getParticleCount(baseCount: number): number {
+    if (gameSettings.particleDetail === 'low') return Math.max(2, Math.round(baseCount * 0.35));
+    if (gameSettings.particleDetail === 'high') return Math.round(baseCount * 1.25);
+    return Math.max(3, Math.round(baseCount * 0.7));
+  }
+
   spawnEnderParticles(position: THREE.Vector3): void {
     const mat = new THREE.MeshBasicMaterial({ color: 0xd500f9, transparent: true, opacity: 0.9 });
+    const count = this.getParticleCount(3);
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < count; i++) {
       const mesh = new THREE.Mesh(this.particleGeo, mat);
       mesh.position.set(
         position.x + (Math.random() - 0.5) * 0.8,
@@ -47,8 +55,9 @@ export class ParticleSystem {
 
   spawnHeartParticles(position: THREE.Vector3): void {
     const mat = new THREE.MeshBasicMaterial({ color: 0xff4081, transparent: true, opacity: 0.95 });
+    const count = this.getParticleCount(6);
 
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < count; i++) {
       const mesh = new THREE.Mesh(this.particleGeo, mat);
       mesh.position.set(
         position.x + (Math.random() - 0.5) * 0.7,
@@ -75,8 +84,9 @@ export class ParticleSystem {
 
   spawnBlockBreakParticles(position: THREE.Vector3, colorHex = 0x8d6e63): void {
     const mat = new THREE.MeshBasicMaterial({ color: colorHex });
+    const count = this.getParticleCount(12);
 
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < count; i++) {
       const mesh = new THREE.Mesh(this.particleGeo, mat);
       mesh.position.set(
         position.x + (Math.random() - 0.5) * 0.6,
@@ -102,8 +112,9 @@ export class ParticleSystem {
 
   spawnBlockPlaceParticles(position: THREE.Vector3, colorHex = 0xdddddd): void {
     const mat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.8 });
+    const count = this.getParticleCount(8);
 
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < count; i++) {
       const mesh = new THREE.Mesh(this.particleGeo, mat);
       mesh.position.set(
         position.x + (Math.random() - 0.5) * 0.8,
@@ -129,8 +140,9 @@ export class ParticleSystem {
 
   spawnDeathParticles(position: THREE.Vector3): void {
     const mat = new THREE.MeshBasicMaterial({ color: 0xeeeeee, transparent: true, opacity: 0.9 });
+    const count = this.getParticleCount(18);
 
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < count; i++) {
       const mesh = new THREE.Mesh(this.particleGeo, mat);
       mesh.position.set(
         position.x + (Math.random() - 0.5) * 0.6,
@@ -156,8 +168,9 @@ export class ParticleSystem {
 
   spawnWaterSplashParticles(position: THREE.Vector3): void {
     const mat = new THREE.MeshBasicMaterial({ color: 0x4fc3f7, transparent: true, opacity: 0.85 });
+    const count = this.getParticleCount(12);
 
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < count; i++) {
       const mesh = new THREE.Mesh(this.particleGeo, mat);
       mesh.position.set(
         position.x + (Math.random() - 0.5) * 0.5,
@@ -182,6 +195,15 @@ export class ParticleSystem {
   }
 
   update(deltaTime: number): void {
+    const maxParticles = gameSettings.particleDetail === 'low' ? 35 : (gameSettings.particleDetail === 'high' ? 140 : 70);
+    while (this.particles.length > maxParticles) {
+      const oldest = this.particles.shift();
+      if (oldest) {
+        this.scene.remove(oldest.mesh);
+        oldest.mesh.geometry.dispose();
+      }
+    }
+
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
       p.life -= deltaTime;

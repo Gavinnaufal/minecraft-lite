@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { gameSettings } from './GameSettings';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 
@@ -14,14 +15,15 @@ camera.position.set(0, 0, 0);
 
 export const renderer = new THREE.WebGLRenderer({ 
   canvas, 
-  antialias: true
+  antialias: !gameSettings.isMobilePreset,
+  powerPreference: 'high-performance',
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(gameSettings.pixelRatio);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.15;
 scene.background = new THREE.Color('#4da6ff');
-scene.fog = new THREE.FogExp2('#87ceeb', 0.012);
+scene.fog = new THREE.FogExp2('#87ceeb', gameSettings.isMobilePreset ? 0.02 : 0.012);
 
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
 scene.add(ambientLight);
@@ -39,4 +41,5 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(gameSettings.pixelRatio);
 });

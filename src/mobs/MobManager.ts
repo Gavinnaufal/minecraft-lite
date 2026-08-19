@@ -3,13 +3,14 @@ import { Mob } from './Mob';
 import type { Player } from '../player/Player';
 import type { World } from '../world/World';
 import type { EquipmentSlots } from '../inventory/EquipmentSlots';
+import { gameSettings } from '../core/GameSettings';
 
 export class MobManager {
   mobs: Mob[] = [];
   private pool: Mob[] = [];
   private scene: THREE.Scene;
   private world?: World;
-  mobCap = 18;
+  mobCap = gameSettings.mobCap;
 
   constructor(scene: THREE.Scene, world?: World) {
     this.scene = scene;
@@ -84,7 +85,8 @@ export class MobManager {
   }
 
   update(deltaTime: number, playerPos?: THREE.Vector3, player?: Player, camera?: THREE.PerspectiveCamera, isNight: boolean = true, equipmentSlots?: EquipmentSlots): void {
-    const CULL_DIST_SQ = 80 * 80;
+    const cullDist = gameSettings.isMobilePreset ? 45 : 80;
+    const CULL_DIST_SQ = cullDist * cullDist;
 
     for (const mob of this.mobs) {
       if (playerPos) {
@@ -101,9 +103,10 @@ export class MobManager {
       mob.update(deltaTime, this.world, playerPos, player, this, camera, isNight, equipmentSlots);
     }
 
-    // Despawn mobs that are extremely far away (>120 blocks) to free memory
+    // Despawn mobs that are far away (70 blocks on mobile, 120 on desktop) to free memory & CPU
     if (playerPos) {
-      const DESPAWN_DIST_SQ = 120 * 120;
+      const despawnDist = gameSettings.isMobilePreset ? 70 : 120;
+      const DESPAWN_DIST_SQ = despawnDist * despawnDist;
       for (let i = this.mobs.length - 1; i >= 0; i--) {
         const mob = this.mobs[i];
         const dx = mob.position.x - playerPos.x;

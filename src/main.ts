@@ -1,7 +1,7 @@
 import './style.css';
 import { Engine } from './core/Engine';
 import { renderer, scene, camera, lights } from './core/Renderer';
-import { inputManager } from './core/InputManager';
+import { inputManager, InputManager } from './core/InputManager';
 import { Clock } from './core/Clock';
 import { PlayerCamera } from './player/Camera';
 import { Player } from './player/Player';
@@ -510,6 +510,7 @@ const mainMenu = new MainMenu(settingsMenu, (isLoad) => {
 
 settingsMenu.create(
   () => {
+    renderer.setPixelRatio(gameSettings.pixelRatio);
     chunkManager.forceReload(gameSettings.renderDistance, camera.position.x, camera.position.z);
   },
   () => {
@@ -1268,7 +1269,8 @@ engine.setUpdateCallback((deltaTime) => {
           }
         } else if (activeItem.itemId === 'stick' || activeItem.itemId === 'wheat') {
           const itemDef = getItemById(activeItem.itemId);
-          toastSystem.show(`${itemDef?.name || activeItem.itemId} digunakan untuk resep crafting! Tekan [E] untuk craft.`, 'info');
+          const craftHint = InputManager.isTouchDevice() ? 'Buka Inventory untuk craft.' : 'Tekan [E] untuk craft.';
+          toastSystem.show(`${itemDef?.name || activeItem.itemId} digunakan untuk resep crafting! ${craftHint}`, 'info');
         }
       }
     }

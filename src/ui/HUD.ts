@@ -2,6 +2,7 @@ import { Hotbar } from '../inventory/Hotbar';
 import { createItemIcon } from './IconGenerator';
 import { getItemById } from '../inventory/ItemRegistry';
 import { AudioManager } from '../audio/AudioManager';
+import { InputManager } from '../core/InputManager';
 
 const SVG_ICONS = {
   location: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00ffcc" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`,
@@ -225,6 +226,17 @@ export class HUD {
       this.shieldEls.push(shield);
     }
     document.body.appendChild(this.armorContainer);
+
+    this.checkDevice();
+    window.addEventListener('resize', () => this.checkDevice());
+    window.addEventListener('touchstart', () => this.checkDevice(), { passive: true, once: true });
+  }
+
+  checkDevice(): void {
+    const isTouch = InputManager.isTouchDevice();
+    if (this.controlsGuide) {
+      this.controlsGuide.style.display = isTouch ? 'none' : 'flex';
+    }
   }
 
   private armorContainer: HTMLDivElement;

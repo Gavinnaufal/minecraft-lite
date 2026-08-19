@@ -128,11 +128,11 @@ export class PlayerController {
       this.stepTimer = 0;
     }
 
-    // Fall Damage Calculation
+    // Fall Damage Calculation (Safe fall distance: jumps & drops <= 5 blocks take 0 damage)
     if (this.player.isGrounded && !this.wasGroundedLastFrame) {
       const fallSpeed = Math.abs(this.prevVelocityY);
-      if (fallSpeed > 14.0 && !inWater) {
-        const fallDamage = Math.floor((fallSpeed - 14.0) * 1.2);
+      if (fallSpeed > 18.0 && !inWater) {
+        const fallDamage = Math.floor((fallSpeed - 18.0) * 0.8);
         if (fallDamage > 0) {
           this.player.health = Math.max(0, this.player.health - fallDamage);
           AudioManager.getInstance().playSFX('hit');

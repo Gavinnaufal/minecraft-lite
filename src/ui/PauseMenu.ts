@@ -1,7 +1,6 @@
 import type { SaveManager } from '../save/SaveManager';
 import type { SettingsMenu } from './SettingsMenu';
 import { AudioManager } from '../audio/AudioManager';
-import { toggleFullscreen } from '../utils/fullscreen';
 
 export class PauseMenu {
   private container: HTMLDivElement | null = null;
@@ -98,19 +97,13 @@ export class PauseMenu {
       }
     });
 
-    // 3. Fullscreen Toggle
-    const btnFullscreen = makeMcBtn('⛶ Toggle Fullscreen (Layar Penuh)', () => {
-      toggleFullscreen();
-    });
-
-    // 4. Options / Settings
+    // 3. Options / Settings
     const btnSettings = makeMcBtn('Options & Settings...', () => {
       this.settingsMenu.toggle();
     });
 
     btnBox.appendChild(btnResume);
     btnBox.appendChild(btnSave);
-    btnBox.appendChild(btnFullscreen);
     btnBox.appendChild(btnSettings);
 
     this.container.appendChild(btnBox);

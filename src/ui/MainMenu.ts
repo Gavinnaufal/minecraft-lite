@@ -126,17 +126,101 @@ export class MainMenu {
       this.settingsMenu.toggle();
     });
 
-    const fullscreenBtn = makeMcBtn('⛶ Toggle Fullscreen (Layar Penuh)', () => {
-      toggleFullscreen();
-    });
-
     btnBox.appendChild(newGameBtn);
     btnBox.appendChild(loadGameBtn);
     btnBox.appendChild(settingsBtn);
-    btnBox.appendChild(fullscreenBtn);
     this.container.appendChild(btnBox);
 
+    this.createPwaBanner();
+
     document.body.appendChild(this.container);
+  }
+
+  private createPwaBanner(): void {
+    if (!this.container) return;
+
+    try {
+      const isStandalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+
+      const isMobile =
+        'ontouchstart' in window ||
+        navigator.maxTouchPoints > 0 ||
+        window.innerWidth <= 1024;
+
+      const hasSeen = localStorage.getItem('mc_pwa_banner_dismissed') === 'true';
+
+      if (!isMobile || isStandalone || hasSeen) return;
+
+      const isIOS =
+        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+      const banner = document.createElement('div');
+      banner.id = 'pwa-home-banner';
+      banner.style.cssText = `
+        position: absolute;
+        bottom: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 440px;
+        max-width: 92vw;
+        background: rgba(20, 20, 20, 0.94);
+        border: 2px solid #ffcc00;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+        border-radius: 6px;
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        z-index: 520;
+        font-family: monospace;
+        font-size: 12px;
+        color: #fff;
+        line-height: 1.4;
+      `;
+
+      const textEl = document.createElement('div');
+      textEl.innerHTML = isIOS
+        ? '💡 <span style="color:#ffcc00;font-weight:bold;">Main Layar Penuh!</span> Tekan Share (<b>□↑</b>) di Safari, lalu pilih <b>"Add to Home Screen"</b>.'
+        : '💡 <span style="color:#ffcc00;font-weight:bold;">Main Layar Penuh!</span> Tekan menu (<b>⋮</b>) di Chrome, lalu pilih <b>"Add to Home Screen"</b>.';
+
+      const closeBtn = document.createElement('button');
+      closeBtn.textContent = '✕';
+      closeBtn.style.cssText = `
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        color: #fff;
+        font-size: 14px;
+        font-weight: bold;
+        width: 28px;
+        height: 28px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+        touch-action: manipulation;
+      `;
+
+      const dismiss = (e?: Event) => {
+        if (e && e.cancelable) e.preventDefault();
+        try {
+          localStorage.setItem('mc_pwa_banner_dismissed', 'true');
+        } catch {}
+        banner.remove();
+      };
+
+      closeBtn.addEventListener('touchend', dismiss, { passive: false });
+      closeBtn.addEventListener('click', dismiss);
+
+      banner.appendChild(textEl);
+      banner.appendChild(closeBtn);
+      this.container.appendChild(banner);
+    } catch {}
   }
 
   show(): void {

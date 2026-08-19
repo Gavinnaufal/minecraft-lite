@@ -1,4 +1,4 @@
-class InputManager {
+export class InputManager {
   private readonly keysDown = new Set<string>();
 
   mouseDeltaX = 0;
@@ -32,6 +32,37 @@ class InputManager {
       if (this.keysDown.has(code)) return true;
     }
     return false;
+  }
+
+  setVirtualKey(key: string, pressed: boolean): void {
+    if (pressed) {
+      this.keysDown.add(key.toLowerCase());
+      this.keysDown.add(key);
+      if (key.length === 1) {
+        this.keysDown.add('Key' + key.toUpperCase());
+      }
+    } else {
+      this.keysDown.delete(key.toLowerCase());
+      this.keysDown.delete(key.toUpperCase());
+      this.keysDown.delete(key);
+      if (key.length === 1) {
+        this.keysDown.delete('Key' + key.toUpperCase());
+      }
+    }
+  }
+
+  addTouchDelta(dx: number, dy: number): void {
+    this.mouseDeltaX += dx;
+    this.mouseDeltaY += dy;
+  }
+
+  static isTouchDevice(): boolean {
+    return (
+      'ontouchstart' in window ||
+      navigator.maxTouchPoints > 0 ||
+      window.matchMedia('(pointer: coarse)').matches ||
+      window.innerWidth <= 1024
+    );
   }
 
   requestPointerLock(): void {

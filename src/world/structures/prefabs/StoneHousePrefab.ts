@@ -39,8 +39,8 @@ export function buildStoneHousePrefab(
           // Wood log pillars on 4 corners
           manager.placeBlockInChunk(chunk, lx, y, lz, 5); // wood_log
         } else if (isWall) {
-          // Doorway on front wall (dz === 0, dx === 3, y = 1..2)
-          const isDoor = dz === 0 && dx === 3 && (dy === 1 || dy === 2);
+          // Front doorway facing village road (dz === 0, dx = 2..3, dy = 1..2)
+          const isDoor = dz === 0 && (dx === 2 || dx === 3) && (dy === 1 || dy === 2);
           // Windows on side walls (dy === 2)
           const isWindow = dy === 2 && ((dx === 0 || dx === width - 1) && (dz === 2 || dz === 3));
 

@@ -19,6 +19,7 @@ import { worldToChunkCoord } from './utils/math';
 import { SettingsMenu } from './ui/SettingsMenu';
 import { PauseMenu } from './ui/PauseMenu';
 import { HUD } from './ui/HUD';
+import { TouchControls } from './ui/TouchControls';
 import { InventoryScreen } from './ui/InventoryScreen';
 import { MainMenu } from './ui/MainMenu';
 import { HandModel } from './ui/HandModel';
@@ -548,6 +549,8 @@ const pauseMenu = new PauseMenu(saveManager, settingsMenu, () => {
   inputManager.requestPointerLock();
 });
 pauseMenu.create();
+
+const touchControls = TouchControls.getInstance();
 
 mainMenu.create();
 
@@ -1393,7 +1396,7 @@ if (import.meta.env.DEV) {
   const win = window as unknown as Record<string, unknown>;
   win.world = world; win.chunkManager = chunkManager; win.camera = camera;
   win.player = player; win.hotbar = hotbar; win.inventory = inventory;
-  win.saveManager = saveManager;
+  win.saveManager = saveManager; win.touchControls = touchControls;
   win.clearSave = async () => {
     await saveManager.clearSave();
     console.log('[Save] Clearing world save data and reloading...');

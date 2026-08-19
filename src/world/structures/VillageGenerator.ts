@@ -158,6 +158,7 @@ export class VillageGenerator {
       }
       if (groundY > WATER_LEVEL) {
         buildOakHousePrefab(chunk, chunkMinWX, chunkMinWZ, hWX, groundY, hWZ);
+        this.clearHouseEntrance(chunk, hWX + 2, hWZ, groundY, 'north', 2);
       }
     }
 
@@ -172,6 +173,8 @@ export class VillageGenerator {
       }
       if (groundY > WATER_LEVEL) {
         buildStoneHousePrefab(chunk, chunkMinWX, chunkMinWZ, hWX, groundY, hWZ);
+        this.clearHouseEntrance(chunk, hWX + 2, hWZ, groundY, 'north', 2);
+        this.clearHouseEntrance(chunk, hWX + 3, hWZ, groundY, 'north', 2);
       }
     }
 
@@ -193,6 +196,88 @@ export class VillageGenerator {
       if (groundY > WATER_LEVEL) {
         buildFarmPrefab(chunk, chunkMinWX, chunkMinWZ, fWX, groundY, fWZ);
       }
+    }
+  }
+
+  /**
+   * Clears air space in front of house doors and creates an approach walkway with foundation.
+   * Ensures natural entry without mountain terrain or cliffs blocking the doorway.
+   * GUARANTEES that the doorway (step = 0) itself is cleared to AIR as the absolute final step.
+   */
+  private clearHouseEntrance(
+    chunk: Chunk,
+    entranceWX: number,
+    entranceWZ: number,
+    groundY: number,
+    facingDirection: 'north' | 'south' | 'east' | 'west' = 'north',
+    walkwayBlockId = 2,
+  ): void {
+    const chunkMinWX = chunk.chunkX * CHUNK_SIZE_X;
+    const chunkMinWZ = chunk.chunkZ * CHUNK_SIZE_Z;
+
+    let dirX = 0;
+    let dirZ = 0;
+
+    switch (facingDirection) {
+      case 'north': dirZ = -1; break; // Facing -Z
+      case 'south': dirZ = 1; break;  // Facing +Z
+      case 'west': dirX = -1; break;  // Facing -X
+      case 'east': dirX = 1; break;   // Facing +X
+    }
+
+    // Phase 1: Process approach walkway (step = 1 and step = 2 outward from door)
+    for (let step = 1; step <= 2; step++) {
+      const wx = entranceWX + dirX * step;
+      const wz = entranceWZ + dirZ * step;
+      const lx = wx - chunkMinWX;
+      const lz = wz - chunkMinWZ;
+
+      if (lx < 0 || lx >= CHUNK_SIZE_X || lz < 0 || lz >= CHUNK_SIZE_Z) continue;
+
+      // 1. Foundation under walkway: fill downward until hitting solid ground (prevents floating walkways on slopes)
+      for (let fillY = groundY - 1; fillY >= 1; fillY--) {
+        const below = chunk.getBlock(lx, fillY, lz);
+        if (below === 0 || below === 7 || below === 6) {
+          chunk.setBlock(lx, fillY, lz, 3); // Stone foundation
+        } else {
+          break; // Solid ground reached
+        }
+      }
+
+      // 2. Approach Walkway: place path block at y = groundY
+      chunk.setBlock(lx, groundY, lz, walkwayBlockId);
+
+      // 3. Air clearance above walkway: clear 3 blocks high (y = groundY + 1 to groundY + 3)
+      for (let dy = 1; dy <= 3; dy++) {
+        const y = groundY + dy;
+        chunk.setBlock(lx, y, lz, 0); // Air
+      }
+      chunk.isDirty = true;
+    }
+
+    // Phase 2: Process doorway threshold (step = 0, at entranceWX, entranceWZ)
+    const doorLX = entranceWX - chunkMinWX;
+    const doorLZ = entranceWZ - chunkMinWZ;
+    if (doorLX >= 0 && doorLX < CHUNK_SIZE_X && doorLZ >= 0 && doorLZ < CHUNK_SIZE_Z) {
+      // 1. Ensure floor sill at y = groundY is solid stone
+      chunk.setBlock(doorLX, groundY, doorLZ, 3);
+
+      // 2. Downward foundation under door floor if built over air
+      for (let fillY = groundY - 1; fillY >= 1; fillY--) {
+        const below = chunk.getBlock(doorLX, fillY, doorLZ);
+        if (below === 0 || below === 7 || below === 6) {
+          chunk.setBlock(doorLX, fillY, doorLZ, 3); // Stone foundation under door floor
+        } else {
+          break;
+        }
+      }
+
+      // 3. FINAL GUARANTEE: The doorway itself MUST be 100% AIR from groundY + 1 to groundY + 3
+      for (let dy = 1; dy <= 3; dy++) {
+        const y = groundY + dy;
+        chunk.setBlock(doorLX, y, doorLZ, 0); // Guaranteed AIR (executed last, nothing can overwrite this)
+      }
+      chunk.isDirty = true;
     }
   }
 

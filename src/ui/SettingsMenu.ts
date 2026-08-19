@@ -1,5 +1,6 @@
 import { gameSettings } from '../core/GameSettings';
 import { AudioManager } from '../audio/AudioManager';
+import { toggleFullscreen } from '../utils/fullscreen';
 
 export class SettingsMenu {
   private container: HTMLDivElement | null = null;
@@ -205,6 +206,9 @@ export class SettingsMenu {
       return btn;
     };
 
+    const fsBtn = makeOptionBtn('⛶ Toggle Fullscreen (Layar Penuh)', '#37474f', () => {
+      toggleFullscreen();
+    });
     const doneBtn = makeOptionBtn('Done', '#707070', () => this.toggle());
     const resetBtn = makeOptionBtn('Reset World (New Seed)', '#c62828', () => {
       if (confirm('Apakah Anda yakin ingin menghapus dunia ini dan membuat baru?')) {
@@ -216,6 +220,7 @@ export class SettingsMenu {
       this.onQuitToMainMenu?.();
     });
 
+    btnBox.appendChild(fsBtn);
     btnBox.appendChild(doneBtn);
     btnBox.appendChild(resetBtn);
     btnBox.appendChild(quitBtn);

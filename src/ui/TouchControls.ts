@@ -1,4 +1,5 @@
 import { inputManager, InputManager } from '../core/InputManager';
+import { toggleFullscreen } from '../utils/fullscreen';
 
 export class TouchControls {
   private static instance: TouchControls | null = null;
@@ -122,6 +123,46 @@ export class TouchControls {
       transition: transform 0.08s ease, background 0.08s ease;
     `;
     this.container.appendChild(this.jumpButton);
+
+    // 3. Fullscreen Quick Button (Top-Right)
+    const fsBtn = document.createElement('div');
+    fsBtn.id = 'touch-fs-btn';
+    fsBtn.title = 'Toggle Fullscreen';
+    fsBtn.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+      </svg>
+    `;
+    fsBtn.style.cssText = `
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1.5px solid rgba(255, 255, 255, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      touch-action: manipulation;
+      cursor: pointer;
+      z-index: 105;
+      backdrop-filter: blur(4px);
+    `;
+    fsBtn.addEventListener(
+      'touchend',
+      (e) => {
+        if (e.cancelable) e.preventDefault();
+        toggleFullscreen();
+      },
+      { passive: false }
+    );
+    fsBtn.addEventListener('click', () => {
+      toggleFullscreen();
+    });
+    this.container.appendChild(fsBtn);
 
     document.body.appendChild(this.container);
 

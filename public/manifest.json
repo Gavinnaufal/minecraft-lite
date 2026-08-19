@@ -1,0 +1,20 @@
+{
+  "name": "Minecraft Lite 3.0",
+  "short_name": "Minecraft",
+  "description": "Voxel sandbox engine built with Three.js & TypeScript",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "landscape",
+  "background_color": "#000000",
+  "theme_color": "#1e1e1e",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "48x48 72x72 96x96 128x128 192x192 256x256 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

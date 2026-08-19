@@ -1,5 +1,6 @@
 import { SettingsMenu } from './SettingsMenu';
 import { AudioManager } from '../audio/AudioManager';
+import { toggleFullscreen } from '../utils/fullscreen';
 
 export class MainMenu {
   private container: HTMLDivElement | null = null;
@@ -109,12 +110,14 @@ export class MainMenu {
 
     const newGameBtn = makeMcBtn('Singleplayer (New World)', () => {
       this.hide();
+      toggleFullscreen();
       AudioManager.getInstance().startMusic();
       this.onStartGame?.(false);
     });
 
     const loadGameBtn = makeMcBtn('Load Saved World', () => {
       this.hide();
+      toggleFullscreen();
       AudioManager.getInstance().startMusic();
       this.onStartGame?.(true);
     });
@@ -123,9 +126,14 @@ export class MainMenu {
       this.settingsMenu.toggle();
     });
 
+    const fullscreenBtn = makeMcBtn('⛶ Toggle Fullscreen (Layar Penuh)', () => {
+      toggleFullscreen();
+    });
+
     btnBox.appendChild(newGameBtn);
     btnBox.appendChild(loadGameBtn);
     btnBox.appendChild(settingsBtn);
+    btnBox.appendChild(fullscreenBtn);
     this.container.appendChild(btnBox);
 
     document.body.appendChild(this.container);

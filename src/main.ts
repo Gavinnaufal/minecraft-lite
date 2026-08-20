@@ -556,6 +556,13 @@ const pauseMenu = new PauseMenu(saveManager, settingsMenu, () => {
 pauseMenu.create();
 
 const touchControls = TouchControls.getInstance();
+touchControls.onToggleInventory = () => {
+  if (furnaceScreen.getIsOpen()) furnaceScreen.close();
+  else if (chestScreen.isOpen) chestScreen.closeChest();
+  else if (tradingScreen.isOpen) tradingScreen.close();
+  else inventoryScreen.toggle();
+  updateTouchControlsState();
+};
 
 const updateTouchControlsState = (): void => {
   const modalOpen =

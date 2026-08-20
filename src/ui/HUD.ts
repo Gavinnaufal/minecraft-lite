@@ -157,17 +157,32 @@ export class HUD {
 
     // Authentic Minecraft Hotbar Container (Gray GUI Bar)
     this.container = document.createElement('div');
+    this.container.id = 'hud-hotbar';
     this.container.style.cssText = `
       position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%);
-      display: flex; gap: 0; z-index: 100; pointer-events: none;
+      display: flex; gap: 0; z-index: 100; pointer-events: auto;
       background: #8b8b8b; border-top: 3px solid #373737; border-left: 3px solid #373737;
       border-bottom: 3px solid #ffffff; border-right: 3px solid #ffffff;
       padding: 3px; border-radius: 2px; box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+      touch-action: manipulation;
     `;
     document.body.appendChild(this.container);
 
+    const hudStyle = document.createElement('style');
+    hudStyle.textContent = `
+      @media (max-width: 600px) {
+        #hud-hotbar {
+          transform: translateX(-50%) scale(0.85) !important;
+          transform-origin: bottom center !important;
+          bottom: 4px !important;
+        }
+      }
+    `;
+    document.head.appendChild(hudStyle);
+
     for (let i = 0; i < 9; i++) {
       const slot = document.createElement('div');
+      slot.className = 'hotbar-slot';
       slot.style.cssText = `
         width: 56px; height: 56px; background: #8b8b8b;
         border-top: 3px solid #373737; border-left: 3px solid #373737;
@@ -175,7 +190,18 @@ export class HUD {
         display: flex; align-items: center; justify-content: center; position: relative;
         font-family: monospace; font-size: 13px; color: #fff;
         margin: 1px; transition: all 0.1s ease; box-sizing: border-box;
+        cursor: pointer; pointer-events: auto; touch-action: manipulation;
       `;
+
+      const selectSlot = (e?: Event) => {
+        if (e && e.cancelable) e.preventDefault();
+        this.hotbar.activeSlotIndex = i;
+        AudioManager.getInstance().playSFX('click');
+      };
+
+      slot.addEventListener('touchend', selectSlot, { passive: false });
+      slot.addEventListener('click', selectSlot);
+
       this.container.appendChild(slot);
       this.slots.push(slot);
     }

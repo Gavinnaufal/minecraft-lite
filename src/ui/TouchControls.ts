@@ -105,24 +105,26 @@ export class TouchControls {
     // 2. Jump Button (Bottom-Right)
     this.jumpButton = document.createElement('div');
     this.jumpButton.id = 'touch-jump-btn';
-    this.jumpButton.title = 'Jump';
+    this.jumpButton.title = 'Jump (Lompat)';
     this.jumpButton.innerHTML = `
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));">
         <path d="M18 15l-6-6-6 6"/>
       </svg>
+      <span style="font-size: 9px; font-weight: bold; color: #ffffff; font-family: monospace; text-shadow: 1px 1px 2px #000; pointer-events: none; letter-spacing: 0.5px; margin-top: -2px;">LOMPAT</span>
     `;
     this.jumpButton.style.cssText = `
       position: absolute;
       right: 25px;
-      bottom: 30px;
-      width: 62px;
-      height: 62px;
+      bottom: 25px;
+      width: 68px;
+      height: 68px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%);
-      border: 2.5px solid rgba(255, 255, 255, 0.45);
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.12) 100%);
+      border: 2.5px solid rgba(255, 255, 255, 0.6);
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
       backdrop-filter: blur(4px);
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       pointer-events: auto;
@@ -143,19 +145,21 @@ export class TouchControls {
         <path d="M16 16l4 4"/>
         <path d="M19 21l2-2"/>
       </svg>
+      <span style="font-size: 9px; font-weight: bold; color: #ffcccc; font-family: monospace; text-shadow: 1px 1px 2px #000; pointer-events: none; letter-spacing: 0.5px; margin-top: -2px;">SERANG</span>
     `;
     this.attackButton.style.cssText = `
       position: absolute;
-      right: 98px;
-      bottom: 30px;
-      width: 56px;
-      height: 56px;
+      right: 110px;
+      bottom: 25px;
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
       background: radial-gradient(circle, rgba(255, 80, 80, 0.35) 0%, rgba(255, 80, 80, 0.15) 100%);
-      border: 2.5px solid rgba(255, 120, 120, 0.55);
+      border: 2.5px solid rgba(255, 110, 110, 0.65);
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
       backdrop-filter: blur(4px);
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       pointer-events: auto;
@@ -165,29 +169,31 @@ export class TouchControls {
     `;
     this.container.appendChild(this.attackButton);
 
-    // 4. Place / Interact Button (Above Jump Button)
+    // 4. Place / Interact Button (Top-Center of Triangle Cluster)
     this.placeButton = document.createElement('div');
     this.placeButton.id = 'touch-place-btn';
-    this.placeButton.title = 'Place Block / Interact';
+    this.placeButton.title = 'Place Block / Interact (Taruh)';
     this.placeButton.innerHTML = `
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));">
         <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
         <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
         <line x1="12" y1="22.08" x2="12" y2="12"/>
       </svg>
+      <span style="font-size: 9px; font-weight: bold; color: #cceeff; font-family: monospace; text-shadow: 1px 1px 2px #000; pointer-events: none; letter-spacing: 0.5px; margin-top: -2px;">TARUH</span>
     `;
     this.placeButton.style.cssText = `
       position: absolute;
-      right: 25px;
-      bottom: 102px;
-      width: 56px;
-      height: 56px;
+      right: 62px;
+      bottom: 108px;
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
       background: radial-gradient(circle, rgba(80, 200, 255, 0.35) 0%, rgba(80, 200, 255, 0.15) 100%);
-      border: 2.5px solid rgba(120, 220, 255, 0.55);
+      border: 2.5px solid rgba(120, 220, 255, 0.65);
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
       backdrop-filter: blur(4px);
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       pointer-events: auto;
@@ -505,7 +511,7 @@ export class TouchControls {
     this.jumpTouchId = null;
     inputManager.setVirtualKey(' ', false);
     this.jumpButton.style.transform = 'scale(1)';
-    this.jumpButton.style.background = 'radial-gradient(circle, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%)';
+    this.jumpButton.style.background = 'radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.12) 100%)';
   }
 
   private resetAttack(): void {

@@ -4,25 +4,61 @@ import { EquipmentSlots, type ArmorSlotType } from '../inventory/EquipmentSlots'
 import { getItemById } from '../inventory/ItemRegistry';
 import { checkRecipe } from '../crafting/CraftingSystem';
 import { createItemIcon } from './IconGenerator';
+import { AudioManager } from '../audio/AudioManager';
 
 export interface CraftGridSlot {
   itemId: string;
   count: number;
 }
 
+export type SlotSourceType = 'inv' | 'hotbar' | 'craft' | 'armor';
+
+export interface SelectedSlotInfo {
+  type: SlotSourceType;
+  index: number;
+  r?: number;
+  c?: number;
+  armorSlot?: ArmorSlotType;
+  count?: number;
+  itemId?: string;
+  durability?: number;
+}
+
 export class InventoryScreen {
   private container: HTMLDivElement | null = null;
+  private panel: HTMLDivElement | null = null;
   private visible = false;
   private readonly inventory: Inventory;
   private readonly hotbar: Hotbar;
   private readonly equipmentSlots?: EquipmentSlots;
+  public onClose: (() => void) | null = null;
+
+  // Desktop drag-and-drop state (CP74)
   private dragItem: { itemId: string; count: number; durability?: number } | null = null;
   private dragEl: HTMLDivElement | null = null;
   private tooltipEl: HTMLDivElement | null = null;
   private isMouseDown = false;
   private isRightMouseDown = false;
   private lastEnteredSlot: HTMLElement | null = null;
-  public onClose: (() => void) | null = null;
+
+  // Mobile Tap-to-Select & Tap-to-Move state
+  private selectedSlot: SelectedSlotInfo | null = null;
+  private currentMobileTab: 'inv' | 'craft' | 'armor' = 'inv';
+
+  // Mobile Long-Press Stack Splitter state
+  private splitModal: HTMLDivElement | null = null;
+  private splitTarget: SelectedSlotInfo | null = null;
+  private splitTotalCount = 1;
+  private splitSelectedCount = 1;
+  private touchTimer: number | null = null;
+  private touchStartPos = { x: 0, y: 0 };
+  private isLongPressActive = false;
+
+  // Section column references for tab switching
+  private armorColumnEl: HTMLDivElement | null = null;
+  private craftColumnEl: HTMLDivElement | null = null;
+  private invColumnEl: HTMLDivElement | null = null;
+  private tabButtons: HTMLButtonElement[] = [];
 
   private armorSlotEls: Record<ArmorSlotType, HTMLDivElement | null> = {
     helmet: null,
@@ -59,35 +95,122 @@ export class InventoryScreen {
       justify-content: center; align-items: center; flex-direction: column;
     `;
 
-    const invStyle = document.createElement('style');
-    invStyle.textContent = `
+    // Inject Responsive & Tabbed CSS Styles
+    const styleEl = document.createElement('style');
+    styleEl.textContent = `
       #inventory-panel {
         position: relative;
+        background: #c6c6c6;
+        border-top: 4px solid #ffffff;
+        border-left: 4px solid #ffffff;
+        border-bottom: 4px solid #555555;
+        border-right: 4px solid #555555;
+        padding: 20px 24px;
+        display: flex;
+        gap: 20px;
+        border-radius: 4px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        box-sizing: border-box;
         max-width: 96vw;
         max-height: 94vh;
-        box-sizing: border-box;
-        transition: transform 0.15s ease;
+        user-select: none;
       }
-      @media (max-width: 950px), (max-height: 600px) {
+
+      .inv-tab-bar {
+        display: none;
+        gap: 8px;
+        margin-bottom: 12px;
+        width: 100%;
+        justify-content: center;
+      }
+
+      .inv-tab-btn {
+        flex: 1;
+        max-width: 150px;
+        padding: 8px 10px;
+        font-family: monospace;
+        font-size: 13px;
+        font-weight: bold;
+        color: #fff;
+        background: #555555;
+        border-top: 2px solid #888;
+        border-left: 2px solid #888;
+        border-bottom: 2px solid #222;
+        border-right: 2px solid #222;
+        border-radius: 4px;
+        cursor: pointer;
+        touch-action: manipulation;
+        text-shadow: 1px 1px 0 #000;
+        transition: background 0.12s ease;
+      }
+
+      .inv-tab-btn.active {
+        background: #2e7d32 !important;
+        border-top: 2px solid #81c784 !important;
+        border-left: 2px solid #81c784 !important;
+        border-bottom: 2px solid #1b5e20 !important;
+        border-right: 2px solid #1b5e20 !important;
+        box-shadow: 0 0 8px rgba(76, 175, 80, 0.7);
+      }
+
+      .inv-slot-selected {
+        border-top: 3px solid #ffcc00 !important;
+        border-left: 3px solid #ffcc00 !important;
+        border-bottom: 3px solid #ffcc00 !important;
+        border-right: 3px solid #ffcc00 !important;
+        box-shadow: 0 0 14px #ffcc00, inset 0 0 8px #ffcc00 !important;
+        transform: scale(1.06) !important;
+        z-index: 15 !important;
+      }
+
+      @media (max-width: 840px), (max-height: 520px) {
         #inventory-panel {
-          transform: scale(0.82);
-          transform-origin: center center;
+          flex-direction: column;
+          padding: 14px 16px;
+          max-width: 96vw;
+          max-height: 94vh;
+          overflow-y: auto;
+          align-items: center;
+        }
+
+        .inv-tab-bar {
+          display: flex;
+        }
+
+        .inv-section-col {
+          display: none !important;
+          width: 100%;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .inv-section-col.active-tab {
+          display: flex !important;
+        }
+
+        .inv-slot-box {
+          width: 48px !important;
+          height: 48px !important;
+        }
+
+        .inv-grid-9 {
+          grid-template-columns: repeat(9, 48px) !important;
         }
       }
-      @media (max-width: 780px), (max-height: 480px) {
-        #inventory-panel {
-          transform: scale(0.68);
-          transform-origin: center center;
+
+      @media (max-width: 500px) {
+        .inv-slot-box {
+          width: 38px !important;
+          height: 38px !important;
         }
-      }
-      @media (max-width: 600px), (max-height: 380px) {
-        #inventory-panel {
-          transform: scale(0.55);
-          transform-origin: center center;
+
+        .inv-grid-9 {
+          grid-template-columns: repeat(9, 38px) !important;
+          gap: 2px !important;
         }
       }
     `;
-    document.head.appendChild(invStyle);
+    document.head.appendChild(styleEl);
 
     this.container.addEventListener('mousedown', (e) => {
       e.stopPropagation();
@@ -105,14 +228,8 @@ export class InventoryScreen {
     document.body.appendChild(this.container);
 
     // Main panel - Minecraft Classic Gray GUI Box
-    const panel = document.createElement('div');
-    panel.id = 'inventory-panel';
-    panel.style.cssText = `
-      background: #c6c6c6; border-top: 4px solid #ffffff; border-left: 4px solid #ffffff;
-      border-bottom: 4px solid #555555; border-right: 4px solid #555555;
-      padding: 24px; display: flex; gap: 24px; border-radius: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-      position: relative;
-    `;
+    this.panel = document.createElement('div');
+    this.panel.id = 'inventory-panel';
 
     // Big touch-friendly Close button for mobile & desktop
     const closeBtn = document.createElement('button');
@@ -136,22 +253,47 @@ export class InventoryScreen {
     };
     closeBtn.addEventListener('touchend', triggerClose, { passive: false });
     closeBtn.addEventListener('click', triggerClose);
-    panel.appendChild(closeBtn);
+    this.panel.appendChild(closeBtn);
 
-    this.container.appendChild(panel);
+    // Tab Navigation Bar for Mobile Mode
+    const tabBar = document.createElement('div');
+    tabBar.className = 'inv-tab-bar';
 
-    // Equipment / Armor Column (Far Left)
-    const armorCol = document.createElement('div');
-    armorCol.style.cssText = 'display: flex; flex-direction: column; gap: 8px; background: #8b8b8b; padding: 12px; border: 3px solid #373737; border-radius: 4px; position: relative; margin-right: 4px;';
-    
-    const armorLabel = document.createElement('div');
-    armorLabel.style.cssText = 'position: absolute; top: -24px; left: 0; font-family: monospace; font-size: 14px; color: #222; font-weight: bold; text-shadow: 1px 1px 0 #fff;';
-    armorLabel.textContent = 'Armor';
-    armorCol.appendChild(armorLabel);
+    const createTabBtn = (tabId: 'inv' | 'craft' | 'armor', label: string, icon: string, active: boolean) => {
+      const btn = document.createElement('button');
+      btn.className = `inv-tab-btn ${active ? 'active' : ''}`;
+      btn.dataset.tab = tabId;
+      btn.innerHTML = `${icon} ${label}`;
+      const onSelect = (e?: Event) => {
+        if (e && e.cancelable) e.preventDefault();
+        this.switchMobileTab(tabId);
+        AudioManager.getInstance().playSFX('click');
+      };
+      btn.addEventListener('touchend', onSelect, { passive: false });
+      btn.addEventListener('click', onSelect);
+      this.tabButtons.push(btn);
+      return btn;
+    };
+
+    tabBar.appendChild(createTabBtn('inv', 'Tas & Hotbar', '🎒', true));
+    tabBar.appendChild(createTabBtn('craft', 'Crafting', '🔨', false));
+    tabBar.appendChild(createTabBtn('armor', 'Armor', '🛡️', false));
+    this.panel.appendChild(tabBar);
+
+    // 1. Equipment / Armor Column (Far Left)
+    this.armorColumnEl = document.createElement('div');
+    this.armorColumnEl.className = 'inv-section-col';
+    this.armorColumnEl.style.cssText = 'display: flex; flex-direction: column; gap: 8px; background: #8b8b8b; padding: 14px; border: 3px solid #373737; border-radius: 4px; box-sizing: border-box; align-items: center;';
+
+    const armorTitle = document.createElement('div');
+    armorTitle.style.cssText = 'font-family: monospace; font-size: 14px; color: #222; font-weight: bold; text-shadow: 1px 1px 0 #fff; margin-bottom: 4px; text-align: center;';
+    armorTitle.textContent = '🛡️ Armor & Equipment';
+    this.armorColumnEl.appendChild(armorTitle);
 
     const slotTypes: ArmorSlotType[] = ['helmet', 'chestplate', 'leggings', 'boots'];
     for (const slotType of slotTypes) {
       const slotEl = document.createElement('div');
+      slotEl.className = 'inv-slot-box';
       slotEl.dataset.slotType = 'armor';
       slotEl.dataset.armorSlot = slotType;
       slotEl.style.cssText = `
@@ -160,29 +302,35 @@ export class InventoryScreen {
         border-bottom: 3px solid #ffffff; border-right: 3px solid #ffffff;
         display: flex; align-items: center; justify-content: center;
         font-family: monospace; font-size: 12px; color: #fff; cursor: pointer;
-        position: relative; border-radius: 2px;
+        position: relative; border-radius: 2px; touch-action: manipulation;
       `;
       slotEl.addEventListener('mousedown', (e) => this.onArmorSlotClick(e, slotType));
+      this.attachTouchListeners(slotEl, { type: 'armor', index: 0, armorSlot: slotType });
       slotEl.addEventListener('contextmenu', (e) => e.preventDefault());
-      armorCol.appendChild(slotEl);
+      this.armorColumnEl.appendChild(slotEl);
       this.armorSlotEls[slotType] = slotEl;
     }
-    panel.appendChild(armorCol);
+    this.panel.appendChild(this.armorColumnEl);
 
-    // Left side: crafting grid
-    const craftArea = document.createElement('div');
-    craftArea.style.cssText = 'display: flex; gap: 12px; align-items: center; background: #8b8b8b; padding: 16px; border: 3px solid #373737; border-radius: 4px; position: relative;';
-    
-    const craftLabel = document.createElement('div');
-    craftLabel.style.cssText = 'position: absolute; top: -24px; left: 0; font-family: monospace; font-size: 15px; color: #222; font-weight: bold; text-shadow: 1px 1px 0 #fff;';
-    craftLabel.textContent = 'Crafting Table (3x3)';
+    // 2. Crafting Area (Middle Column)
+    this.craftColumnEl = document.createElement('div');
+    this.craftColumnEl.className = 'inv-section-col';
+    this.craftColumnEl.style.cssText = 'display: flex; flex-direction: column; gap: 8px; align-items: center; background: #8b8b8b; padding: 14px; border: 3px solid #373737; border-radius: 4px; box-sizing: border-box;';
+
+    const craftTitle = document.createElement('div');
+    craftTitle.style.cssText = 'font-family: monospace; font-size: 14px; color: #222; font-weight: bold; text-shadow: 1px 1px 0 #fff; margin-bottom: 4px; text-align: center;';
+    craftTitle.textContent = '🔨 Crafting Table (3x3)';
+    this.craftColumnEl.appendChild(craftTitle);
+
+    const craftContent = document.createElement('div');
+    craftContent.style.cssText = 'display: flex; gap: 12px; align-items: center; justify-content: center;';
 
     const craftGridDiv = document.createElement('div');
     craftGridDiv.style.cssText = 'display: grid; grid-template-columns: repeat(3, 56px); gap: 4px; position: relative;';
-    craftGridDiv.appendChild(craftLabel);
 
     for (let i = 0; i < 9; i++) {
       const el = document.createElement('div');
+      el.className = 'inv-slot-box';
       el.dataset.slotType = 'craft';
       el.style.cssText = `
         width: 56px; height: 56px; background: #8b8b8b;
@@ -190,23 +338,25 @@ export class InventoryScreen {
         border-bottom: 3px solid #ffffff; border-right: 3px solid #ffffff;
         display: flex; align-items: center; justify-content: center;
         font-family: monospace; font-size: 12px; color: #fff; cursor: pointer;
-        position: relative; border-radius: 2px;
+        position: relative; border-radius: 2px; touch-action: manipulation;
       `;
       const r = Math.floor(i / 3), c = i % 3;
       el.addEventListener('mousedown', (e) => this.onCraftSlotClick(e, r, c));
       el.addEventListener('mouseenter', () => this.onSlotMouseEnterCraft(r, c, el));
+      this.attachTouchListeners(el, { type: 'craft', index: i, r, c });
       el.addEventListener('contextmenu', (e) => e.preventDefault());
       craftGridDiv.appendChild(el);
       this.craftSlots.push(el);
     }
-    craftArea.appendChild(craftGridDiv);
+    craftContent.appendChild(craftGridDiv);
 
     const arrow = document.createElement('div');
     arrow.textContent = '➔';
     arrow.style.cssText = 'color: #373737; font-size: 32px; font-weight: bold; margin: 0 6px; text-shadow: 1px 1px 0 #fff;';
-    craftArea.appendChild(arrow);
+    craftContent.appendChild(arrow);
 
     this.craftOutput = document.createElement('div');
+    this.craftOutput.className = 'inv-slot-box';
     this.craftOutput.dataset.slotType = 'output';
     this.craftOutput.style.cssText = `
       width: 64px; height: 64px; background: #8b8b8b;
@@ -214,46 +364,55 @@ export class InventoryScreen {
       border-bottom: 3px solid #ffffff; border-right: 3px solid #ffffff;
       display: flex; align-items: center; justify-content: center;
       font-family: monospace; font-size: 12px; color: #fff; cursor: pointer; position: relative;
-      border-radius: 4px; box-shadow: 0 0 10px rgba(255,204,0,0.6);
+      border-radius: 4px; box-shadow: 0 0 10px rgba(255,204,0,0.6); touch-action: manipulation;
     `;
     this.craftOutput.addEventListener('mousedown', (e) => {
       e.preventDefault();
       this.takeOutput(e.shiftKey);
     });
+    this.craftOutput.addEventListener('touchend', (e) => {
+      if (e.cancelable) e.preventDefault();
+      this.takeOutput(false);
+      AudioManager.getInstance().playSFX('break');
+    }, { passive: false });
     this.craftOutput.addEventListener('contextmenu', (e) => e.preventDefault());
-    craftArea.appendChild(this.craftOutput);
-    panel.appendChild(craftArea);
+    craftContent.appendChild(this.craftOutput);
+    this.craftColumnEl.appendChild(craftContent);
+    this.panel.appendChild(this.craftColumnEl);
 
-    // Right side: inventory grid + hotbar
-    const rightSide = document.createElement('div');
-    rightSide.style.cssText = 'display: flex; flex-direction: column; gap: 12px;';
+    // 3. Right side: Inventory Grid (27 slots) + Hotbar (9 slots)
+    this.invColumnEl = document.createElement('div');
+    this.invColumnEl.className = 'inv-section-col active-tab';
+    this.invColumnEl.style.cssText = 'display: flex; flex-direction: column; gap: 10px;';
 
     const invTitle = document.createElement('div');
-    invTitle.style.cssText = 'font-family: monospace; font-size: 15px; color: #222; font-weight: bold; text-shadow: 1px 1px 0 #fff;';
-    invTitle.textContent = 'Inventory Karakter';
-    rightSide.appendChild(invTitle);
+    invTitle.style.cssText = 'font-family: monospace; font-size: 14px; color: #222; font-weight: bold; text-shadow: 1px 1px 0 #fff;';
+    invTitle.textContent = '🎒 Tas Karakter (27 Slot)';
+    this.invColumnEl.appendChild(invTitle);
 
     const invGrid = document.createElement('div');
+    invGrid.className = 'inv-grid-9';
     invGrid.style.cssText = 'display: grid; grid-template-columns: repeat(9, 56px); gap: 4px;';
     for (let i = 0; i < 27; i++) {
       invGrid.appendChild(this.makeSlot(i, false));
     }
-    rightSide.appendChild(invGrid);
+    this.invColumnEl.appendChild(invGrid);
 
     const hotbarTitle = document.createElement('div');
-    hotbarTitle.style.cssText = 'font-family: monospace; font-size: 15px; color: #222; font-weight: bold; margin-top: 6px; text-shadow: 1px 1px 0 #fff;';
-    hotbarTitle.textContent = 'Hotbar (Item Aktif)';
-    rightSide.appendChild(hotbarTitle);
+    hotbarTitle.style.cssText = 'font-family: monospace; font-size: 14px; color: #222; font-weight: bold; margin-top: 4px; text-shadow: 1px 1px 0 #fff;';
+    hotbarTitle.textContent = '⚡ Hotbar Aktif (9 Slot)';
+    this.invColumnEl.appendChild(hotbarTitle);
 
     const hotbarRow = document.createElement('div');
+    hotbarRow.className = 'inv-grid-9';
     hotbarRow.style.cssText = 'display: grid; grid-template-columns: repeat(9, 56px); gap: 4px;';
     for (let i = 0; i < 9; i++) {
       hotbarRow.appendChild(this.makeSlot(i, true));
     }
-    rightSide.appendChild(hotbarRow);
-    panel.appendChild(rightSide);
+    this.invColumnEl.appendChild(hotbarRow);
+    this.panel.appendChild(this.invColumnEl);
 
-    // Cursor Drag element
+    // Desktop Cursor Drag element
     this.dragEl = document.createElement('div');
     this.dragEl.style.cssText = `
       position: fixed; pointer-events: none; z-index: 300; display: none;
@@ -273,26 +432,424 @@ export class InventoryScreen {
     `;
     document.body.appendChild(this.tooltipEl);
 
+    // Stack Splitter Modal for Mobile
+    this.createSplitModal();
+
+    this.container.appendChild(this.panel);
     document.addEventListener('mousemove', this.onMouseMove);
+  }
+
+  private switchMobileTab(tab: 'inv' | 'craft' | 'armor'): void {
+    this.currentMobileTab = tab;
+    this.tabButtons.forEach((btn) => {
+      if (btn.dataset.tab === tab) btn.classList.add('active');
+      else btn.classList.remove('active');
+    });
+
+    if (this.armorColumnEl) {
+      if (tab === 'armor') this.armorColumnEl.classList.add('active-tab');
+      else this.armorColumnEl.classList.remove('active-tab');
+    }
+    if (this.craftColumnEl) {
+      if (tab === 'craft') this.craftColumnEl.classList.add('active-tab');
+      else this.craftColumnEl.classList.remove('active-tab');
+    }
+    if (this.invColumnEl) {
+      if (tab === 'inv') this.invColumnEl.classList.add('active-tab');
+      else this.invColumnEl.classList.remove('active-tab');
+    }
   }
 
   private makeSlot(slotIdx: number, isHotbar: boolean): HTMLDivElement {
     const el = document.createElement('div');
+    el.className = 'inv-slot-box';
     el.dataset.slotType = 'slot';
+    el.dataset.slotIdx = String(slotIdx);
+    el.dataset.isHotbar = isHotbar ? 'true' : 'false';
     el.style.cssText = `
       width: 56px; height: 56px; background: #8b8b8b;
       border-top: 3px solid #373737; border-left: 3px solid #373737;
       border-bottom: 3px solid #ffffff; border-right: 3px solid #ffffff;
       display: flex; align-items: center; justify-content: center;
       font-family: monospace; font-size: 13px; color: #fff; cursor: pointer;
-      position: relative; border-radius: 2px;
+      position: relative; border-radius: 2px; touch-action: manipulation;
     `;
     el.addEventListener('mousedown', (e) => this.onSlotClick(e, slotIdx, isHotbar));
     el.addEventListener('mouseenter', () => this.onSlotMouseEnterInv(slotIdx, isHotbar, el));
+    this.attachTouchListeners(el, { type: isHotbar ? 'hotbar' : 'inv', index: slotIdx });
     el.addEventListener('contextmenu', (e) => e.preventDefault());
     return el;
   }
 
+  /** Attach Touch Tap-to-Select and Long-Press Split listeners to any slot */
+  private attachTouchListeners(el: HTMLElement, slotInfo: SelectedSlotInfo): void {
+    el.addEventListener(
+      'touchstart',
+      (e) => {
+        this.isLongPressActive = false;
+        if (e.touches.length === 1) {
+          const t = e.touches[0];
+          this.touchStartPos = { x: t.clientX, y: t.clientY };
+
+          const itemData = this.getSlotItemData(slotInfo);
+          if (itemData && itemData.count > 1) {
+            this.touchTimer = window.setTimeout(() => {
+              this.isLongPressActive = true;
+              AudioManager.getInstance().playSFX('click');
+              this.openSplitModal(slotInfo, itemData);
+            }, 380);
+          }
+        }
+      },
+      { passive: true }
+    );
+
+    el.addEventListener(
+      'touchmove',
+      (e) => {
+        if (e.touches.length === 1) {
+          const t = e.touches[0];
+          const dist = Math.hypot(t.clientX - this.touchStartPos.x, t.clientY - this.touchStartPos.y);
+          if (dist > 12 && this.touchTimer !== null) {
+            clearTimeout(this.touchTimer);
+            this.touchTimer = null;
+          }
+        }
+      },
+      { passive: true }
+    );
+
+    el.addEventListener(
+      'touchend',
+      (e) => {
+        if (this.touchTimer !== null) {
+          clearTimeout(this.touchTimer);
+          this.touchTimer = null;
+        }
+        if (!this.isLongPressActive) {
+          if (e.cancelable) e.preventDefault();
+          this.handleSlotTouch(slotInfo);
+        }
+      },
+      { passive: false }
+    );
+  }
+
+  private getSlotItemData(slotInfo: SelectedSlotInfo): { itemId: string; count: number; durability?: number } | null {
+    if (slotInfo.type === 'inv') {
+      const s = this.inventory.slots[slotInfo.index];
+      return s.itemId ? { itemId: s.itemId, count: s.count, durability: s.durability } : null;
+    } else if (slotInfo.type === 'hotbar') {
+      const s = this.hotbar.slots[slotInfo.index];
+      return s.itemId ? { itemId: s.itemId, count: s.count, durability: s.durability } : null;
+    } else if (slotInfo.type === 'craft' && slotInfo.r !== undefined && slotInfo.c !== undefined) {
+      const s = this.craftGrid[slotInfo.r][slotInfo.c];
+      return s ? { itemId: s.itemId, count: s.count } : null;
+    } else if (slotInfo.type === 'armor' && slotInfo.armorSlot && this.equipmentSlots) {
+      const s = this.equipmentSlots.getItem(slotInfo.armorSlot);
+      return s.itemId ? { itemId: s.itemId, count: 1 } : null;
+    }
+    return null;
+  }
+
+  /** Touch Tap handler for selecting or transferring items */
+  private handleSlotTouch(slotInfo: SelectedSlotInfo): void {
+    const slotItem = this.getSlotItemData(slotInfo);
+
+    if (this.selectedSlot === null) {
+      // 1. No item currently selected -> select this slot if it contains an item
+      if (slotItem) {
+        this.selectedSlot = {
+          ...slotInfo,
+          count: slotItem.count,
+          itemId: slotItem.itemId,
+          durability: slotItem.durability,
+        };
+        AudioManager.getInstance().playSFX('click');
+        this.refresh();
+      }
+    } else {
+      // 2. A slot is already selected
+      const isSameSlot =
+        this.selectedSlot.type === slotInfo.type &&
+        this.selectedSlot.index === slotInfo.index &&
+        this.selectedSlot.r === slotInfo.r &&
+        this.selectedSlot.c === slotInfo.c &&
+        this.selectedSlot.armorSlot === slotInfo.armorSlot;
+
+      if (isSameSlot) {
+        // Tapped same slot -> deselect
+        this.selectedSlot = null;
+        AudioManager.getInstance().playSFX('click');
+        this.refresh();
+      } else {
+        // Tapped a different slot -> execute transfer
+        this.executeTouchTransfer(this.selectedSlot, slotInfo);
+        this.selectedSlot = null;
+        this.refresh();
+        AudioManager.getInstance().playSFX('place');
+      }
+    }
+  }
+
+  private executeTouchTransfer(src: SelectedSlotInfo, dest: SelectedSlotInfo): void {
+    const srcData = this.getSlotItemData(src);
+    if (!srcData) return;
+
+    const transferAmount = src.count !== undefined && src.count > 0 ? Math.min(src.count, srcData.count) : srcData.count;
+    const destData = this.getSlotItemData(dest);
+
+    // Armor destination check
+    if (dest.type === 'armor' && dest.armorSlot) {
+      const itemDef = getItemById(srcData.itemId);
+      if (itemDef?.armorSlot !== dest.armorSlot || !this.equipmentSlots) {
+        return; // Incompatible armor slot
+      }
+      const oldArmor = this.equipmentSlots.equip(dest.armorSlot, srcData.itemId);
+      this.deductFromSlot(src, 1);
+      if (oldArmor && oldArmor.itemId) {
+        this.addToSlot(src, oldArmor.itemId, 1);
+      }
+      return;
+    }
+
+    // Armor source check
+    if (src.type === 'armor' && src.armorSlot && this.equipmentSlots) {
+      if (destData && destData.itemId) {
+        const destDef = getItemById(destData.itemId);
+        if (destDef?.armorSlot === src.armorSlot) {
+          // Swap armor
+          this.equipmentSlots.equip(src.armorSlot, destData.itemId);
+          this.setSlotItem(dest, srcData.itemId, 1);
+        }
+      } else {
+        // Unequip to destination
+        this.equipmentSlots.unequip(src.armorSlot);
+        this.setSlotItem(dest, srcData.itemId, 1);
+      }
+      return;
+    }
+
+    // Standard Inventory / Hotbar / Crafting grid transfer
+    if (!destData) {
+      // Destination empty: move transferAmount
+      this.setSlotItem(dest, srcData.itemId, transferAmount, srcData.durability);
+      this.deductFromSlot(src, transferAmount);
+    } else if (destData.itemId === srcData.itemId) {
+      // Same item: combine stacks
+      const maxStack = getItemById(srcData.itemId)?.maxStack ?? 64;
+      const space = maxStack - destData.count;
+      if (space > 0) {
+        const added = Math.min(space, transferAmount);
+        this.setSlotCount(dest, destData.count + added);
+        this.deductFromSlot(src, added);
+      }
+    } else {
+      // Different item: swap if moving entire stack
+      if (transferAmount === srcData.count && src.type !== 'craft') {
+        this.setSlotItem(dest, srcData.itemId, srcData.count, srcData.durability);
+        this.setSlotItem(src, destData.itemId, destData.count, destData.durability);
+      }
+    }
+  }
+
+  private deductFromSlot(slotInfo: SelectedSlotInfo, amount: number): void {
+    if (slotInfo.type === 'inv') {
+      const s = this.inventory.slots[slotInfo.index];
+      s.count -= amount;
+      if (s.count <= 0) {
+        s.itemId = null;
+        s.count = 0;
+        s.durability = undefined;
+      }
+    } else if (slotInfo.type === 'hotbar') {
+      const s = this.hotbar.slots[slotInfo.index];
+      s.count -= amount;
+      if (s.count <= 0) {
+        s.itemId = null;
+        s.count = 0;
+        s.durability = undefined;
+      }
+    } else if (slotInfo.type === 'craft' && slotInfo.r !== undefined && slotInfo.c !== undefined) {
+      const s = this.craftGrid[slotInfo.r][slotInfo.c];
+      if (s) {
+        s.count -= amount;
+        if (s.count <= 0) this.craftGrid[slotInfo.r][slotInfo.c] = null;
+      }
+    }
+  }
+
+  private addToSlot(slotInfo: SelectedSlotInfo, itemId: string, count: number, durability?: number): void {
+    if (slotInfo.type === 'inv') {
+      this.inventory.addItem(itemId, count, durability);
+    } else if (slotInfo.type === 'hotbar') {
+      this.hotbar.addItem(itemId, count, durability);
+    }
+  }
+
+  private setSlotItem(slotInfo: SelectedSlotInfo, itemId: string, count: number, durability?: number): void {
+    if (slotInfo.type === 'inv') {
+      const s = this.inventory.slots[slotInfo.index];
+      s.itemId = itemId;
+      s.count = count;
+      s.durability = durability;
+    } else if (slotInfo.type === 'hotbar') {
+      const s = this.hotbar.slots[slotInfo.index];
+      s.itemId = itemId;
+      s.count = count;
+      s.durability = durability;
+    } else if (slotInfo.type === 'craft' && slotInfo.r !== undefined && slotInfo.c !== undefined) {
+      this.craftGrid[slotInfo.r][slotInfo.c] = { itemId, count };
+    }
+  }
+
+  private setSlotCount(slotInfo: SelectedSlotInfo, count: number): void {
+    if (slotInfo.type === 'inv') {
+      this.inventory.slots[slotInfo.index].count = count;
+    } else if (slotInfo.type === 'hotbar') {
+      this.hotbar.slots[slotInfo.index].count = count;
+    } else if (slotInfo.type === 'craft' && slotInfo.r !== undefined && slotInfo.c !== undefined) {
+      const s = this.craftGrid[slotInfo.r][slotInfo.c];
+      if (s) s.count = count;
+    }
+  }
+
+  // ===================== STACK SPLITTER POPUP =====================
+  private createSplitModal(): void {
+    this.splitModal = document.createElement('div');
+    this.splitModal.id = 'stack-split-modal';
+    this.splitModal.style.cssText = `
+      display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      z-index: 500; background: #22222e; border: 3px solid #ffcc00; border-radius: 8px;
+      padding: 16px; color: #fff; width: 290px; max-width: 90vw; box-shadow: 0 12px 36px rgba(0,0,0,0.9);
+      flex-direction: column; gap: 10px; font-family: monospace; user-select: none;
+    `;
+
+    this.splitModal.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #444; padding-bottom: 8px;">
+        <div id="split-item-icon" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;"></div>
+        <div>
+          <div id="split-item-name" style="font-weight: bold; font-size: 13px; color: #ffcc00;"></div>
+          <div id="split-item-total" style="font-size: 11px; color: #aaa;"></div>
+        </div>
+      </div>
+      
+      <div style="text-align: center; margin: 4px 0;">
+        <div style="font-size: 11px; color: #aaa; margin-bottom: 2px;">Jumlah yang Dipindah:</div>
+        <div id="split-count-display" style="font-size: 22px; font-weight: bold; color: #00ffcc; text-shadow: 0 0 8px rgba(0,255,204,0.5);">1</div>
+      </div>
+
+      <input type="range" id="split-slider" min="1" max="64" value="1" style="width: 100%; cursor: pointer; accent-color: #00ffcc;">
+
+      <div style="display: flex; gap: 6px; justify-content: center;">
+        <button id="split-btn-1" style="flex: 1; padding: 6px 2px; font-size: 11px; font-weight: bold; background: #37474f; color: #fff; border: 1px solid #78909c; border-radius: 3px; cursor: pointer; touch-action: manipulation;">1 Saja</button>
+        <button id="split-btn-half" style="flex: 1; padding: 6px 2px; font-size: 11px; font-weight: bold; background: #37474f; color: #fff; border: 1px solid #78909c; border-radius: 3px; cursor: pointer; touch-action: manipulation;">Setengah</button>
+        <button id="split-btn-all" style="flex: 1; padding: 6px 2px; font-size: 11px; font-weight: bold; background: #37474f; color: #fff; border: 1px solid #78909c; border-radius: 3px; cursor: pointer; touch-action: manipulation;">Semua</button>
+      </div>
+
+      <div style="display: flex; gap: 8px; justify-content: center;">
+        <button id="split-btn-dec" style="flex: 1; padding: 6px; font-size: 14px; font-weight: bold; background: #424242; color: #fff; border: 1px solid #616161; border-radius: 3px; cursor: pointer; touch-action: manipulation;">- 1</button>
+        <button id="split-btn-inc" style="flex: 1; padding: 6px; font-size: 14px; font-weight: bold; background: #424242; color: #fff; border: 1px solid #616161; border-radius: 3px; cursor: pointer; touch-action: manipulation;">+ 1</button>
+      </div>
+
+      <div style="display: flex; gap: 8px; margin-top: 6px;">
+        <button id="split-btn-confirm" style="flex: 1; background: #2e7d32; padding: 9px; font-size: 13px; font-weight: bold; border: 2px solid #81c784; border-radius: 4px; color: #fff; cursor: pointer; touch-action: manipulation;">✓ Pilih</button>
+        <button id="split-btn-cancel" style="flex: 1; background: #c62828; padding: 9px; font-size: 13px; font-weight: bold; border: 2px solid #ef5350; border-radius: 4px; color: #fff; cursor: pointer; touch-action: manipulation;">✕ Batal</button>
+      </div>
+    `;
+
+    document.body.appendChild(this.splitModal);
+    this.wireSplitModalEvents();
+  }
+
+  private openSplitModal(slotInfo: SelectedSlotInfo, itemData: { itemId: string; count: number; durability?: number }): void {
+    if (!this.splitModal) return;
+    this.splitTarget = slotInfo;
+    this.splitTotalCount = itemData.count;
+    this.splitSelectedCount = Math.ceil(itemData.count / 2);
+
+    const nameEl = this.splitModal.querySelector<HTMLDivElement>('#split-item-name');
+    const totalEl = this.splitModal.querySelector<HTMLDivElement>('#split-item-total');
+    const iconEl = this.splitModal.querySelector<HTMLDivElement>('#split-item-icon');
+    const slider = this.splitModal.querySelector<HTMLInputElement>('#split-slider');
+
+    const itemDef = getItemById(itemData.itemId);
+    if (nameEl) nameEl.textContent = itemDef?.name ?? itemData.itemId;
+    if (totalEl) totalEl.textContent = `Total di slot: ${itemData.count}`;
+    if (iconEl) {
+      iconEl.innerHTML = '';
+      iconEl.appendChild(createItemIcon(itemData.itemId, 34));
+    }
+    if (slider) {
+      slider.min = '1';
+      slider.max = String(itemData.count);
+      slider.value = String(this.splitSelectedCount);
+    }
+
+    this.updateSplitDisplay();
+    this.splitModal.style.display = 'flex';
+  }
+
+  private updateSplitDisplay(): void {
+    if (!this.splitModal) return;
+    const countDisplay = this.splitModal.querySelector<HTMLDivElement>('#split-count-display');
+    const slider = this.splitModal.querySelector<HTMLInputElement>('#split-slider');
+    if (countDisplay) countDisplay.textContent = `${this.splitSelectedCount} / ${this.splitTotalCount}`;
+    if (slider) slider.value = String(this.splitSelectedCount);
+  }
+
+  private wireSplitModalEvents(): void {
+    if (!this.splitModal) return;
+
+    const slider = this.splitModal.querySelector<HTMLInputElement>('#split-slider');
+    slider?.addEventListener('input', () => {
+      this.splitSelectedCount = parseInt(slider.value, 10);
+      this.updateSplitDisplay();
+    });
+
+    const setQty = (qty: number) => {
+      this.splitSelectedCount = Math.max(1, Math.min(this.splitTotalCount, qty));
+      this.updateSplitDisplay();
+      AudioManager.getInstance().playSFX('click');
+    };
+
+    this.splitModal.querySelector('#split-btn-1')?.addEventListener('click', () => setQty(1));
+    this.splitModal.querySelector('#split-btn-half')?.addEventListener('click', () => setQty(Math.ceil(this.splitTotalCount / 2)));
+    this.splitModal.querySelector('#split-btn-all')?.addEventListener('click', () => setQty(this.splitTotalCount));
+    this.splitModal.querySelector('#split-btn-dec')?.addEventListener('click', () => setQty(this.splitSelectedCount - 1));
+    this.splitModal.querySelector('#split-btn-inc')?.addEventListener('click', () => setQty(this.splitSelectedCount + 1));
+
+    const confirmBtn = this.splitModal.querySelector('#split-btn-confirm');
+    const onConfirm = (e?: Event) => {
+      if (e && e.cancelable) e.preventDefault();
+      if (this.splitTarget) {
+        this.selectedSlot = {
+          ...this.splitTarget,
+          count: this.splitSelectedCount,
+        };
+      }
+      this.closeSplitModal();
+      this.refresh();
+      AudioManager.getInstance().playSFX('click');
+    };
+    confirmBtn?.addEventListener('touchend', onConfirm, { passive: false });
+    confirmBtn?.addEventListener('click', onConfirm);
+
+    const cancelBtn = this.splitModal.querySelector('#split-btn-cancel');
+    const onCancel = (e?: Event) => {
+      if (e && e.cancelable) e.preventDefault();
+      this.closeSplitModal();
+    };
+    cancelBtn?.addEventListener('touchend', onCancel, { passive: false });
+    cancelBtn?.addEventListener('click', onCancel);
+  }
+
+  private closeSplitModal(): void {
+    if (this.splitModal) this.splitModal.style.display = 'none';
+    this.splitTarget = null;
+  }
+
+  // ===================== DESKTOP MOUSE INTERACTION (CP74) =====================
   private onArmorSlotClick(e: MouseEvent, slotType: ArmorSlotType): void {
     e.preventDefault();
     if (!this.equipmentSlots) return;
@@ -324,7 +881,6 @@ export class InventoryScreen {
 
     const slot = isHotbar ? this.hotbar.slots[slotIdx] : this.inventory.slots[slotIdx];
     if (this.isRightMouseDown) {
-      // Right-drag mouse over slot: drop 1 item continuously into slot!
       if (slot.itemId === null) {
         slot.itemId = this.dragItem.itemId;
         slot.count = 1;
@@ -349,7 +905,6 @@ export class InventoryScreen {
 
     const current = this.craftGrid[r][c];
     if (this.isRightMouseDown) {
-      // Right-drag mouse over craft slot: drop 1 item continuously!
       if (!current) {
         this.craftGrid[r][c] = { itemId: this.dragItem.itemId, count: 1 };
         this.dragItem.count--;
@@ -370,7 +925,6 @@ export class InventoryScreen {
     e.preventDefault();
     const slot = isHotbar ? this.hotbar.slots[slotIdx] : this.inventory.slots[slotIdx];
 
-    // Shift-Click: Auto-equip if armor item, or Quick Transfer between Hotbar & Inventory
     if (e.shiftKey && slot.itemId) {
       const itemMeta = getItemById(slot.itemId);
       if (itemMeta?.armorSlot && this.equipmentSlots) {
@@ -402,7 +956,6 @@ export class InventoryScreen {
 
     if (this.dragItem) {
       if (isRightClick) {
-        // Right click holding item: drop EXACTLY 1 item into slot (click 1x = +1, 2x = +2, 3x = +3)
         if (slot.itemId === null) {
           slot.itemId = this.dragItem.itemId;
           slot.count = 1;
@@ -418,7 +971,6 @@ export class InventoryScreen {
           }
         }
       } else {
-        // Left click holding item: place all / stack / swap
         if (slot.itemId === null) {
           slot.itemId = this.dragItem.itemId;
           slot.count = this.dragItem.count;
@@ -443,12 +995,10 @@ export class InventoryScreen {
       }
     } else if (slot.itemId) {
       if (isRightClick && slot.count > 1) {
-        // Right click without holding item: pick up HALF stack!
         const half = Math.ceil(slot.count / 2);
         this.dragItem = { itemId: slot.itemId, count: half, durability: slot.durability };
         slot.count -= half;
       } else {
-        // Left click: pick up entire slot
         this.dragItem = { itemId: slot.itemId, count: slot.count, durability: slot.durability };
         slot.itemId = null;
         slot.count = 0;
@@ -465,12 +1015,10 @@ export class InventoryScreen {
     if (this.dragItem) {
       if (!current) {
         if (isRightClick) {
-          // Drop exactly 1 item into craft slot
           this.craftGrid[r][c] = { itemId: this.dragItem.itemId, count: 1 };
           this.dragItem.count--;
           if (this.dragItem.count <= 0) this.dragItem = null;
         } else {
-          // Drop entire stack into craft slot
           this.craftGrid[r][c] = { itemId: this.dragItem.itemId, count: this.dragItem.count };
           this.dragItem = null;
         }
@@ -508,7 +1056,7 @@ export class InventoryScreen {
   }
 
   private getSimpleCraftGridIds(): (string | null)[][] {
-    return this.craftGrid.map(row => row.map(cell => cell ? cell.itemId : null));
+    return this.craftGrid.map((row) => row.map((cell) => (cell ? cell.itemId : null)));
   }
 
   private takeOutput(isShiftKey = false): void {
@@ -516,7 +1064,6 @@ export class InventoryScreen {
     const recipe = checkRecipe(simpleGrid);
     if (!recipe) return;
 
-    // Calculate max batches available in grid
     let maxBatches = 64;
     for (let r = 0; r < 3; r++) {
       for (let c = 0; c < 3; c++) {
@@ -529,7 +1076,6 @@ export class InventoryScreen {
     const maxStack = getItemById(recipe.result.itemId)?.maxStack ?? 64;
 
     if (isShiftKey || maxBatches > 1) {
-      // Craft ALL available batches at once (or up to maxStack 64)
       const maxPossibleBatches = Math.min(maxBatches, Math.floor(maxStack / recipe.result.count));
       const totalYield = maxPossibleBatches * recipe.result.count;
 
@@ -548,7 +1094,6 @@ export class InventoryScreen {
         this.consumeCraftGrid(maxPossibleBatches);
       }
     } else {
-      // Single Batch Craft
       if (this.dragItem) {
         if (this.dragItem.itemId === recipe.result.itemId) {
           if (this.dragItem.count + recipe.result.count <= maxStack) {
@@ -557,7 +1102,9 @@ export class InventoryScreen {
           }
         }
       } else {
-        this.dragItem = { itemId: recipe.result.itemId, count: recipe.result.count };
+        let rem = this.inventory.addItem(recipe.result.itemId, recipe.result.count);
+        if (rem > 0) rem = this.hotbar.addItem(recipe.result.itemId, rem);
+        if (rem > 0) this.dragItem = { itemId: recipe.result.itemId, count: rem };
         this.consumeCraftGrid(1);
       }
     }
@@ -611,6 +1158,8 @@ export class InventoryScreen {
   show(): void {
     this.visible = true;
     if (this.container) this.container.style.display = 'flex';
+    this.selectedSlot = null;
+    this.switchMobileTab(this.currentMobileTab);
     this.refresh();
   }
 
@@ -623,6 +1172,8 @@ export class InventoryScreen {
     if (this.container) this.container.style.display = 'none';
     if (this.dragEl) this.dragEl.style.display = 'none';
     if (this.tooltipEl) this.tooltipEl.style.display = 'none';
+    this.closeSplitModal();
+    this.selectedSlot = null;
     this.returnCraftGridToInventory();
     this.onClose?.();
   }
@@ -664,6 +1215,10 @@ export class InventoryScreen {
         const slotEl = this.armorSlotEls[slotType];
         if (!slotEl) continue;
         slotEl.innerHTML = '';
+        const isSelected = this.selectedSlot?.type === 'armor' && this.selectedSlot.armorSlot === slotType;
+        if (isSelected) slotEl.classList.add('inv-slot-selected');
+        else slotEl.classList.remove('inv-slot-selected');
+
         const item = this.equipmentSlots.getItem(slotType);
         if (item && item.itemId) {
           slotEl.appendChild(createItemIcon(item.itemId, 38));
@@ -679,13 +1234,18 @@ export class InventoryScreen {
       const el = this.craftSlots[i];
       if (!el) continue;
       el.innerHTML = '';
+
+      const isSelected = this.selectedSlot?.type === 'craft' && this.selectedSlot.r === r && this.selectedSlot.c === c;
+      if (isSelected) el.classList.add('inv-slot-selected');
+      else el.classList.remove('inv-slot-selected');
+
       const item = this.craftGrid[r][c];
       if (item) {
         el.appendChild(createItemIcon(item.itemId, 38));
         if (item.count > 1) {
           const countSpan = document.createElement('span');
           countSpan.style.cssText = 'position:absolute;bottom:2px;right:4px;font-size:12px;font-weight:bold;color:#fff;text-shadow:1px 1px 0 #000;';
-          countSpan.textContent = String(item.count);
+          countSpan.textContent = isSelected && this.selectedSlot?.count ? `${this.selectedSlot.count}/${item.count}` : String(item.count);
           el.appendChild(countSpan);
         }
       }
@@ -715,21 +1275,41 @@ export class InventoryScreen {
       }
     }
 
-    // Refresh Inventory slots
+    // Refresh Inventory and Hotbar slots
     const invSlots = this.container.querySelectorAll<HTMLDivElement>('[data-slot-type="slot"]');
     invSlots.forEach((el, idx) => {
-      const isHotbar = idx >= 27;
-      const slotIdx = isHotbar ? idx - 27 : idx;
+      const isHotbar = el.dataset.isHotbar === 'true';
+      const slotIdx = parseInt(el.dataset.slotIdx ?? String(idx), 10);
       const slot = isHotbar ? this.hotbar.slots[slotIdx] : this.inventory.slots[slotIdx];
       el.innerHTML = '';
+
+      const isSelected = this.selectedSlot && (isHotbar ? this.selectedSlot.type === 'hotbar' : this.selectedSlot.type === 'inv') && this.selectedSlot.index === slotIdx;
+      if (isSelected) el.classList.add('inv-slot-selected');
+      else el.classList.remove('inv-slot-selected');
 
       if (slot.itemId) {
         el.appendChild(createItemIcon(slot.itemId, 38));
         if (slot.count > 1) {
           const c = document.createElement('span');
           c.style.cssText = 'position:absolute;bottom:2px;right:4px;font-size:12px;font-weight:bold;color:#fff;text-shadow:1px 1px 0 #000;';
-          c.textContent = String(slot.count);
+          c.textContent = isSelected && this.selectedSlot?.count ? `${this.selectedSlot.count}/${slot.count}` : String(slot.count);
           el.appendChild(c);
+        }
+
+        // Durability bar if tool/armor
+        const itemDef = getItemById(slot.itemId);
+        if (itemDef?.maxDurability && slot.durability !== undefined) {
+          const ratio = Math.max(0, Math.min(1, slot.durability / itemDef.maxDurability));
+          const color = ratio > 0.5 ? '#4caf50' : ratio > 0.2 ? '#ffeb3b' : '#f44336';
+          const durBar = document.createElement('div');
+          durBar.style.cssText = `
+            position: absolute; bottom: 2px; left: 4px; width: 44px; height: 3px;
+            background: rgba(0,0,0,0.7); border-radius: 1px; overflow: hidden;
+          `;
+          const fill = document.createElement('div');
+          fill.style.cssText = `height: 100%; width: ${ratio * 100}%; background: ${color};`;
+          durBar.appendChild(fill);
+          el.appendChild(durBar);
         }
       }
     });

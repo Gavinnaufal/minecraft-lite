@@ -14,6 +14,7 @@ export class FurnaceScreen {
   private currentCoordKey: { x: number; y: number; z: number } | null = null;
   private currentFurnaceData: FurnaceData | null = null;
   private updateInterval: number | null = null;
+  public onClose: (() => void) | null = null;
 
   // Fuel duration lookup table (in seconds)
   private static FUEL_VALUES: Record<string, number> = {
@@ -26,6 +27,29 @@ export class FurnaceScreen {
   constructor(inventory: Inventory, hotbar: Hotbar) {
     this.inventory = inventory;
     this.hotbar = hotbar;
+
+    const furnaceStyle = document.createElement('style');
+    furnaceStyle.textContent = `
+      #furnace-screen {
+        max-width: 95vw;
+        max-height: 94vh;
+        overflow-y: auto;
+        box-sizing: border-box;
+      }
+      @media (max-width: 550px), (max-height: 520px) {
+        #furnace-screen {
+          transform: translate(-50%, -50%) scale(0.82) !important;
+          transform-origin: center center !important;
+        }
+      }
+      @media (max-width: 440px) {
+        #furnace-screen {
+          transform: translate(-50%, -50%) scale(0.72) !important;
+          transform-origin: center center !important;
+        }
+      }
+    `;
+    document.head.appendChild(furnaceStyle);
 
     this.container = document.createElement('div');
     this.container.id = 'furnace-screen';
@@ -80,6 +104,7 @@ export class FurnaceScreen {
     }
     this.currentCoordKey = null;
     this.currentFurnaceData = null;
+    this.onClose?.();
   }
 
   public getIsOpen(): boolean {
@@ -192,7 +217,7 @@ export class FurnaceScreen {
         <h2 style="margin: 0; font-size: 20px; color: #ffcc80; display: flex; align-items: center; gap: 8px;">
           <span>🔥</span> Furnace
         </h2>
-        <button id="furnace-close-btn" style="background: none; border: none; color: #aaa; font-size: 22px; cursor: pointer;">&times;</button>
+        <button id="furnace-close-btn" title="Tutup Furnace (Esc / E)" style="background: #c62828; border: 2px solid #ffffff; color: #fff; width: 44px; height: 44px; border-radius: 6px; font-size: 22px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; touch-action: manipulation; box-shadow: 0 2px 8px rgba(0,0,0,0.5);">&times;</button>
       </div>
 
       <!-- FURNACE WORKSPACE -->
@@ -283,7 +308,12 @@ export class FurnaceScreen {
 
   private attachEventListeners(): void {
     const closeBtn = this.container.querySelector('#furnace-close-btn');
-    closeBtn?.addEventListener('click', () => this.close());
+    const triggerClose = (e?: Event) => {
+      if (e && e.cancelable) e.preventDefault();
+      this.close();
+    };
+    closeBtn?.addEventListener('touchend', triggerClose, { passive: false });
+    closeBtn?.addEventListener('click', triggerClose);
 
     const inputSlot = this.container.querySelector('#furnace-slot-input');
     inputSlot?.addEventListener('click', () => this.handleSlotClick('input'));

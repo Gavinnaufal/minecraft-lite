@@ -540,14 +540,18 @@ const equipmentSlots = new EquipmentSlots();
 
 const inventoryScreen = new InventoryScreen(inventory, hotbar, equipmentSlots);
 inventoryScreen.create();
+inventoryScreen.onClose = () => updateTouchControlsState();
 
 const chestScreen = new ChestScreen(inventory, hotbar);
 chestScreen.create();
+chestScreen.onClose = () => updateTouchControlsState();
 
 const furnaceScreen = new FurnaceScreen(inventory, hotbar);
+furnaceScreen.onClose = () => updateTouchControlsState();
 
 const tradingScreen = new TradingScreen(inventory, hotbar, particleSystem);
 tradingScreen.create();
+tradingScreen.onClose = () => updateTouchControlsState();
 
 const pauseMenu = new PauseMenu(saveManager, settingsMenu, () => {
   inputManager.requestPointerLock();

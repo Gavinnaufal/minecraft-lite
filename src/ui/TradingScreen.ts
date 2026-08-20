@@ -18,6 +18,7 @@ export class TradingScreen {
   private readonly hotbar: Hotbar;
   private particleSystem?: ParticleSystem;
   private animationFrameId: number | null = null;
+  public onClose: (() => void) | null = null;
 
   constructor(inventory: Inventory, hotbar: Hotbar, particleSystem?: ParticleSystem) {
     this.inventory = inventory;
@@ -53,26 +54,54 @@ export class TradingScreen {
       this.container.style.display = 'none';
     }
     this.stopUpdateLoop();
+    this.onClose?.();
   }
 
   create(): void {
     this.container = document.createElement('div');
+    this.container.id = 'trading-screen';
     this.container.style.cssText = `
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(8px);
       display: none; align-items: center; justify-content: center;
       z-index: 320; font-family: monospace; user-select: none;
     `;
+
+    const tradingStyle = document.createElement('style');
+    tradingStyle.textContent = `
+      #trading-panel {
+        max-width: 96vw;
+        max-height: 94vh;
+        overflow-y: auto;
+        box-sizing: border-box;
+        transition: transform 0.15s ease;
+      }
+      @media (max-width: 600px), (max-height: 550px) {
+        #trading-panel {
+          transform: scale(0.82);
+          transform-origin: center center;
+        }
+      }
+      @media (max-width: 480px), (max-height: 440px) {
+        #trading-panel {
+          transform: scale(0.70);
+          transform-origin: center center;
+        }
+      }
+    `;
+    document.head.appendChild(tradingStyle);
+
     this.container.addEventListener('mousedown', (e) => e.stopPropagation());
     this.container.addEventListener('mouseup', (e) => e.stopPropagation());
     this.container.addEventListener('click', (e) => e.stopPropagation());
     this.container.addEventListener('contextmenu', (e) => e.preventDefault());
 
     const panel = document.createElement('div');
+    panel.id = 'trading-panel';
     panel.style.cssText = `
       background: rgba(20, 20, 32, 0.95); border: 2px solid rgba(76, 175, 80, 0.5);
       border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8); color: #fff; min-width: 460px; max-width: 560px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8); color: #fff; min-width: 320px; width: 520px; position: relative;
     `;
 
     // Header
@@ -86,12 +115,25 @@ export class TradingScreen {
     `;
 
     const closeBtn = document.createElement('button');
-    closeBtn.innerHTML = '✕';
-    closeBtn.style.cssText = `
-      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-      color: #fff; border-radius: 4px; padding: 4px 10px; cursor: pointer; font-size: 14px;
+    closeBtn.id = 'trading-close-btn';
+    closeBtn.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
     `;
-    closeBtn.addEventListener('click', () => this.close());
+    closeBtn.title = 'Tutup Perdagangan (Esc / E)';
+    closeBtn.style.cssText = `
+      width: 44px; height: 44px; background: #c62828; border: 2px solid #ffffff;
+      border-radius: 6px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; touch-action: manipulation; box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    `;
+    const triggerClose = (e?: Event) => {
+      if (e && e.cancelable) e.preventDefault();
+      this.close();
+    };
+    closeBtn.addEventListener('touchend', triggerClose, { passive: false });
+    closeBtn.addEventListener('click', triggerClose);
     header.appendChild(closeBtn);
     panel.appendChild(header);
 

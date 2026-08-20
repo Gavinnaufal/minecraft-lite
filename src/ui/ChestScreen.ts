@@ -14,6 +14,7 @@ export class ChestScreen {
   private dragItem: { itemId: string; count: number; durability?: number } | null = null;
   private dragEl: HTMLDivElement | null = null;
   private tooltipEl: HTMLDivElement | null = null;
+  public onClose: (() => void) | null = null;
 
   constructor(inventory: Inventory, hotbar: Hotbar) {
     this.inventory = inventory;
@@ -43,6 +44,7 @@ export class ChestScreen {
       if (rem > 0) this.hotbar.addItem(this.dragItem.itemId, rem, this.dragItem.durability);
       this.dragItem = null;
     }
+    this.onClose?.();
   }
 
   get isOpen(): boolean {
@@ -51,6 +53,7 @@ export class ChestScreen {
 
   create(): void {
     this.container = document.createElement('div');
+    this.container.id = 'chest-screen';
     this.container.style.cssText = `
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(8px);
@@ -58,11 +61,35 @@ export class ChestScreen {
       z-index: 300; font-family: monospace; user-select: none;
     `;
 
+    const chestStyle = document.createElement('style');
+    chestStyle.textContent = `
+      #chest-panel {
+        max-width: 96vw;
+        max-height: 94vh;
+        box-sizing: border-box;
+        transition: transform 0.15s ease;
+      }
+      @media (max-width: 750px), (max-height: 600px) {
+        #chest-panel {
+          transform: scale(0.78);
+          transform-origin: center center;
+        }
+      }
+      @media (max-width: 580px), (max-height: 480px) {
+        #chest-panel {
+          transform: scale(0.62);
+          transform-origin: center center;
+        }
+      }
+    `;
+    document.head.appendChild(chestStyle);
+
     const panel = document.createElement('div');
+    panel.id = 'chest-panel';
     panel.style.cssText = `
       background: rgba(20, 20, 32, 0.92); border: 2px solid rgba(255, 204, 0, 0.4);
       border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8); color: #fff;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8); color: #fff; position: relative;
     `;
 
     // Header
@@ -71,12 +98,25 @@ export class ChestScreen {
     header.innerHTML = '<span style="font-size: 16px; font-weight: bold; color: #ffcc00;"><svg width="16" height="16" viewBox="0 0 24 24" fill="#ffcc00" style="vertical-align:middle;margin-right:6px;"><path d="M20 6h-8l-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2zm-6 10H6v-2h8v2zm4-4H6V10h12v2z"/></svg>Peti Penyimpanan (Chest)</span>';
 
     const closeBtn = document.createElement('button');
-    closeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" style="vertical-align:middle;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
-    closeBtn.style.cssText = `
-      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-      color: #fff; border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size: 14px;
+    closeBtn.id = 'chest-close-btn';
+    closeBtn.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
     `;
-    closeBtn.addEventListener('click', () => this.closeChest());
+    closeBtn.title = 'Tutup Peti (Esc / E)';
+    closeBtn.style.cssText = `
+      width: 44px; height: 44px; background: #c62828; border: 2px solid #ffffff;
+      border-radius: 6px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; touch-action: manipulation; box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    `;
+    const triggerClose = (e?: Event) => {
+      if (e && e.cancelable) e.preventDefault();
+      this.closeChest();
+    };
+    closeBtn.addEventListener('touchend', triggerClose, { passive: false });
+    closeBtn.addEventListener('click', triggerClose);
     header.appendChild(closeBtn);
     panel.appendChild(header);
 

@@ -1,5 +1,6 @@
 import { inputManager, InputManager } from '../core/InputManager';
 import { AudioManager } from '../audio/AudioManager';
+import { gameSettings } from '../core/GameSettings';
 
 export class TouchControls {
   private static instance: TouchControls | null = null;
@@ -29,7 +30,6 @@ export class TouchControls {
 
   private lastLookX = 0;
   private lastLookY = 0;
-  private readonly lookSensitivity = 1.65;
 
   // Active virtual keys
   private activeKeys = {
@@ -401,7 +401,10 @@ export class TouchControls {
         const deltaX = touch.clientX - this.lastLookX;
         const deltaY = touch.clientY - this.lastLookY;
 
-        inputManager.addTouchDelta(deltaX * this.lookSensitivity, deltaY * this.lookSensitivity);
+        inputManager.addTouchDelta(
+          deltaX * gameSettings.touchSensitivity,
+          deltaY * gameSettings.touchSensitivity
+        );
 
         this.lastLookX = touch.clientX;
         this.lastLookY = touch.clientY;

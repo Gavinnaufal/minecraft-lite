@@ -46,11 +46,35 @@ export class SettingsMenu {
     rdSlider.addEventListener('input', () => {
       gameSettings.renderDistance = parseInt(rdSlider.value);
       rdLabel.textContent = `Render Distance: ${gameSettings.renderDistance} Chunks`;
+      gameSettings.save();
       this.onChange?.();
     });
 
     this.container.appendChild(rdLabel);
     this.container.appendChild(rdSlider);
+
+    // Touch Camera Sensitivity (Mobile)
+    const tsLabel = document.createElement('div');
+    tsLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: #333;';
+    tsLabel.textContent = `Camera Sensitivity (Mobile): ${gameSettings.touchSensitivity.toFixed(1)}x`;
+
+    const tsSlider = document.createElement('input');
+    tsSlider.type = 'range';
+    tsSlider.min = '1.0';
+    tsSlider.max = '8.0';
+    tsSlider.step = '0.5';
+    tsSlider.value = String(gameSettings.touchSensitivity);
+    tsSlider.style.cssText = 'width: 100%; margin-bottom: 16px; cursor: pointer;';
+
+    tsSlider.addEventListener('input', () => {
+      gameSettings.touchSensitivity = parseFloat(tsSlider.value);
+      tsLabel.textContent = `Camera Sensitivity (Mobile): ${gameSettings.touchSensitivity.toFixed(1)}x`;
+      gameSettings.save();
+      this.onChange?.();
+    });
+
+    this.container.appendChild(tsLabel);
+    this.container.appendChild(tsSlider);
 
     // SFX Volume
     const audioMgr = AudioManager.getInstance();
@@ -118,6 +142,7 @@ export class SettingsMenu {
     prSelect.addEventListener('change', () => {
       gameSettings.pixelRatio = parseFloat(prSelect.value);
       prLabel.textContent = `Resolution: ${gameSettings.pixelRatio <= 1.0 ? '1.0x (Optimal / High FPS)' : 'Native High-DPI (Crisp / Heavy)'}`;
+      gameSettings.save();
       this.onChange?.();
     });
 
@@ -141,6 +166,8 @@ export class SettingsMenu {
     pdSelect.addEventListener('change', () => {
       gameSettings.particleDetail = pdSelect.value as 'low' | 'medium' | 'high';
       pdLabel.textContent = `Particle Detail: ${pdSelect.value.charAt(0).toUpperCase() + pdSelect.value.slice(1)}`;
+      gameSettings.save();
+      this.onChange?.();
     });
 
     this.container.appendChild(pdLabel);
@@ -169,6 +196,7 @@ export class SettingsMenu {
       gameSettings.itemGraphicsStyle = igSelect.value as 'fancy' | 'voxel' | 'fast';
       const labelText = igOptions.find(o => o.val === igSelect.value)?.text ?? 'Fancy';
       igLabel.textContent = `Item Graphics Style: ${labelText}`;
+      gameSettings.save();
       this.onChange?.();
     });
 

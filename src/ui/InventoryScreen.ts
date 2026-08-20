@@ -22,6 +22,7 @@ export class InventoryScreen {
   private isMouseDown = false;
   private isRightMouseDown = false;
   private lastEnteredSlot: HTMLElement | null = null;
+  public onClose: (() => void) | null = null;
 
   private armorSlotEls: Record<ArmorSlotType, HTMLDivElement | null> = {
     helmet: null,
@@ -51,11 +52,43 @@ export class InventoryScreen {
 
   create(): void {
     this.container = document.createElement('div');
+    this.container.id = 'inventory-screen';
     this.container.style.cssText = `
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); z-index: 200;
       justify-content: center; align-items: center; flex-direction: column;
     `;
+
+    const invStyle = document.createElement('style');
+    invStyle.textContent = `
+      #inventory-panel {
+        position: relative;
+        max-width: 96vw;
+        max-height: 94vh;
+        box-sizing: border-box;
+        transition: transform 0.15s ease;
+      }
+      @media (max-width: 950px), (max-height: 600px) {
+        #inventory-panel {
+          transform: scale(0.82);
+          transform-origin: center center;
+        }
+      }
+      @media (max-width: 780px), (max-height: 480px) {
+        #inventory-panel {
+          transform: scale(0.68);
+          transform-origin: center center;
+        }
+      }
+      @media (max-width: 600px), (max-height: 380px) {
+        #inventory-panel {
+          transform: scale(0.55);
+          transform-origin: center center;
+        }
+      }
+    `;
+    document.head.appendChild(invStyle);
+
     this.container.addEventListener('mousedown', (e) => {
       e.stopPropagation();
       this.isMouseDown = true;
@@ -73,11 +106,38 @@ export class InventoryScreen {
 
     // Main panel - Minecraft Classic Gray GUI Box
     const panel = document.createElement('div');
+    panel.id = 'inventory-panel';
     panel.style.cssText = `
       background: #c6c6c6; border-top: 4px solid #ffffff; border-left: 4px solid #ffffff;
       border-bottom: 4px solid #555555; border-right: 4px solid #555555;
       padding: 24px; display: flex; gap: 24px; border-radius: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+      position: relative;
     `;
+
+    // Big touch-friendly Close button for mobile & desktop
+    const closeBtn = document.createElement('button');
+    closeBtn.id = 'inventory-close-btn';
+    closeBtn.innerHTML = `
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    `;
+    closeBtn.title = 'Tutup Inventory (E / Esc)';
+    closeBtn.style.cssText = `
+      position: absolute; top: -14px; right: -14px; width: 44px; height: 44px;
+      border-radius: 50%; background: #c62828; border: 3px solid #ffffff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 50; touch-action: manipulation;
+    `;
+    const triggerClose = (e?: Event) => {
+      if (e && e.cancelable) e.preventDefault();
+      this.close();
+    };
+    closeBtn.addEventListener('touchend', triggerClose, { passive: false });
+    closeBtn.addEventListener('click', triggerClose);
+    panel.appendChild(closeBtn);
+
     this.container.appendChild(panel);
 
     // Equipment / Armor Column (Far Left)
@@ -564,6 +624,7 @@ export class InventoryScreen {
     if (this.dragEl) this.dragEl.style.display = 'none';
     if (this.tooltipEl) this.tooltipEl.style.display = 'none';
     this.returnCraftGridToInventory();
+    this.onClose?.();
   }
 
   close(): void {

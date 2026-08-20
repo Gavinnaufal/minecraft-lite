@@ -27,13 +27,14 @@ export interface SelectedSlotInfo {
 export class InventoryScreen {
   private container: HTMLDivElement | null = null;
   private panel: HTMLDivElement | null = null;
+  private statusBanner: HTMLDivElement | null = null;
   private visible = false;
   private readonly inventory: Inventory;
   private readonly hotbar: Hotbar;
   private readonly equipmentSlots?: EquipmentSlots;
   public onClose: (() => void) | null = null;
 
-  // Desktop drag-and-drop state (CP74)
+  // Desktop drag-and-drop state (CP74 - mouse only)
   private dragItem: { itemId: string; count: number; durability?: number } | null = null;
   private dragEl: HTMLDivElement | null = null;
   private tooltipEl: HTMLDivElement | null = null;
@@ -41,7 +42,7 @@ export class InventoryScreen {
   private isRightMouseDown = false;
   private lastEnteredSlot: HTMLElement | null = null;
 
-  // Mobile Tap-to-Select & Tap-to-Move state
+  // Mobile Tap-to-Select & Tap-to-Move state (zero drag, pure tap)
   private selectedSlot: SelectedSlotInfo | null = null;
   private currentMobileTab: 'inv' | 'craft' | 'armor' = 'inv';
 
@@ -95,7 +96,7 @@ export class InventoryScreen {
       justify-content: center; align-items: center; flex-direction: column;
     `;
 
-    // Inject Responsive & Tabbed CSS Styles
+    // Inject Responsive, Tabbed & Dimmed CSS Styles
     const styleEl = document.createElement('style');
     styleEl.textContent = `
       #inventory-panel {
@@ -105,9 +106,10 @@ export class InventoryScreen {
         border-left: 4px solid #ffffff;
         border-bottom: 4px solid #555555;
         border-right: 4px solid #555555;
-        padding: 20px 24px;
+        padding: 16px 20px;
         display: flex;
-        gap: 20px;
+        flex-direction: column;
+        gap: 12px;
         border-radius: 4px;
         box-shadow: 0 10px 40px rgba(0,0,0,0.8);
         box-sizing: border-box;
@@ -116,17 +118,22 @@ export class InventoryScreen {
         user-select: none;
       }
 
+      .inv-body-columns {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+      }
+
       .inv-tab-bar {
         display: none;
         gap: 8px;
-        margin-bottom: 12px;
         width: 100%;
         justify-content: center;
       }
 
       .inv-tab-btn {
         flex: 1;
-        max-width: 150px;
+        max-width: 160px;
         padding: 8px 10px;
         font-family: monospace;
         font-size: 13px;
@@ -153,20 +160,50 @@ export class InventoryScreen {
         box-shadow: 0 0 8px rgba(76, 175, 80, 0.7);
       }
 
+      /* Slot Styles */
+      .inv-slot-box {
+        transition: opacity 0.15s ease, filter 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+        box-sizing: border-box;
+      }
+
+      /* Dimming effect when 1 slot is selected */
+      .inv-has-selection .inv-slot-box:not(.inv-slot-selected) {
+        opacity: 0.5;
+        filter: grayscale(0.2) brightness(0.75);
+      }
+
+      .inv-has-selection .inv-slot-box:not(.inv-slot-selected):hover,
+      .inv-has-selection .inv-slot-box:not(.inv-slot-selected):active {
+        opacity: 0.95;
+        filter: brightness(1.1);
+      }
+
+      /* Glowing Yellow Border for Selected Slot */
       .inv-slot-selected {
-        border-top: 3px solid #ffcc00 !important;
-        border-left: 3px solid #ffcc00 !important;
-        border-bottom: 3px solid #ffcc00 !important;
-        border-right: 3px solid #ffcc00 !important;
-        box-shadow: 0 0 14px #ffcc00, inset 0 0 8px #ffcc00 !important;
-        transform: scale(1.06) !important;
-        z-index: 15 !important;
+        opacity: 1 !important;
+        filter: none !important;
+        border-top: 3px solid #ffeb3b !important;
+        border-left: 3px solid #ffeb3b !important;
+        border-bottom: 3px solid #ffeb3b !important;
+        border-right: 3px solid #ffeb3b !important;
+        box-shadow: 0 0 16px #ffeb3b, inset 0 0 10px #ffeb3b !important;
+        transform: scale(1.08) !important;
+        z-index: 20 !important;
+      }
+
+      @keyframes slotPop {
+        0% { transform: scale(1.16); }
+        50% { transform: scale(0.92); }
+        100% { transform: scale(1.0); }
+      }
+
+      .inv-slot-pop {
+        animation: slotPop 0.22s ease-out;
       }
 
       @media (max-width: 840px), (max-height: 520px) {
         #inventory-panel {
-          flex-direction: column;
-          padding: 14px 16px;
+          padding: 12px 14px;
           max-width: 96vw;
           max-height: 94vh;
           overflow-y: auto;
@@ -175,6 +212,12 @@ export class InventoryScreen {
 
         .inv-tab-bar {
           display: flex;
+        }
+
+        .inv-body-columns {
+          flex-direction: column;
+          width: 100%;
+          align-items: center;
         }
 
         .inv-section-col {
@@ -212,6 +255,7 @@ export class InventoryScreen {
     `;
     document.head.appendChild(styleEl);
 
+    // Desktop mouse interaction handlers
     this.container.addEventListener('mousedown', (e) => {
       e.stopPropagation();
       this.isMouseDown = true;
@@ -223,13 +267,37 @@ export class InventoryScreen {
       if (e.button === 2) this.isRightMouseDown = false;
       this.lastEnteredSlot = null;
     });
-    this.container.addEventListener('click', (e) => e.stopPropagation());
+    this.container.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Click on background of container cancels selection
+      if (e.target === this.container && this.selectedSlot !== null) {
+        this.selectedSlot = null;
+        this.refresh();
+        AudioManager.getInstance().playSFX('click');
+      }
+    });
     this.container.addEventListener('contextmenu', (e) => e.preventDefault());
     document.body.appendChild(this.container);
 
     // Main panel - Minecraft Classic Gray GUI Box
     this.panel = document.createElement('div');
     this.panel.id = 'inventory-panel';
+
+    // Touch tap on panel background cancels selection
+    this.panel.addEventListener(
+      'touchstart',
+      (e) => {
+        const target = e.target as HTMLElement;
+        if (target === this.panel || target.classList.contains('inv-body-columns') || target.classList.contains('inv-section-col')) {
+          if (this.selectedSlot !== null) {
+            this.selectedSlot = null;
+            this.refresh();
+            AudioManager.getInstance().playSFX('click');
+          }
+        }
+      },
+      { passive: true }
+    );
 
     // Big touch-friendly Close button for mobile & desktop
     const closeBtn = document.createElement('button');
@@ -280,6 +348,22 @@ export class InventoryScreen {
     tabBar.appendChild(createTabBtn('armor', 'Armor', '🛡️', false));
     this.panel.appendChild(tabBar);
 
+    // Interactive Status / Action Banner (Clear Guidance for Touch Users)
+    this.statusBanner = document.createElement('div');
+    this.statusBanner.id = 'inv-status-banner';
+    this.statusBanner.style.cssText = `
+      width: 100%; box-sizing: border-box; padding: 6px 12px; border-radius: 4px;
+      font-family: monospace; font-size: 12px; text-align: center;
+      background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #e0e0e0; display: flex; align-items: center; justify-content: center; gap: 8px;
+    `;
+    this.statusBanner.innerHTML = '<span>💡 Ketuk sebuah item untuk memilih & memindahkannya</span>';
+    this.panel.appendChild(this.statusBanner);
+
+    // Body Columns Container (Side-by-Side on Desktop, Tabbed on Mobile)
+    const bodyColumns = document.createElement('div');
+    bodyColumns.className = 'inv-body-columns';
+
     // 1. Equipment / Armor Column (Far Left)
     this.armorColumnEl = document.createElement('div');
     this.armorColumnEl.className = 'inv-section-col';
@@ -310,7 +394,7 @@ export class InventoryScreen {
       this.armorColumnEl.appendChild(slotEl);
       this.armorSlotEls[slotType] = slotEl;
     }
-    this.panel.appendChild(this.armorColumnEl);
+    bodyColumns.appendChild(this.armorColumnEl);
 
     // 2. Crafting Area (Middle Column)
     this.craftColumnEl = document.createElement('div');
@@ -370,15 +454,19 @@ export class InventoryScreen {
       e.preventDefault();
       this.takeOutput(e.shiftKey);
     });
-    this.craftOutput.addEventListener('touchend', (e) => {
-      if (e.cancelable) e.preventDefault();
-      this.takeOutput(false);
-      AudioManager.getInstance().playSFX('break');
-    }, { passive: false });
+    this.craftOutput.addEventListener(
+      'touchend',
+      (e) => {
+        if (e.cancelable) e.preventDefault();
+        this.takeOutput(false);
+        AudioManager.getInstance().playSFX('break');
+      },
+      { passive: false }
+    );
     this.craftOutput.addEventListener('contextmenu', (e) => e.preventDefault());
     craftContent.appendChild(this.craftOutput);
     this.craftColumnEl.appendChild(craftContent);
-    this.panel.appendChild(this.craftColumnEl);
+    bodyColumns.appendChild(this.craftColumnEl);
 
     // 3. Right side: Inventory Grid (27 slots) + Hotbar (9 slots)
     this.invColumnEl = document.createElement('div');
@@ -410,9 +498,11 @@ export class InventoryScreen {
       hotbarRow.appendChild(this.makeSlot(i, true));
     }
     this.invColumnEl.appendChild(hotbarRow);
-    this.panel.appendChild(this.invColumnEl);
+    bodyColumns.appendChild(this.invColumnEl);
 
-    // Desktop Cursor Drag element
+    this.panel.appendChild(bodyColumns);
+
+    // Desktop Cursor Drag element (Mouse only)
     this.dragEl = document.createElement('div');
     this.dragEl.style.cssText = `
       position: fixed; pointer-events: none; z-index: 300; display: none;
@@ -481,7 +571,10 @@ export class InventoryScreen {
     return el;
   }
 
-  /** Attach Touch Tap-to-Select and Long-Press Split listeners to any slot */
+  /**
+   * Pure Tap-to-Select and Long-Press Split listeners.
+   * Completely excludes touchmove item dragging to prevent items getting stuck on mobile.
+   */
   private attachTouchListeners(el: HTMLElement, slotInfo: SelectedSlotInfo): void {
     el.addEventListener(
       'touchstart',
@@ -528,7 +621,7 @@ export class InventoryScreen {
         }
         if (!this.isLongPressActive) {
           if (e.cancelable) e.preventDefault();
-          this.handleSlotTouch(slotInfo);
+          this.handleSlotTouch(slotInfo, el);
         }
       },
       { passive: false }
@@ -553,7 +646,7 @@ export class InventoryScreen {
   }
 
   /** Touch Tap handler for selecting or transferring items */
-  private handleSlotTouch(slotInfo: SelectedSlotInfo): void {
+  private handleSlotTouch(slotInfo: SelectedSlotInfo, el?: HTMLElement): void {
     const slotItem = this.getSlotItemData(slotInfo);
 
     if (this.selectedSlot === null) {
@@ -585,6 +678,10 @@ export class InventoryScreen {
       } else {
         // Tapped a different slot -> execute transfer
         this.executeTouchTransfer(this.selectedSlot, slotInfo);
+        if (el) {
+          el.classList.add('inv-slot-pop');
+          setTimeout(() => el.classList.remove('inv-slot-pop'), 220);
+        }
         this.selectedSlot = null;
         this.refresh();
         AudioManager.getInstance().playSFX('place');
@@ -912,7 +1009,7 @@ export class InventoryScreen {
       } else if (current.itemId === this.dragItem.itemId) {
         const max = getItemById(current.itemId)?.maxStack ?? 64;
         if (current.count < max) {
-          current.count++;
+          slotCountPlus(current);
           this.dragItem.count--;
           if (this.dragItem.count <= 0) this.dragItem = null;
         }
@@ -1206,7 +1303,44 @@ export class InventoryScreen {
   }
 
   refresh(): void {
-    if (!this.container) return;
+    if (!this.container || !this.panel) return;
+
+    // Toggle .inv-has-selection class on panel for dimming non-selected slots
+    if (this.selectedSlot !== null) {
+      this.panel.classList.add('inv-has-selection');
+    } else {
+      this.panel.classList.remove('inv-has-selection');
+    }
+
+    // Update Status Banner
+    if (this.statusBanner) {
+      if (this.selectedSlot !== null) {
+        const itemDef = this.selectedSlot.itemId ? getItemById(this.selectedSlot.itemId) : null;
+        const name = itemDef?.name ?? this.selectedSlot.itemId ?? 'Item';
+        const count = this.selectedSlot.count ?? 1;
+        this.statusBanner.style.background = 'rgba(46, 125, 50, 0.4)';
+        this.statusBanner.style.borderColor = '#81c784';
+        this.statusBanner.style.color = '#e8f5e9';
+        this.statusBanner.innerHTML = `
+          <span>👉 Memilih: <b style="color:#ffeb3b;">${count}x ${name}</b>. Ketuk slot tujuan untuk memindahkan.</span>
+          <button id="banner-cancel-btn" style="background:#c62828; color:#fff; border:1px solid #ffcdd2; border-radius:3px; padding:2px 8px; font-size:11px; cursor:pointer; touch-action:manipulation;">✕ Batal</button>
+        `;
+        const cancelBtn = this.statusBanner.querySelector('#banner-cancel-btn');
+        const onCancel = (e?: Event) => {
+          if (e && e.cancelable) e.preventDefault();
+          this.selectedSlot = null;
+          this.refresh();
+          AudioManager.getInstance().playSFX('click');
+        };
+        cancelBtn?.addEventListener('touchend', onCancel, { passive: false });
+        cancelBtn?.addEventListener('click', onCancel);
+      } else {
+        this.statusBanner.style.background = 'rgba(0, 0, 0, 0.35)';
+        this.statusBanner.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+        this.statusBanner.style.color = '#e0e0e0';
+        this.statusBanner.innerHTML = '<span>💡 Ketuk sebuah item untuk memilih & memindahkannya</span>';
+      }
+    }
 
     // Refresh Armor slots
     if (this.equipmentSlots) {
@@ -1314,4 +1448,8 @@ export class InventoryScreen {
       }
     });
   }
+}
+
+function slotCountPlus(slot: CraftGridSlot): void {
+  slot.count++;
 }

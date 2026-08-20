@@ -258,10 +258,31 @@ export class HUD {
     window.addEventListener('touchstart', () => this.checkDevice(), { passive: true, once: true });
   }
 
+  private isVisible = true;
+
+  setVisible(visible: boolean): void {
+    this.isVisible = visible;
+    if (this.coordsDisplay) this.coordsDisplay.style.display = visible ? 'flex' : 'none';
+    if (this.timeDisplayContainer) this.timeDisplayContainer.style.display = visible ? 'flex' : 'none';
+    if (this.controlsGuide) {
+      this.controlsGuide.style.display = visible && !InputManager.isTouchDevice() ? 'flex' : 'none';
+    }
+    if (this.crosshair) this.crosshair.style.display = visible ? 'block' : 'none';
+    if (this.container) this.container.style.display = visible ? 'flex' : 'none';
+    if (this.healthContainer) this.healthContainer.style.display = visible ? 'flex' : 'none';
+    if (this.oxygenContainer) this.oxygenContainer.style.display = visible ? 'flex' : 'none';
+    if (this.armorContainer) this.armorContainer.style.display = visible ? 'flex' : 'none';
+    if (this.itemNameBanner) this.itemNameBanner.style.display = visible ? 'block' : 'none';
+  }
+
+  getVisible(): boolean {
+    return this.isVisible;
+  }
+
   checkDevice(): void {
     const isTouch = InputManager.isTouchDevice();
     if (this.controlsGuide) {
-      this.controlsGuide.style.display = isTouch ? 'none' : 'flex';
+      this.controlsGuide.style.display = this.isVisible && !isTouch ? 'flex' : 'none';
     }
   }
 

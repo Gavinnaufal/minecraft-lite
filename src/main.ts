@@ -579,10 +579,12 @@ const updateTouchControlsState = (): void => {
     tradingScreen.isOpen ||
     chatBox.visible;
   touchControls.setEnabled(!modalOpen);
+  hud.setVisible(!modalOpen);
 };
 
 mainMenu.create();
 touchControls.setEnabled(false); // Touch controls are strictly disabled while Main Menu is active
+hud.setVisible(false); // HUD is strictly hidden while Main Menu is active
 
 canvas.addEventListener('click', () => {
   if (!mainMenu.isOpen && !pauseMenu.isOpen && !inventoryScreen.isOpen && !chestScreen.isOpen && !furnaceScreen.getIsOpen() && !tradingScreen.isOpen) {

@@ -7,6 +7,11 @@ export class MainMenu {
   private visible = true;
   private settingsMenu: SettingsMenu;
   private onStartGame: ((isLoad: boolean) => void) | null = null;
+  private newGameBtn: HTMLButtonElement | null = null;
+  private loadGameBtn: HTMLButtonElement | null = null;
+  private settingsBtn: HTMLButtonElement | null = null;
+  private btnBox: HTMLDivElement | null = null;
+  private installPromptCard: HTMLDivElement | null = null;
 
   constructor(settingsMenu: SettingsMenu, onStartGame: (isLoad: boolean) => void) {
     this.settingsMenu = settingsMenu;
@@ -15,21 +20,24 @@ export class MainMenu {
 
   create(): void {
     this.container = document.createElement('div');
+    this.container.id = 'main-menu';
     this.container.style.cssText = `
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 500;
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh; z-index: 500;
       background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.85)), url('/textures/blocks/dirt.png');
       background-size: 64px 64px;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       font-family: monospace; color: #fff; user-select: none;
+      padding: 16px; box-sizing: border-box; overflow-y: auto;
     `;
 
     // Minecraft Title Box
     const titleBox = document.createElement('div');
-    titleBox.style.cssText = 'position: relative; margin-bottom: 48px; text-align: center;';
+    titleBox.className = 'mc-title-box';
+    titleBox.style.cssText = 'position: relative; margin-bottom: 36px; text-align: center;';
 
     const title = document.createElement('h1');
     title.style.cssText = `
-      font-size: 52px; font-weight: 900; color: #ffcc00; margin: 0;
+      font-size: 48px; font-weight: 900; color: #ffcc00; margin: 0;
       text-shadow: 4px 4px 0 #3f3100, -2px -2px 0 #fff;
       letter-spacing: 4px; text-transform: uppercase;
       font-family: 'Courier New', monospace;
@@ -39,8 +47,8 @@ export class MainMenu {
     // Yellow Splash Text (Minecraft Style)
     const splash = document.createElement('div');
     splash.style.cssText = `
-      position: absolute; right: -40px; bottom: -22px; transform: rotate(-14deg);
-      font-size: 16px; font-weight: bold; color: #ffff00; text-shadow: 2px 2px 0 #000;
+      position: absolute; right: -30px; bottom: -20px; transform: rotate(-14deg);
+      font-size: 15px; font-weight: bold; color: #ffff00; text-shadow: 2px 2px 0 #000;
       animation: splashPulse 1.2s infinite alternate ease-in-out;
     `;
     splash.textContent = '100% TS + Three.js Voxel Engine!';
@@ -52,12 +60,13 @@ export class MainMenu {
         100% { transform: rotate(-14deg) scale(1.1); }
       }
       .mc-button {
-        width: 360px; padding: 14px 20px; font-family: monospace; font-size: 16px; font-weight: bold;
+        width: 340px; max-width: 90vw; padding: 13px 18px; font-family: monospace; font-size: 15px; font-weight: bold;
         color: #e0e0e0; background: #707070;
         border-top: 3px solid #9e9e9e; border-left: 3px solid #9e9e9e;
         border-bottom: 3px solid #3a3a3a; border-right: 3px solid #3a3a3a;
         cursor: pointer; text-shadow: 2px 2px 0 #000; text-align: center;
         box-shadow: 0 4px 10px rgba(0,0,0,0.6); transition: background 0.1s, border-color 0.1s;
+        touch-action: manipulation;
       }
       .mc-button:hover {
         background: #808080; color: #ffffa0;
@@ -69,6 +78,13 @@ export class MainMenu {
         border-bottom-color: #9e9e9e; border-right-color: #9e9e9e;
         background: #555555;
       }
+      @media (max-height: 520px) {
+        .mc-title-box { margin-bottom: 14px !important; }
+        #main-menu h1 { font-size: 32px !important; }
+      }
+      @media (max-width: 600px) {
+        #main-menu h1 { font-size: 34px !important; letter-spacing: 2px !important; }
+      }
     `;
     document.head.appendChild(styleEl);
 
@@ -76,11 +92,9 @@ export class MainMenu {
     titleBox.appendChild(splash);
     this.container.appendChild(titleBox);
 
-    this.container.id = 'main-menu';
-
     // Button Box
-    const btnBox = document.createElement('div');
-    btnBox.style.cssText = 'display: flex; flex-direction: column; gap: 16px; align-items: center; width: 100%;';
+    this.btnBox = document.createElement('div');
+    this.btnBox.style.cssText = 'display: flex; flex-direction: column; gap: 16px; align-items: center; width: 100%;';
 
     const makeMcBtn = (label: string, onClick: () => void) => {
       const btn = document.createElement('button');
@@ -108,124 +122,126 @@ export class MainMenu {
       return btn;
     };
 
-    const newGameBtn = makeMcBtn('Singleplayer (New World)', () => {
+    this.newGameBtn = makeMcBtn('Singleplayer (New World)', () => {
       this.hide();
       toggleFullscreen();
       AudioManager.getInstance().startMusic();
       this.onStartGame?.(false);
     });
 
-    const loadGameBtn = makeMcBtn('Load Saved World', () => {
+    this.loadGameBtn = makeMcBtn('Load Saved World', () => {
       this.hide();
       toggleFullscreen();
       AudioManager.getInstance().startMusic();
       this.onStartGame?.(true);
     });
 
-    const settingsBtn = makeMcBtn('Options & Settings...', () => {
+    this.settingsBtn = makeMcBtn('Options & Settings...', () => {
       this.settingsMenu.toggle();
     });
 
-    btnBox.appendChild(newGameBtn);
-    btnBox.appendChild(loadGameBtn);
-    btnBox.appendChild(settingsBtn);
-    this.container.appendChild(btnBox);
+    this.btnBox.appendChild(this.newGameBtn);
+    this.btnBox.appendChild(this.loadGameBtn);
+    this.btnBox.appendChild(this.settingsBtn);
+    this.container.appendChild(this.btnBox);
 
-    this.createPwaBanner();
+    this.updateMenuState();
+
+    window.addEventListener('resize', () => {
+      if (this.visible) this.updateMenuState();
+    });
 
     document.body.appendChild(this.container);
   }
 
-  private createPwaBanner(): void {
-    if (!this.container) return;
+  private updateMenuState(): void {
+    if (!this.container || !this.newGameBtn || !this.loadGameBtn || !this.btnBox) return;
 
-    try {
-      const isStandalone =
-        window.matchMedia('(display-mode: standalone)').matches ||
-        (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
 
-      const isMobile =
-        'ontouchstart' in window ||
-        navigator.maxTouchPoints > 0 ||
-        window.innerWidth <= 1024;
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const isNarrow = window.innerWidth <= 1024;
+    const isCoarse = !!window.matchMedia?.('(pointer: coarse)').matches;
+    const isMobile = (isTouch || isCoarse) && isNarrow;
 
-      const hasSeen = localStorage.getItem('mc_pwa_banner_dismissed') === 'true';
+    const isIOS =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-      if (!isMobile || isStandalone || hasSeen) return;
+    console.log(
+      `%c[Main Menu Mode Check]%c isMobile=${isMobile}, isStandalone=${isStandalone}, isNarrow=${isNarrow}, isTouch=${isTouch}`,
+      'color: #ffcc00; font-weight: bold;',
+      'color: #00ffff;'
+    );
 
-      const isIOS =
-        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (isMobile && !isStandalone) {
+      // Mobile Browser (Non-Standalone): Sembunyikan tombol Play / Load
+      this.newGameBtn.style.display = 'none';
+      this.loadGameBtn.style.display = 'none';
 
-      const banner = document.createElement('div');
-      banner.id = 'pwa-home-banner';
-      banner.style.cssText = `
-        position: absolute;
-        bottom: 18px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 440px;
-        max-width: 92vw;
-        background: rgba(20, 20, 20, 0.94);
-        border: 2px solid #ffcc00;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
-        border-radius: 6px;
-        padding: 10px 14px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        z-index: 520;
-        font-family: monospace;
-        font-size: 12px;
-        color: #fff;
-        line-height: 1.4;
-      `;
+      if (!this.installPromptCard) {
+        this.installPromptCard = document.createElement('div');
+        this.installPromptCard.id = 'pwa-install-required-card';
+        this.installPromptCard.style.cssText = `
+          width: 360px;
+          max-width: 90vw;
+          background: rgba(20, 20, 20, 0.95);
+          border: 2px solid #ffcc00;
+          box-shadow: 0 8px 26px rgba(0, 0, 0, 0.85);
+          border-radius: 8px;
+          padding: 16px 18px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          gap: 12px;
+          font-family: monospace;
+          color: #fff;
+          box-sizing: border-box;
+        `;
 
-      const textEl = document.createElement('div');
-      textEl.innerHTML = isIOS
-        ? '💡 <span style="color:#ffcc00;font-weight:bold;">Main Layar Penuh!</span> Tekan Share (<b>□↑</b>) di Safari, lalu pilih <b>"Add to Home Screen"</b>.'
-        : '💡 <span style="color:#ffcc00;font-weight:bold;">Main Layar Penuh!</span> Tekan menu (<b>⋮</b>) di Chrome, lalu pilih <b>"Add to Home Screen"</b>.';
+        const iconTitle = document.createElement('div');
+        iconTitle.style.cssText = 'font-size: 15px; font-weight: bold; color: #ffcc00; display: flex; align-items: center; gap: 8px; text-shadow: 1px 1px 0 #000;';
+        iconTitle.innerHTML = '📲 <span>Tambahkan ke Layar Utama</span>';
 
-      const closeBtn = document.createElement('button');
-      closeBtn.textContent = '✕';
-      closeBtn.style.cssText = `
-        background: rgba(255, 255, 255, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        color: #fff;
-        font-size: 14px;
-        font-weight: bold;
-        width: 28px;
-        height: 28px;
-        border-radius: 4px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        flex-shrink: 0;
-        touch-action: manipulation;
-      `;
+        const desc = document.createElement('div');
+        desc.style.cssText = 'font-size: 13px; color: #e0e0e0; line-height: 1.5; text-align: left; background: rgba(0,0,0,0.3); padding: 10px 12px; border-radius: 4px; border-left: 3px solid #ffcc00;';
+        desc.innerHTML = isIOS
+          ? 'Game ini membutuhkan mode <b>Layar Utama</b> agar berjalan fullscreen tanpa address bar:<br><br>' +
+            '1. Tekan tombol Share (<b>□↑</b>) di Safari<br>' +
+            '2. Pilih <b>"Add to Home Screen"</b> (Tambah ke Layar Utama)<br>' +
+            '3. Buka game dari ikon di Home Screen untuk mulai bermain!'
+          : 'Game ini membutuhkan mode <b>Layar Utama</b> agar berjalan fullscreen tanpa address bar:<br><br>' +
+            '1. Tekan menu titik tiga (<b>⋮</b>) di pojok browser<br>' +
+            '2. Pilih <b>"Add to Home Screen"</b> / <b>"Install app"</b><br>' +
+            '3. Buka game dari ikon di Home Screen untuk mulai bermain!';
 
-      const dismiss = (e?: Event) => {
-        if (e && e.cancelable) e.preventDefault();
-        try {
-          localStorage.setItem('mc_pwa_banner_dismissed', 'true');
-        } catch {}
-        banner.remove();
-      };
+        this.installPromptCard.appendChild(iconTitle);
+        this.installPromptCard.appendChild(desc);
 
-      closeBtn.addEventListener('touchend', dismiss, { passive: false });
-      closeBtn.addEventListener('click', dismiss);
-
-      banner.appendChild(textEl);
-      banner.appendChild(closeBtn);
-      this.container.appendChild(banner);
-    } catch {}
+        // Insert prompt card before settingsBtn in btnBox
+        this.btnBox.insertBefore(this.installPromptCard, this.btnBox.firstChild);
+      } else {
+        this.installPromptCard.style.display = 'flex';
+      }
+    } else {
+      // Desktop/Laptop ATAU Mobile yang sudah Standalone: Tampilkan tombol Play & Load
+      this.newGameBtn.style.display = 'block';
+      this.loadGameBtn.style.display = 'block';
+      if (this.installPromptCard) {
+        this.installPromptCard.style.display = 'none';
+      }
+    }
   }
 
   show(): void {
     this.visible = true;
-    if (this.container) this.container.style.display = 'flex';
+    if (this.container) {
+      this.container.style.display = 'flex';
+      this.updateMenuState();
+    }
   }
 
   hide(): void {

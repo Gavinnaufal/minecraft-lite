@@ -342,10 +342,14 @@ const dayNight = new DayNightCycle();
 // Spawn player on terrain surface immediately with seed-randomized offset
 const spawnSeedX = Math.round((Math.sin(worldSeed * 0.0001) * 10000) % 400);
 const spawnSeedZ = Math.round((Math.cos(worldSeed * 0.0001) * 10000) % 400);
-player.position.x = spawnSeedX;
-player.position.z = spawnSeedZ;
+player.position.x = spawnSeedX + 0.5;
+player.position.z = spawnSeedZ + 0.5;
 const spawnH = heightMap.getHeight(player.position.x, player.position.z);
-player.position.y = spawnH + 2;
+player.position.y = spawnH + 2.1;
+player.velocity.x = 0;
+player.velocity.y = 0;
+player.velocity.z = 0;
+player.isGrounded = false;
 camera.position.set(player.position.x, player.position.y + player.eyeHeight, player.position.z);
 
 // Load terrain NOW (don't wait for save/load)
@@ -568,6 +572,24 @@ touchControls.onToggleInventory = () => {
   updateTouchControlsState();
 };
 
+touchControls.onTogglePauseMenu = () => {
+  inputManager.clearKeys();
+  if (chatBox.visible) {
+    chatBox.close();
+  } else if (tradingScreen.isOpen) {
+    tradingScreen.close();
+  } else if (furnaceScreen.getIsOpen()) {
+    furnaceScreen.close();
+  } else if (chestScreen.isOpen) {
+    chestScreen.closeChest();
+  } else if (inventoryScreen.isOpen) {
+    inventoryScreen.close();
+  } else {
+    pauseMenu.toggle();
+  }
+  updateTouchControlsState();
+};
+
 const updateTouchControlsState = (): void => {
   const modalOpen =
     mainMenu.isOpen ||
@@ -719,15 +741,16 @@ const engine = new Engine();
 function restartPlayer() {
   player.health = 20;
   lastPlayerHealth = 20;
-  const spawnY = heightMap.getHeight(0, 0) + 2;
-  player.position.x = 0;
+  const spawnY = heightMap.getHeight(0.5, 0.5) + 2.1;
+  player.position.x = 0.5;
   player.position.y = spawnY;
-  player.position.z = 0;
+  player.position.z = 0.5;
   player.velocity.x = 0;
   player.velocity.y = 0;
   player.velocity.z = 0;
-  camera.position.set(0, spawnY + player.eyeHeight, 0);
-  chunkManager.update(0, 0, gameSettings.renderDistance);
+  player.isGrounded = false;
+  camera.position.set(0.5, spawnY + player.eyeHeight, 0.5);
+  chunkManager.update(0.5, 0.5, gameSettings.renderDistance);
   hud.update(player.health);
   hud.showDeathMessage();
   AudioManager.getInstance().playSFX('hit');

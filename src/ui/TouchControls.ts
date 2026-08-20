@@ -13,8 +13,10 @@ export class TouchControls {
   private attackButton: HTMLDivElement;
   private placeButton: HTMLDivElement;
   private invButton: HTMLDivElement;
+  private menuButton: HTMLDivElement;
 
   public onToggleInventory: (() => void) | null = null;
+  public onTogglePauseMenu: (() => void) | null = null;
 
   private isEnabled = false;
   private isVisible = false;
@@ -250,6 +252,49 @@ export class TouchControls {
 
     this.container.appendChild(this.invButton);
 
+    // 6. Pause / Settings Menu Button (Top-Left)
+    this.menuButton = document.createElement('div');
+    this.menuButton.id = 'touch-menu-btn';
+    this.menuButton.title = 'Menu / Pause (Esc)';
+    this.menuButton.innerHTML = `
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;">
+        <line x1="4" y1="6" x2="20" y2="6"></line>
+        <line x1="4" y1="12" x2="20" y2="12"></line>
+        <line x1="4" y1="18" x2="20" y2="18"></line>
+      </svg>
+    `;
+    this.menuButton.style.cssText = `
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.55);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      touch-action: manipulation;
+      cursor: pointer;
+      z-index: 105;
+      backdrop-filter: blur(4px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      transition: transform 0.08s ease, background 0.08s ease;
+    `;
+
+    const triggerMenu = (e?: Event) => {
+      if (e && e.cancelable) e.preventDefault();
+      AudioManager.getInstance().playSFX('click');
+      this.onTogglePauseMenu?.();
+    };
+
+    this.menuButton.addEventListener('touchend', triggerMenu, { passive: false });
+    this.menuButton.addEventListener('click', triggerMenu);
+
+    this.container.appendChild(this.menuButton);
+
     document.body.appendChild(this.container);
 
     this.setupEventListeners();
@@ -351,8 +396,13 @@ export class TouchControls {
         continue;
       }
 
-      // 4. Inventory Button
-      if (target === this.invButton || this.invButton.contains(target)) {
+      // 4. Inventory & Menu Buttons (Top-Right & Top-Left)
+      if (
+        target === this.invButton ||
+        this.invButton.contains(target) ||
+        target === this.menuButton ||
+        this.menuButton.contains(target)
+      ) {
         if (e.cancelable) e.preventDefault();
         continue;
       }

@@ -87,6 +87,7 @@ export class HUD {
 
     // Top-Left Status Badge (XYZ + Facing + FPS)
     this.coordsDisplay = document.createElement('div');
+    this.coordsDisplay.id = 'hud-coords';
     this.coordsDisplay.style.cssText = `
       position: fixed; top: 12px; left: 16px; z-index: 100; pointer-events: none;
       font-family: monospace; font-size: 12px; color: #fff; line-height: 1.4;
@@ -99,6 +100,7 @@ export class HUD {
 
     // Top-Center Time Badge
     this.timeDisplayContainer = document.createElement('div');
+    this.timeDisplayContainer.id = 'hud-time';
     this.timeDisplayContainer.style.cssText = `
       position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 100;
       font-family: monospace; font-size: 13px; font-weight: bold; color: #ffcc00; pointer-events: none;
@@ -170,11 +172,67 @@ export class HUD {
 
     const hudStyle = document.createElement('style');
     hudStyle.textContent = `
+      @media (max-width: 900px) {
+        #hud-coords {
+          left: 64px !important;
+          font-size: 11px !important;
+          padding: 4px 8px !important;
+          gap: 6px !important;
+          white-space: nowrap !important;
+        }
+        #hud-coords .hud-item-dim,
+        #hud-coords .hud-dim-divider {
+          display: none !important;
+        }
+        #hud-time {
+          padding: 4px 10px !important;
+          font-size: 12px !important;
+        }
+        #hud-health {
+          bottom: 74px !important;
+          transform: translateX(-50%) scale(0.92) !important;
+          transform-origin: bottom center !important;
+        }
+        #hud-oxygen {
+          bottom: 96px !important;
+          transform: translateX(-50%) scale(0.92) !important;
+          transform-origin: bottom center !important;
+        }
+        #hud-armor {
+          bottom: 96px !important;
+          left: calc(50% - 98px) !important;
+          transform: scale(0.92) !important;
+          transform-origin: bottom center !important;
+        }
+      }
       @media (max-width: 600px) {
+        #hud-coords .hud-item-fps {
+          display: none !important;
+        }
+        #hud-coords {
+          padding: 3px 6px !important;
+          gap: 4px !important;
+        }
         #hud-hotbar {
           transform: translateX(-50%) scale(0.85) !important;
           transform-origin: bottom center !important;
           bottom: 4px !important;
+        }
+        #hud-health {
+          bottom: 68px !important;
+          transform: translateX(-50%) scale(0.85) !important;
+          transform-origin: bottom center !important;
+        }
+        #hud-oxygen {
+          bottom: 88px !important;
+          transform: translateX(-50%) scale(0.85) !important;
+          transform-origin: bottom center !important;
+        }
+        #hud-armor {
+          bottom: 88px !important;
+          left: calc(50% - 90px) !important;
+          transform: scale(0.85) !important;
+          transform-origin: bottom center !important;
         }
       }
     `;
@@ -208,8 +266,9 @@ export class HUD {
 
     // Health bar visual (10 heart SVG icons = 20 HP)
     this.healthContainer = document.createElement('div');
+    this.healthContainer.id = 'hud-health';
     this.healthContainer.style.cssText = `
-      position: fixed; bottom: 76px; left: 50%; transform: translateX(-50%);
+      position: fixed; bottom: 82px; left: 50%; transform: translateX(-50%);
       display: flex; gap: 3px; z-index: 100; pointer-events: none;
     `;
     for (let i = 0; i < 10; i++) {
@@ -223,8 +282,9 @@ export class HUD {
 
     // Oxygen bubbles bar (10 bubble SVG icons = 20 Oxygen)
     this.oxygenContainer = document.createElement('div');
+    this.oxygenContainer.id = 'hud-oxygen';
     this.oxygenContainer.style.cssText = `
-      position: fixed; bottom: 98px; left: 50%; transform: translateX(-50%);
+      position: fixed; bottom: 104px; left: 50%; transform: translateX(-50%);
       display: flex; gap: 3px; z-index: 100; pointer-events: none;
       opacity: 0; transition: opacity 0.3s ease;
     `;
@@ -239,8 +299,9 @@ export class HUD {
 
     // Armor Bar Container (10 shield SVG icons = 20 Armor Points)
     this.armorContainer = document.createElement('div');
+    this.armorContainer.id = 'hud-armor';
     this.armorContainer.style.cssText = `
-      position: fixed; bottom: 98px; left: calc(50% - 105px);
+      position: fixed; bottom: 104px; left: calc(50% - 105px);
       display: flex; gap: 3px; z-index: 100; pointer-events: none;
       opacity: 0; transition: opacity 0.3s ease;
     `;
@@ -330,13 +391,13 @@ export class HUD {
     else if (deg >= 225 && deg < 315) dir = 'East';
 
     this.coordsDisplay.innerHTML = `
-      <span>${SVG_ICONS.location} <span style="color:#00ffcc;">XYZ: ${x.toFixed(1)}, ${y.toFixed(1)}, ${z.toFixed(1)}</span></span>
-      <span style="color:rgba(255,255,255,0.3)">|</span>
-      <span>${SVG_ICONS.compass} <span style="color:#ffcc00;">${dir}</span></span>
-      <span style="color:rgba(255,255,255,0.3)">|</span>
-      <span>${SVG_ICONS.fps} <span style="color:#81c784;">${fps} FPS</span></span>
-      <span style="color:rgba(255,255,255,0.3)">|</span>
-      <span style="color:${this.dimensionLabel === 'Nether' ? '#ff6633' : '#55ff55'};">${this.dimensionLabel}</span>
+      <span class="hud-item-xyz">${SVG_ICONS.location} <span style="color:#00ffcc;">XYZ: ${x.toFixed(1)}, ${y.toFixed(1)}, ${z.toFixed(1)}</span></span>
+      <span class="hud-divider">|</span>
+      <span class="hud-item-dir">${SVG_ICONS.compass} <span style="color:#ffcc00;">${dir}</span></span>
+      <span class="hud-divider">|</span>
+      <span class="hud-item-fps">${SVG_ICONS.fps} <span style="color:#81c784;">${fps} FPS</span></span>
+      <span class="hud-divider hud-dim-divider">|</span>
+      <span class="hud-item-dim" style="color:${this.dimensionLabel === 'Nether' ? '#ff6633' : '#55ff55'};">${this.dimensionLabel}</span>
     `;
   }
 

@@ -69,9 +69,9 @@ export class PlayerCollision {
         if (adjustedDy > 0 && pMaxY <= b.minY) {
           const maxMove = b.minY - pMaxY;
           if (maxMove < adjustedDy) adjustedDy = Math.max(0, maxMove);
-        } else if (adjustedDy < 0 && pMinY >= b.maxY) {
+        } else if (adjustedDy <= 0 && pMinY >= b.maxY - 0.25) {
           const maxMove = b.maxY - pMinY;
-          if (maxMove > adjustedDy) adjustedDy = Math.min(0, maxMove);
+          if (maxMove > adjustedDy) adjustedDy = maxMove;
         }
       }
     }
@@ -80,10 +80,11 @@ export class PlayerCollision {
     pMaxY += adjustedDy;
 
     let adjustedDx = intendedDx;
+    const VERTICAL_EPSILON = 0.05;
 
     // 2. Resolve X Axis
     for (const b of blocks) {
-      if (pMaxY > b.minY && pMinY < b.maxY && pMaxZ > b.minZ && pMinZ < b.maxZ) {
+      if (pMaxY > b.minY + VERTICAL_EPSILON && pMinY + VERTICAL_EPSILON < b.maxY && pMaxZ > b.minZ && pMinZ < b.maxZ) {
         if (adjustedDx > 0 && pMaxX <= b.minX) {
           const maxMove = b.minX - pMaxX;
           if (maxMove < adjustedDx) adjustedDx = Math.max(0, maxMove);
@@ -101,7 +102,7 @@ export class PlayerCollision {
 
     // 3. Resolve Z Axis
     for (const b of blocks) {
-      if (pMaxX > b.minX && pMinX < b.maxX && pMaxY > b.minY && pMinY < b.maxY) {
+      if (pMaxX > b.minX && pMinX < b.maxX && pMaxY > b.minY + VERTICAL_EPSILON && pMinY + VERTICAL_EPSILON < b.maxY) {
         if (adjustedDz > 0 && pMaxZ <= b.minZ) {
           const maxMove = b.minZ - pMaxZ;
           if (maxMove < adjustedDz) adjustedDz = Math.max(0, maxMove);
@@ -145,7 +146,8 @@ export class PlayerCollision {
     for (let x = minX; x <= maxX; x++) {
       for (let z = minZ; z <= maxZ; z++) {
         const b = this.world.getBlock(x, footY, z);
-        if (b !== 0 && b !== 7) return true;
+        const def = getBlockById(b);
+        if (b !== 0 && def?.solid) return true;
       }
     }
     return false;

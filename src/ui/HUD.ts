@@ -18,6 +18,9 @@ const SVG_ICONS = {
   shieldEmpty: `<svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(30,30,40,0.4)" stroke="rgba(255,255,255,0.2)" stroke-width="1.2" style="vertical-align: middle; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`,
   bubbleFull: `<svg width="15" height="15" viewBox="0 0 24 24" fill="#00e5ff" stroke="#00838f" stroke-width="1.5" style="vertical-align: middle; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.8));"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="9" r="2.5" fill="#ffffff"/></svg>`,
   bubbleEmpty: `<svg width="15" height="15" viewBox="0 0 24 24" fill="rgba(0,50,80,0.3)" stroke="rgba(0,229,255,0.3)" stroke-width="1.5" style="vertical-align: middle; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.8));"><circle cx="12" cy="12" r="9"/></svg>`,
+  hungerFull: `<svg width="18" height="18" viewBox="0 0 24 24" fill="#d35400" stroke="#6e2c00" stroke-width="1.2" style="vertical-align: middle; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));"><path d="M18.5 3a3.5 3.5 0 0 0-3.5 3.5c0 .37.06.72.16 1.05L9.62 13.1a3.5 3.5 0 0 0-4.12.56 3.5 3.5 0 0 0 .56 4.12l-2.48 2.48a1.5 1.5 0 0 0 2.12 2.12l2.48-2.48a3.5 3.5 0 0 0 4.12.56 3.5 3.5 0 0 0 .56-4.12l5.55-5.55c.33.1.68.16 1.05.16a3.5 3.5 0 0 0 3.5-3.5 3.5 3.5 0 0 0-3.5-3.5z"></path></svg>`,
+  hungerHalf: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6e2c00" stroke-width="1.2" style="vertical-align: middle; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));"><path d="M18.5 3a3.5 3.5 0 0 0-3.5 3.5c0 .37.06.72.16 1.05L9.62 13.1a3.5 3.5 0 0 0-4.12.56 3.5 3.5 0 0 0 .56 4.12l-2.48 2.48a1.5 1.5 0 0 0 2.12 2.12l2.48-2.48a3.5 3.5 0 0 0 4.12.56 3.5 3.5 0 0 0 .56-4.12l5.55-5.55c.33.1.68.16 1.05.16a3.5 3.5 0 0 0 3.5-3.5 3.5 3.5 0 0 0-3.5-3.5z" fill="url(#hungerHalfGrad)"></path><defs><linearGradient id="hungerHalfGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="50%" stop-color="#d35400"/><stop offset="50%" stop-color="rgba(0,0,0,0.3)"/></linearGradient></defs></svg>`,
+  hungerEmpty: `<svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(30,30,40,0.5)" stroke="rgba(255,255,255,0.2)" stroke-width="1.2" style="vertical-align: middle; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));"><path d="M18.5 3a3.5 3.5 0 0 0-3.5 3.5c0 .37.06.72.16 1.05L9.62 13.1a3.5 3.5 0 0 0-4.12.56 3.5 3.5 0 0 0 .56 4.12l-2.48 2.48a1.5 1.5 0 0 0 2.12 2.12l2.48-2.48a3.5 3.5 0 0 0 4.12.56 3.5 3.5 0 0 0 .56-4.12l5.55-5.55c.33.1.68.16 1.05.16a3.5 3.5 0 0 0 3.5-3.5 3.5 3.5 0 0 0-3.5-3.5z"></path></svg>`,
 };
 
 export class HUD {
@@ -30,8 +33,12 @@ export class HUD {
   private timeIcon: HTMLSpanElement;
   private healthContainer: HTMLDivElement;
   private heartEls: HTMLSpanElement[] = [];
+  private hungerContainer: HTMLDivElement;
+  private hungerEls: HTMLSpanElement[] = [];
   private oxygenContainer: HTMLDivElement;
   private bubbleEls: HTMLSpanElement[] = [];
+  private armorContainer: HTMLDivElement;
+  private shieldEls: HTMLSpanElement[] = [];
   private damageOverlay: HTMLDivElement;
   private deathOverlay: HTMLDivElement;
   private underwaterOverlay: HTMLDivElement;
@@ -197,19 +204,27 @@ export class HUD {
         }
         #hud-health {
           bottom: 74px !important;
-          transform: translateX(-50%) scale(0.92) !important;
-          transform-origin: bottom center !important;
+          right: calc(50% + 4px) !important;
+          transform: scale(0.92) !important;
+          transform-origin: bottom right !important;
+        }
+        #hud-hunger {
+          bottom: 74px !important;
+          left: calc(50% + 4px) !important;
+          transform: scale(0.92) !important;
+          transform-origin: bottom left !important;
         }
         #hud-oxygen {
           bottom: 96px !important;
-          transform: translateX(-50%) scale(0.92) !important;
-          transform-origin: bottom center !important;
+          left: calc(50% + 4px) !important;
+          transform: scale(0.92) !important;
+          transform-origin: bottom left !important;
         }
         #hud-armor {
           bottom: 96px !important;
-          left: calc(50% - 98px) !important;
+          right: calc(50% + 4px) !important;
           transform: scale(0.92) !important;
-          transform-origin: bottom center !important;
+          transform-origin: bottom right !important;
         }
       }
       @media (max-width: 600px) {
@@ -227,19 +242,27 @@ export class HUD {
         }
         #hud-health {
           bottom: 68px !important;
-          transform: translateX(-50%) scale(0.85) !important;
-          transform-origin: bottom center !important;
+          right: calc(50% + 2px) !important;
+          transform: scale(0.82) !important;
+          transform-origin: bottom right !important;
+        }
+        #hud-hunger {
+          bottom: 68px !important;
+          left: calc(50% + 2px) !important;
+          transform: scale(0.82) !important;
+          transform-origin: bottom left !important;
         }
         #hud-oxygen {
           bottom: 88px !important;
-          transform: translateX(-50%) scale(0.85) !important;
-          transform-origin: bottom center !important;
+          left: calc(50% + 2px) !important;
+          transform: scale(0.82) !important;
+          transform-origin: bottom left !important;
         }
         #hud-armor {
           bottom: 88px !important;
-          left: calc(50% - 90px) !important;
-          transform: scale(0.85) !important;
-          transform-origin: bottom center !important;
+          right: calc(50% + 2px) !important;
+          transform: scale(0.82) !important;
+          transform-origin: bottom right !important;
         }
       }
     `;
@@ -275,11 +298,11 @@ export class HUD {
       this.slots.push(slot);
     }
 
-    // Health bar visual (10 heart SVG icons = 20 HP)
+    // Health bar visual (10 heart SVG icons = 20 HP, on left of center)
     this.healthContainer = document.createElement('div');
     this.healthContainer.id = 'hud-health';
     this.healthContainer.style.cssText = `
-      position: fixed; bottom: 82px; left: 50%; transform: translateX(-50%);
+      position: fixed; bottom: 82px; right: calc(50% + 6px);
       display: flex; gap: 3px; z-index: 100; pointer-events: none;
     `;
     for (let i = 0; i < 10; i++) {
@@ -291,11 +314,27 @@ export class HUD {
     }
     document.body.appendChild(this.healthContainer);
 
-    // Oxygen bubbles bar (10 bubble SVG icons = 20 Oxygen)
+    // Hunger bar visual (10 drumstick SVG icons = 20 Hunger, on right of center)
+    this.hungerContainer = document.createElement('div');
+    this.hungerContainer.id = 'hud-hunger';
+    this.hungerContainer.style.cssText = `
+      position: fixed; bottom: 82px; left: calc(50% + 6px);
+      display: flex; gap: 3px; z-index: 100; pointer-events: none;
+    `;
+    for (let i = 0; i < 10; i++) {
+      const drumstick = document.createElement('span');
+      drumstick.style.cssText = 'display: flex; align-items: center; justify-content: center;';
+      drumstick.innerHTML = SVG_ICONS.hungerFull;
+      this.hungerContainer.appendChild(drumstick);
+      this.hungerEls.push(drumstick);
+    }
+    document.body.appendChild(this.hungerContainer);
+
+    // Oxygen bubbles bar (10 bubble SVG icons = 20 Oxygen, on right above hunger)
     this.oxygenContainer = document.createElement('div');
     this.oxygenContainer.id = 'hud-oxygen';
     this.oxygenContainer.style.cssText = `
-      position: fixed; bottom: 104px; left: 50%; transform: translateX(-50%);
+      position: fixed; bottom: 104px; left: calc(50% + 6px);
       display: flex; gap: 3px; z-index: 100; pointer-events: none;
       opacity: 0; transition: opacity 0.3s ease;
     `;
@@ -308,11 +347,11 @@ export class HUD {
     }
     document.body.appendChild(this.oxygenContainer);
 
-    // Armor Bar Container (10 shield SVG icons = 20 Armor Points)
+    // Armor Bar Container (10 shield SVG icons = 20 Armor Points, on left above health)
     this.armorContainer = document.createElement('div');
     this.armorContainer.id = 'hud-armor';
     this.armorContainer.style.cssText = `
-      position: fixed; bottom: 104px; left: calc(50% - 105px);
+      position: fixed; bottom: 104px; right: calc(50% + 6px);
       display: flex; gap: 3px; z-index: 100; pointer-events: none;
       opacity: 0; transition: opacity 0.3s ease;
     `;
@@ -342,6 +381,7 @@ export class HUD {
     if (this.crosshair) this.crosshair.style.display = visible ? 'block' : 'none';
     if (this.container) this.container.style.display = visible ? 'flex' : 'none';
     if (this.healthContainer) this.healthContainer.style.display = visible ? 'flex' : 'none';
+    if (this.hungerContainer) this.hungerContainer.style.display = visible ? 'flex' : 'none';
     if (this.oxygenContainer) this.oxygenContainer.style.display = visible ? 'flex' : 'none';
     if (this.armorContainer) this.armorContainer.style.display = visible ? 'flex' : 'none';
     if (this.itemNameBanner) this.itemNameBanner.style.display = visible ? 'block' : 'none';
@@ -357,9 +397,6 @@ export class HUD {
       this.controlsGuide.style.display = this.isVisible && !isTouch ? 'flex' : 'none';
     }
   }
-
-  private armorContainer: HTMLDivElement;
-  private shieldEls: HTMLSpanElement[] = [];
 
   updateArmor(totalDefense: number): void {
     if (totalDefense > 0) {
@@ -473,9 +510,30 @@ export class HUD {
     }
   }
 
-  update(playerHealth?: number): void {
+  updateHunger(hunger: number): void {
+    const clampedHunger = Math.max(0, Math.min(20, hunger));
+
+    for (let i = 0; i < 10; i++) {
+      const el = this.hungerEls[i];
+      const fullThreshold = (i + 1) * 2;
+      const halfThreshold = fullThreshold - 1;
+
+      if (clampedHunger >= fullThreshold) {
+        el.innerHTML = SVG_ICONS.hungerFull;
+      } else if (clampedHunger === halfThreshold) {
+        el.innerHTML = SVG_ICONS.hungerHalf;
+      } else {
+        el.innerHTML = SVG_ICONS.hungerEmpty;
+      }
+    }
+  }
+
+  update(playerHealth?: number, playerHunger?: number): void {
     if (playerHealth !== undefined) {
       this.updateHealth(playerHealth);
+    }
+    if (playerHunger !== undefined) {
+      this.updateHunger(playerHunger);
     }
 
     if (this.hotbar.activeSlotIndex !== this.lastActiveSlot) {

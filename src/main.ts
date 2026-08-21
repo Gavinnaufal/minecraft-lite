@@ -815,6 +815,7 @@ function restartPlayer() {
   }
 
   player.health = 20;
+  player.hunger = 20;
   lastPlayerHealth = 20;
   const spawnY = heightMap.getHeight(0.5, 0.5) + 2.1;
   player.position.x = 0.5;
@@ -826,7 +827,7 @@ function restartPlayer() {
   player.isGrounded = false;
   camera.position.set(0.5, spawnY + player.eyeHeight, 0.5);
   chunkManager.update(0.5, 0.5, gameSettings.renderDistance);
-  hud.update(player.health);
+  hud.update(player.health, player.hunger);
   hud.showDeathMessage();
   AudioManager.getInstance().playSFX('hit');
 }
@@ -850,6 +851,8 @@ let lastMobRaycastTime = 0;
 
 let prevPlayerX = player.position.x;
 let prevPlayerZ = player.position.z;
+let starveTimer = 0;
+let regenTimer = 0;
 
 engine.setUpdateCallback((deltaTime) => {
   if (mainMenu.isOpen || pauseMenu.isOpen || inventoryScreen.isOpen || chestScreen.isOpen || furnaceScreen.getIsOpen() || chatBox.visible || endGameScreen.isOpen) {
@@ -860,11 +863,47 @@ engine.setUpdateCallback((deltaTime) => {
 
   statsTracker.updatePlayTime(deltaTime);
   const moveDist = Math.hypot(player.position.x - prevPlayerX, player.position.z - prevPlayerZ);
-  if (moveDist > 0.001 && moveDist < 20) {
+  const isMoving = moveDist > 0.001;
+  if (isMoving && moveDist < 20) {
     statsTracker.recordDistance(moveDist);
   }
   prevPlayerX = player.position.x;
   prevPlayerZ = player.position.z;
+
+  // Hunger Drain Simulation
+  const isSprinting = isMoving && !inputManager.isKeyPressed('Shift');
+  const hungerRate = survivalManager.getDifficultyConfig().hungerRate;
+  const baseHungerDrainPerSec = (1 / 40); // 1 hunger point every ~40s idle on normal
+  const moveMultiplier = isSprinting ? 2.0 : (isMoving ? 1.4 : 1.0);
+  const hungerDrain = baseHungerDrainPerSec * moveMultiplier * hungerRate * deltaTime;
+
+  player.hunger = Math.max(0, player.hunger - hungerDrain);
+
+  // Starvation Damage when hunger <= 0
+  if (player.hunger <= 0) {
+    starveTimer += deltaTime;
+    if (starveTimer >= 3.5) {
+      starveTimer = 0;
+      player.health = Math.max(0, player.health - 1);
+      AudioManager.getInstance().playSFX('hit');
+      hud.triggerDamageFlash();
+      toastSystem.show('⚠️ Kamu kelaparan! Darah berkurang (-1 HP)', 'warning');
+    }
+  } else {
+    starveTimer = 0;
+  }
+
+  // Natural HP Regeneration when well-fed (hunger >= 18)
+  if (player.hunger >= 18 && player.health < 20 && player.health > 0) {
+    regenTimer += deltaTime;
+    if (regenTimer >= 4.0) {
+      regenTimer = 0;
+      player.health = Math.min(20, player.health + 1);
+      player.hunger = Math.max(0, player.hunger - 0.4);
+    }
+  } else {
+    regenTimer = 0;
+  }
 
   if (player.health <= 0 || player.position.y < -20) {
     restartPlayer();
@@ -875,6 +914,7 @@ engine.setUpdateCallback((deltaTime) => {
   }
   lastPlayerHealth = player.health;
   hud.updateArmor(equipmentSlots.getTotalDefense());
+  hud.update(player.health, player.hunger);
 
   dayNight.update(deltaTime);
   AudioManager.getInstance().updateAmbience(dayNight.timeOfDay, deltaTime);
@@ -1329,33 +1369,31 @@ engine.setUpdateCallback((deltaTime) => {
     }
 
     if (activeItem.itemId && activeItem.count > 0) {
-      const isFoodItem = [
-        'cooked_beef',
-        'cooked_porkchop',
-        'cooked_chicken',
-        'cooked_mutton',
-        'bread',
-        'rotten_flesh',
-      ].includes(activeItem.itemId);
+      const FOOD_DATA: Record<string, { hunger: number; name: string }> = {
+        cooked_beef: { hunger: 8, name: 'Cooked Beef' },
+        cooked_porkchop: { hunger: 8, name: 'Cooked Porkchop' },
+        cooked_chicken: { hunger: 7, name: 'Cooked Chicken' },
+        cooked_mutton: { hunger: 7, name: 'Cooked Mutton' },
+        bread: { hunger: 5, name: 'Bread' },
+        raw_beef: { hunger: 3, name: 'Raw Beef' },
+        raw_porkchop: { hunger: 3, name: 'Raw Porkchop' },
+        raw_chicken: { hunger: 2, name: 'Raw Chicken' },
+        raw_mutton: { hunger: 2, name: 'Raw Mutton' },
+        rotten_flesh: { hunger: 2, name: 'Rotten Flesh' },
+      };
 
-      if (isFoodItem) {
-        // Eat food to restore HP!
-        if (player.health < 20) {
-          let healAmount = 3;
-          if (activeItem.itemId.startsWith('cooked_')) healAmount = 8;
-          else if (activeItem.itemId === 'bread') healAmount = 5;
-          else if (activeItem.itemId === 'rotten_flesh') healAmount = 2;
-          else healAmount = 3; // raw meats
-
-          player.health = Math.min(20, player.health + healAmount);
+      if (FOOD_DATA[activeItem.itemId]) {
+        const food = FOOD_DATA[activeItem.itemId];
+        if (player.hunger < 20) {
+          player.feed(food.hunger);
           hotbar.removeItem(activeItem.itemId, 1);
           handModel.triggerSwing();
           AudioManager.getInstance().playSFX('eat');
-          hud.update(player.health);
+          hud.update(player.health, player.hunger);
           statsTracker.recordFoodEaten(1);
-          toastSystem.show(`Memakan ${getItemById(activeItem.itemId)?.name} (+${healAmount} HP)`, 'success');
+          toastSystem.show(`Memakan ${food.name} (+${food.hunger} Lapar)`, 'success');
         } else {
-          toastSystem.show('Darah sudah penuh! (20/20 HP)', 'info');
+          toastSystem.show('Kenyang! Hunger sudah penuh (20/20)', 'info');
         }
       } else if (activeItem.itemId.includes('hoe') && targetHit) {
         // Till Grass (1) or Dirt (2) into Farmland (13)!
@@ -1536,7 +1574,7 @@ engine.setUpdateCallback((deltaTime) => {
   clock.update(deltaTime);
   hud.updatePlayerPos(player.position.x, player.position.y, player.position.z, camera.rotation.y, clock.getFPS());
   hud.setSubmergedState(playerController.isSubmerged, playerController.oxygen);
-  hud.update(player.health);
+  hud.update(player.health, player.hunger);
   hud.setTime(dayNight.timeOfDay, survivalManager.currentDay);
 });
 
@@ -1574,6 +1612,16 @@ if (import.meta.env.DEV) {
   win.load = () => saveManager.load();
 
   // Survival Mode Debug Helpers
+  win.setHunger = (hunger: number) => {
+    player.hunger = Math.max(0, Math.min(20, hunger));
+    hud.update(player.health, player.hunger);
+    console.log(`[Debug] Hunger pemain diatur ke: ${player.hunger}/20`);
+  };
+  win.setHealth = (hp: number) => {
+    player.health = Math.max(0, Math.min(20, hp));
+    hud.update(player.health, player.hunger);
+    console.log(`[Debug] HP pemain diatur ke: ${player.health}/20`);
+  };
   win.setDay = (day: number) => {
     survivalManager.setDay(day);
     console.log(`[Debug] Hari diubah menjadi: Hari ${day}`);
@@ -1597,5 +1645,5 @@ if (import.meta.env.DEV) {
     updateTouchControlsState();
   };
 
-  console.log('[Debug] Helper commands: clearSave(), setSeed(str), tp(x,y,z), save(), load(), setDay(n), advanceDay(), setDifficulty("santai"|"normal"|"susah"), setSpeed(n), killPlayer(), showEndGame("win"|"lose")');
+  console.log('[Debug] Helper commands: clearSave(), setSeed(str), tp(x,y,z), save(), load(), setHunger(n), setHealth(n), setDay(n), advanceDay(), setDifficulty("santai"|"normal"|"susah"), setSpeed(n), killPlayer(), showEndGame("win"|"lose")');
 }

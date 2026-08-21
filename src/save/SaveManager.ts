@@ -81,6 +81,7 @@ export class SaveManager {
         y: this.player.position.y,
         z: this.player.position.z,
         health: this.player.health,
+        hunger: this.player.hunger,
       };
       const inventorySlots = this.inventory.slots.map((s) => ({ ...s }));
       const hotbarSlots = this.hotbar.slots.map((s) => ({ ...s }));
@@ -134,7 +135,7 @@ export class SaveManager {
       saveVersion?: number;
       worldSeed: number;
       dimension?: string;
-      player: { x: number; y: number; z: number; health: number };
+      player: { x: number; y: number; z: number; health: number; hunger?: number };
       inventory: { itemId: string | null; count: number }[];
       hotbar: { itemId: string | null; count: number }[];
       hotbarIndex: number;
@@ -200,6 +201,7 @@ export class SaveManager {
     this.player.position.y = data.player.y;
     this.player.position.z = data.player.z;
     this.player.health = data.player.health;
+    this.player.hunger = data.player.hunger ?? 20;
 
     for (let i = 0; i < 27; i++) {
       this.inventory.slots[i] = data.inventory[i] ?? { itemId: null, count: 0 };

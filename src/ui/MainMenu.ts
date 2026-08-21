@@ -1,6 +1,8 @@
 import { SettingsMenu } from './SettingsMenu';
 import { AudioManager } from '../audio/AudioManager';
 import { toggleFullscreen } from '../utils/fullscreen';
+import { survivalManager, DIFFICULTY_CONFIGS, type Difficulty } from '../survival/SurvivalManager';
+import { statsTracker } from '../survival/StatsTracker';
 
 export class MainMenu {
   private container: HTMLDivElement | null = null;
@@ -11,6 +13,8 @@ export class MainMenu {
   private loadGameBtn: HTMLButtonElement | null = null;
   private settingsBtn: HTMLButtonElement | null = null;
   private btnBox: HTMLDivElement | null = null;
+  private difficultyBox: HTMLDivElement | null = null;
+  private introBox: HTMLDivElement | null = null;
   private installPromptCard: HTMLDivElement | null = null;
 
   constructor(settingsMenu: SettingsMenu, onStartGame: (isLoad: boolean) => void) {
@@ -123,10 +127,8 @@ export class MainMenu {
     };
 
     this.newGameBtn = makeMcBtn('Singleplayer (New World)', () => {
-      this.hide();
-      toggleFullscreen();
-      AudioManager.getInstance().startMusic();
-      this.onStartGame?.(false);
+      this.btnBox!.style.display = 'none';
+      this.difficultyBox!.style.display = 'flex';
     });
 
     this.loadGameBtn = makeMcBtn('Load Saved World', () => {
@@ -144,6 +146,130 @@ export class MainMenu {
     this.btnBox.appendChild(this.loadGameBtn);
     this.btnBox.appendChild(this.settingsBtn);
     this.container.appendChild(this.btnBox);
+
+    // Difficulty Selection Box
+    this.difficultyBox = document.createElement('div');
+    this.difficultyBox.id = 'difficulty-selection-box';
+    this.difficultyBox.className = 'wood-panel';
+    this.difficultyBox.style.cssText = `
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+      width: 460px;
+      max-width: 92vw;
+      background: var(--theme-panel-bg-translucent, rgba(35, 23, 16, 0.96));
+      border: 3px solid var(--theme-border-highlight, #704b31);
+      border-radius: 8px;
+      padding: 18px 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.85);
+      box-sizing: border-box;
+      backdrop-filter: blur(8px);
+    `;
+
+    const diffTitle = document.createElement('div');
+    diffTitle.style.cssText = 'font-size: 18px; font-weight: bold; color: var(--theme-accent-gold-text, #ffd56b); text-shadow: 2px 2px 0 #000; letter-spacing: 1px; text-align: center;';
+    diffTitle.textContent = '⚔️ PILIH TINGKAT KESULITAN';
+
+    const diffSubtitle = document.createElement('div');
+    diffSubtitle.style.cssText = 'font-size: 12px; color: var(--theme-text-muted, #c4b097); text-align: center; margin-bottom: 4px; line-height: 1.4;';
+    diffSubtitle.textContent = 'Misi: Bertahanlah hidup selama 15 hari di hutan sampai bala bantuan tiba.';
+
+    this.difficultyBox.appendChild(diffTitle);
+    this.difficultyBox.appendChild(diffSubtitle);
+
+    const makeDiffCard = (diff: Difficulty) => {
+      const config = DIFFICULTY_CONFIGS[diff];
+      const card = document.createElement('div');
+      card.className = 'mc-diff-card inv-slot-box';
+      card.style.cssText = `
+        width: 100%;
+        padding: 10px 14px;
+        box-sizing: border-box;
+        background: var(--theme-slot-bg, #1a110a);
+        border: 2px solid ${config.color};
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        transition: transform 0.1s, background 0.1s, box-shadow 0.1s;
+        touch-action: manipulation;
+      `;
+
+      const header = document.createElement('div');
+      header.style.cssText = `font-size: 15px; font-weight: bold; color: ${config.color}; display: flex; justify-content: space-between; align-items: center; text-shadow: 1px 1px 0 #000;`;
+      header.innerHTML = `<span>${config.badge}</span> <span style="font-size: 11px; opacity: 0.9; color: #fff; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px;">${diff === 'santai' ? 'Nyawa Bebas' : diff === 'normal' ? '3 Nyawa' : '1 Nyawa (Hardcore)'}</span>`;
+
+      const desc = document.createElement('div');
+      desc.style.cssText = 'font-size: 11px; color: var(--theme-text-light, #f7f1e3); line-height: 1.35;';
+      desc.textContent = config.description;
+
+      card.appendChild(header);
+      card.appendChild(desc);
+
+      const triggerSelect = (e?: Event) => {
+        if (e && e.cancelable) e.preventDefault();
+        AudioManager.getInstance().playSFX('place');
+        survivalManager.setDifficulty(diff);
+        this.difficultyBox!.style.display = 'none';
+        this.showIntroScreen(diff);
+      };
+
+      card.addEventListener('mouseenter', () => {
+        card.style.background = 'var(--theme-slot-hover, #3f291a)';
+        card.style.transform = 'scale(1.02)';
+        card.style.boxShadow = `0 4px 14px ${config.color}50`;
+        AudioManager.getInstance().playSFX('footstep');
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.background = 'var(--theme-slot-bg, #1a110a)';
+        card.style.transform = 'scale(1)';
+        card.style.boxShadow = 'none';
+      });
+      card.addEventListener('touchend', triggerSelect, { passive: false });
+      card.addEventListener('click', triggerSelect);
+
+      return card;
+    };
+
+    this.difficultyBox.appendChild(makeDiffCard('santai'));
+    this.difficultyBox.appendChild(makeDiffCard('normal'));
+    this.difficultyBox.appendChild(makeDiffCard('susah'));
+
+    const backBtn = makeMcBtn('◀ Kembali', () => {
+      this.difficultyBox!.style.display = 'none';
+      this.btnBox!.style.display = 'flex';
+    });
+    backBtn.style.marginTop = '4px';
+    backBtn.style.padding = '8px 14px';
+    backBtn.style.fontSize = '13px';
+    backBtn.style.width = '180px';
+    this.difficultyBox.appendChild(backBtn);
+
+    this.container.appendChild(this.difficultyBox);
+
+    // Intro Story Box
+    this.introBox = document.createElement('div');
+    this.introBox.id = 'intro-story-box';
+    this.introBox.className = 'wood-panel';
+    this.introBox.style.cssText = `
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+      width: 500px;
+      max-width: 94vw;
+      background: var(--theme-panel-bg-translucent, rgba(35, 23, 16, 0.96));
+      border: 3px solid var(--theme-border-gold, #c8963e);
+      border-radius: 10px;
+      padding: 20px 24px;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.9), 0 0 24px rgba(200, 150, 62, 0.25);
+      box-sizing: border-box;
+      backdrop-filter: blur(10px);
+      text-align: center;
+    `;
+    this.container.appendChild(this.introBox);
 
     this.updateMenuState();
 
@@ -236,10 +362,126 @@ export class MainMenu {
     }
   }
 
+  private showIntroScreen(diff: Difficulty): void {
+    if (!this.introBox) return;
+    const config = DIFFICULTY_CONFIGS[diff];
+    this.introBox.innerHTML = '';
+    this.introBox.style.display = 'flex';
+
+    const introHeader = document.createElement('div');
+    introHeader.style.cssText = 'font-size: 18px; font-weight: bold; color: #ffcc00; text-shadow: 2px 2px 0 #000; letter-spacing: 1px;';
+    introHeader.textContent = '📖 SURVIVAL: 15 HARI DI HUTAN';
+
+    const diffBadge = document.createElement('div');
+    diffBadge.style.cssText = `font-size: 12px; font-weight: bold; color: ${config.color}; background: rgba(0,0,0,0.5); border: 1px solid ${config.color}; padding: 3px 10px; border-radius: 4px; display: inline-block;`;
+    diffBadge.textContent = `Tingkat Kesulitan: ${config.badge}`;
+
+    const storyText = document.createElement('div');
+    storyText.className = 'parchment-box';
+    storyText.style.cssText = `
+      background: var(--theme-parchment-bg-dark, #261b12);
+      border-left: 4px solid var(--theme-accent-gold, #c8963e);
+      padding: 14px 16px;
+      border-radius: 4px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--theme-text-light, #f7f1e3);
+      text-align: justify;
+      font-style: italic;
+      margin: 4px 0;
+      box-sizing: border-box;
+      width: 100%;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+    `;
+    storyText.innerHTML = `
+      "Dalam perjalanan pulang, semuanya berubah begitu cepat. Saat kau tersadar, yang tersisa hanya hutan lebat dan keheningan.<br><br>
+      Tidak ada tanda arah, tidak ada seorang pun. Yang kau tahu, kau harus bertahan — mencari makanan, membuat alat, membangun benteng, dan menghadapi monster malam — 
+      <b>sampai bala bantuan tiba pada Hari ke-15.</b>"
+    `;
+
+    const missionBadge = document.createElement('div');
+    missionBadge.style.cssText = 'font-size: 13px; font-weight: bold; color: var(--theme-accent-gold-text, #ffd56b); text-shadow: 1px 1px 0 #000; background: rgba(200,150,62,0.15); border: 1px dashed var(--theme-accent-gold, #c8963e); padding: 8px 12px; border-radius: 4px; width: 100%; box-sizing: border-box;';
+    missionBadge.textContent = '🎯 TARGET: Bertahanlah hidup selama 15 Hari!';
+
+    const startBtn = document.createElement('button');
+    startBtn.className = 'mc-button mc-button-green';
+    startBtn.style.cssText = `
+      width: 100%;
+      padding: 13px 18px;
+      font-family: var(--theme-font, monospace);
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      text-shadow: 2px 2px 0 #000;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+      transition: background 0.1s, transform 0.08s;
+      touch-action: manipulation;
+    `;
+    startBtn.textContent = '⚔️ Mulai Bertahan Hidup (Hari 1)';
+
+    const triggerStart = (e?: Event) => {
+      if (e && e.cancelable) e.preventDefault();
+      AudioManager.getInstance().playSFX('place');
+      survivalManager.resetState();
+      statsTracker.reset();
+      this.hide();
+      toggleFullscreen();
+      AudioManager.getInstance().startMusic();
+      this.onStartGame?.(false);
+    };
+
+    startBtn.addEventListener('mouseenter', () => {
+      startBtn.style.background = '#4a822f';
+      AudioManager.getInstance().playSFX('footstep');
+    });
+    startBtn.addEventListener('mouseleave', () => {
+      startBtn.style.background = '#3e6b27';
+    });
+    startBtn.addEventListener('touchend', triggerStart, { passive: false });
+    startBtn.addEventListener('click', triggerStart);
+
+    const backBtn = document.createElement('button');
+    backBtn.className = 'mc-button';
+    backBtn.style.cssText = `
+      width: 180px;
+      padding: 8px 12px;
+      font-family: monospace;
+      font-size: 13px;
+      font-weight: bold;
+      color: #ddd;
+      background: #555;
+      border-top: 2px solid #888;
+      border-left: 2px solid #888;
+      border-bottom: 2px solid #222;
+      border-right: 2px solid #222;
+      cursor: pointer;
+      text-shadow: 1px 1px 0 #000;
+      border-radius: 4px;
+      touch-action: manipulation;
+    `;
+    backBtn.textContent = '◀ Ganti Kesulitan';
+    backBtn.addEventListener('click', () => {
+      this.introBox!.style.display = 'none';
+      this.difficultyBox!.style.display = 'flex';
+      AudioManager.getInstance().playSFX('click');
+    });
+
+    this.introBox.appendChild(introHeader);
+    this.introBox.appendChild(diffBadge);
+    this.introBox.appendChild(storyText);
+    this.introBox.appendChild(missionBadge);
+    this.introBox.appendChild(startBtn);
+    this.introBox.appendChild(backBtn);
+  }
+
   show(): void {
     this.visible = true;
     if (this.container) {
       this.container.style.display = 'flex';
+      if (this.introBox) this.introBox.style.display = 'none';
+      if (this.difficultyBox) this.difficultyBox.style.display = 'none';
+      if (this.btnBox) this.btnBox.style.display = 'flex';
       this.updateMenuState();
     }
   }

@@ -20,20 +20,21 @@ export class PauseMenu {
     this.container = document.createElement('div');
     this.container.style.cssText = `
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.65); z-index: 250;
+      background: var(--theme-panel-overlay, rgba(10, 7, 5, 0.75)); z-index: 250;
       justify-content: center; align-items: center; flex-direction: column;
-      font-family: monospace; color: #fff; user-select: none;
+      font-family: var(--theme-font, monospace); color: var(--theme-text-light, #f7f1e3); user-select: none;
+      backdrop-filter: blur(8px);
     `;
 
     this.container.id = 'pause-menu';
 
     const title = document.createElement('h2');
     title.textContent = 'Game Menu';
-    title.style.cssText = 'margin: 0 0 16px 0; font-size: 26px; color: #ffcc00; font-weight: bold; text-shadow: 2px 2px 0 #000; text-transform: uppercase; letter-spacing: 2px;';
+    title.style.cssText = 'margin: 0 0 16px 0; font-size: 26px; color: var(--theme-accent-gold-text, #ffd56b); font-weight: bold; text-shadow: 2px 2px 0 #000; text-transform: uppercase; letter-spacing: 2px;';
     this.container.appendChild(title);
 
     this.statusText = document.createElement('div');
-    this.statusText.style.cssText = 'height: 20px; font-size: 14px; color: #4caf50; font-weight: bold; margin-bottom: 12px; text-shadow: 1px 1px 0 #000;';
+    this.statusText.style.cssText = 'height: 20px; font-size: 14px; color: var(--theme-accent-green-text, #8ee063); font-weight: bold; margin-bottom: 12px; text-shadow: 1px 1px 0 #000;';
     this.container.appendChild(this.statusText);
 
     const btnBox = document.createElement('div');
@@ -41,12 +42,13 @@ export class PauseMenu {
 
     const makeMcBtn = (label: string, onClick: () => void) => {
       const btn = document.createElement('button');
+      btn.className = 'mc-button';
       btn.style.cssText = `
-        width: 100%; padding: 12px 16px; font-family: monospace; font-size: 15px; font-weight: bold;
-        color: #e0e0e0; background: #707070;
-        border-top: 3px solid #9e9e9e; border-left: 3px solid #9e9e9e;
-        border-bottom: 3px solid #3a3a3a; border-right: 3px solid #3a3a3a;
-        cursor: pointer; text-shadow: 2px 2px 0 #000; text-align: center; border-radius: 2px;
+        width: 100%; padding: 12px 16px; font-family: var(--theme-font, monospace); font-size: 15px; font-weight: bold;
+        color: var(--theme-btn-text, #f5eedc); background: var(--theme-btn-bg, #4a3222);
+        border-top: 3px solid var(--theme-btn-border-light, #7a543a); border-left: 3px solid var(--theme-btn-border-light, #7a543a);
+        border-bottom: 3px solid var(--theme-btn-border-dark, #21160e); border-right: 3px solid var(--theme-btn-border-dark, #21160e);
+        cursor: pointer; text-shadow: 2px 2px 0 #000; text-align: center; border-radius: 4px;
         transition: background 0.1s, border-color 0.1s, color 0.1s;
         touch-action: manipulation;
       `;
@@ -63,21 +65,13 @@ export class PauseMenu {
       };
 
       btn.addEventListener('mouseenter', () => {
-        btn.style.background = '#808080';
+        btn.style.background = 'var(--theme-btn-hover, #63432e)';
         btn.style.color = '#ffffa0';
-        btn.style.borderTopColor = '#ffffa0';
-        btn.style.borderLeftColor = '#ffffa0';
-        btn.style.borderBottomColor = '#555500';
-        btn.style.borderRightColor = '#555500';
         AudioManager.getInstance().playSFX('footstep');
       });
       btn.addEventListener('mouseleave', () => {
-        btn.style.background = '#707070';
-        btn.style.color = '#e0e0e0';
-        btn.style.borderTopColor = '#9e9e9e';
-        btn.style.borderLeftColor = '#9e9e9e';
-        btn.style.borderBottomColor = '#3a3a3a';
-        btn.style.borderRightColor = '#3a3a3a';
+        btn.style.background = 'var(--theme-btn-bg, #4a3222)';
+        btn.style.color = 'var(--theme-btn-text, #f5eedc)';
       });
       btn.addEventListener('touchend', (e) => trigger(e), { passive: false });
       btn.addEventListener('click', (e) => trigger(e));

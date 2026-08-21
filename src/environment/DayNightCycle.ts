@@ -1,14 +1,30 @@
+import { survivalManager } from '../survival/SurvivalManager';
+
 export class DayNightCycle {
-  timeOfDay = 0.5;
-  readonly cycleDuration = 600;
+  timeOfDay = 0.25; // Mulai di pagi hari (06:00) pada Hari 1
+  readonly cycleDuration = 600; // 10 menit (600 detik) per siklus 1 hari penuh
+  public timeMultiplier = 1.0; // Pengali kecepatan waktu untuk debug/testing
+
+  get currentDay(): number {
+    return survivalManager.currentDay;
+  }
+
+  set currentDay(value: number) {
+    survivalManager.setDay(value);
+  }
 
   get isNight(): boolean {
     return this.timeOfDay < 0.25 || this.timeOfDay > 0.75;
   }
 
   update(deltaTime: number): void {
-    this.timeOfDay += deltaTime / this.cycleDuration;
-    if (this.timeOfDay > 1) this.timeOfDay -= 1;
+    const timeDelta = (deltaTime * this.timeMultiplier) / this.cycleDuration;
+    this.timeOfDay += timeDelta;
+
+    if (this.timeOfDay >= 1.0) {
+      this.timeOfDay -= 1.0;
+      survivalManager.advanceDay();
+    }
   }
 
   get lightIntensity(): number {
@@ -25,3 +41,4 @@ export class DayNightCycle {
     return { top: '#4da6ff', bottom: '#87ceeb' };
   }
 }
+

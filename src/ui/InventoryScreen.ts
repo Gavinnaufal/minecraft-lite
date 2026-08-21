@@ -5,6 +5,7 @@ import { getItemById } from '../inventory/ItemRegistry';
 import { checkRecipe } from '../crafting/CraftingSystem';
 import { createItemIcon } from './IconGenerator';
 import { AudioManager } from '../audio/AudioManager';
+import { statsTracker } from '../survival/StatsTracker';
 
 export interface CraftGridSlot {
   itemId: string;
@@ -101,21 +102,23 @@ export class InventoryScreen {
     styleEl.textContent = `
       #inventory-panel {
         position: relative;
-        background: #c6c6c6;
-        border-top: 4px solid #ffffff;
-        border-left: 4px solid #ffffff;
-        border-bottom: 4px solid #555555;
-        border-right: 4px solid #555555;
+        background: var(--theme-panel-bg-translucent, rgba(35, 23, 16, 0.96));
+        border-top: 4px solid var(--theme-border-highlight, #704b31);
+        border-left: 4px solid var(--theme-border-highlight, #704b31);
+        border-bottom: 4px solid var(--theme-border-outer, #150d08);
+        border-right: 4px solid var(--theme-border-outer, #150d08);
         padding: 16px 20px;
         display: flex;
         flex-direction: column;
         gap: 12px;
-        border-radius: 4px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        border-radius: 8px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.85);
         box-sizing: border-box;
         max-width: 96vw;
         max-height: 94vh;
         user-select: none;
+        backdrop-filter: blur(10px);
+        color: var(--theme-text-light, #f7f1e3);
       }
 
       .inv-body-columns {
@@ -135,15 +138,15 @@ export class InventoryScreen {
         flex: 1;
         max-width: 160px;
         padding: 8px 10px;
-        font-family: monospace;
+        font-family: var(--theme-font, monospace);
         font-size: 13px;
         font-weight: bold;
-        color: #fff;
-        background: #555555;
-        border-top: 2px solid #888;
-        border-left: 2px solid #888;
-        border-bottom: 2px solid #222;
-        border-right: 2px solid #222;
+        color: var(--theme-btn-text, #f5eedc);
+        background: var(--theme-btn-bg, #4a3222);
+        border-top: 2px solid var(--theme-btn-border-light, #7a543a);
+        border-left: 2px solid var(--theme-btn-border-light, #7a543a);
+        border-bottom: 2px solid var(--theme-btn-border-dark, #21160e);
+        border-right: 2px solid var(--theme-btn-border-dark, #21160e);
         border-radius: 4px;
         cursor: pointer;
         touch-action: manipulation;
@@ -152,16 +155,32 @@ export class InventoryScreen {
       }
 
       .inv-tab-btn.active {
-        background: #2e7d32 !important;
-        border-top: 2px solid #81c784 !important;
-        border-left: 2px solid #81c784 !important;
-        border-bottom: 2px solid #1b5e20 !important;
-        border-right: 2px solid #1b5e20 !important;
-        box-shadow: 0 0 8px rgba(76, 175, 80, 0.7);
+        background: var(--theme-accent-green, #3d6a2e) !important;
+        border-top: 2px solid var(--theme-accent-green-border, #6fa854) !important;
+        border-left: 2px solid var(--theme-accent-green-border, #6fa854) !important;
+        border-bottom: 2px solid #1c3314 !important;
+        border-right: 2px solid #1c3314 !important;
+        box-shadow: 0 0 10px rgba(111, 168, 84, 0.7);
+        color: #ffffa0;
+      }
+
+      /* Section Column Container */
+      .inv-section-col {
+        background: var(--theme-panel-bg-subtle, #38261a);
+        border: 2px solid var(--theme-border-muted, #543926);
+        border-radius: 6px;
+        padding: 12px;
+        box-sizing: border-box;
       }
 
       /* Slot Styles */
       .inv-slot-box {
+        background: var(--theme-slot-bg, #1a110a);
+        border-top: 2px solid var(--theme-slot-border-dark, #0f0a06);
+        border-left: 2px solid var(--theme-slot-border-dark, #0f0a06);
+        border-bottom: 2px solid var(--theme-slot-border-light, #4d3320);
+        border-right: 2px solid var(--theme-slot-border-light, #4d3320);
+        border-radius: 3px;
         transition: opacity 0.15s ease, filter 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
         box-sizing: border-box;
       }
@@ -178,15 +197,15 @@ export class InventoryScreen {
         filter: brightness(1.1);
       }
 
-      /* Glowing Yellow Border for Selected Slot */
+      /* Glowing Amber Border for Selected Slot */
       .inv-slot-selected {
         opacity: 1 !important;
         filter: none !important;
-        border-top: 3px solid #ffeb3b !important;
-        border-left: 3px solid #ffeb3b !important;
-        border-bottom: 3px solid #ffeb3b !important;
-        border-right: 3px solid #ffeb3b !important;
-        box-shadow: 0 0 16px #ffeb3b, inset 0 0 10px #ffeb3b !important;
+        border-top: 3px solid var(--theme-accent-gold-border, #ffcc55) !important;
+        border-left: 3px solid var(--theme-accent-gold-border, #ffcc55) !important;
+        border-bottom: 3px solid var(--theme-accent-gold-border, #ffcc55) !important;
+        border-right: 3px solid var(--theme-accent-gold-border, #ffcc55) !important;
+        box-shadow: 0 0 16px var(--theme-accent-gold-border, #ffcc55), inset 0 0 8px var(--theme-accent-gold-border, #ffcc55) !important;
         transform: scale(1.08) !important;
         z-index: 20 !important;
       }
@@ -353,9 +372,9 @@ export class InventoryScreen {
     this.statusBanner.id = 'inv-status-banner';
     this.statusBanner.style.cssText = `
       width: 100%; box-sizing: border-box; padding: 6px 12px; border-radius: 4px;
-      font-family: monospace; font-size: 12px; text-align: center;
-      background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.15);
-      color: #e0e0e0; display: flex; align-items: center; justify-content: center; gap: 8px;
+      font-family: var(--theme-font, monospace); font-size: 12px; text-align: center;
+      background: var(--theme-parchment-bg-dark, #261b12); border: 1px solid var(--theme-border-muted, #543926);
+      color: var(--theme-text-light, #f7f1e3); display: flex; align-items: center; justify-content: center; gap: 8px;
     `;
     this.statusBanner.innerHTML = '<span>💡 Ketuk sebuah item untuk memilih & memindahkannya</span>';
     this.panel.appendChild(this.statusBanner);
@@ -367,10 +386,10 @@ export class InventoryScreen {
     // 1. Equipment / Armor Column (Far Left)
     this.armorColumnEl = document.createElement('div');
     this.armorColumnEl.className = 'inv-section-col';
-    this.armorColumnEl.style.cssText = 'display: flex; flex-direction: column; gap: 8px; background: #8b8b8b; padding: 14px; border: 3px solid #373737; border-radius: 4px; box-sizing: border-box; align-items: center;';
+    this.armorColumnEl.style.cssText = 'display: flex; flex-direction: column; gap: 8px; padding: 14px; box-sizing: border-box; align-items: center;';
 
     const armorTitle = document.createElement('div');
-    armorTitle.style.cssText = 'font-family: monospace; font-size: 14px; color: #222; font-weight: bold; text-shadow: 1px 1px 0 #fff; margin-bottom: 4px; text-align: center;';
+    armorTitle.style.cssText = 'font-family: var(--theme-font, monospace); font-size: 14px; color: var(--theme-accent-gold-text, #ffd56b); font-weight: bold; text-shadow: 1px 1px 0 #000; margin-bottom: 4px; text-align: center;';
     armorTitle.textContent = '🛡️ Armor & Equipment';
     this.armorColumnEl.appendChild(armorTitle);
 
@@ -381,12 +400,10 @@ export class InventoryScreen {
       slotEl.dataset.slotType = 'armor';
       slotEl.dataset.armorSlot = slotType;
       slotEl.style.cssText = `
-        width: 56px; height: 56px; background: #8b8b8b;
-        border-top: 3px solid #373737; border-left: 3px solid #373737;
-        border-bottom: 3px solid #ffffff; border-right: 3px solid #ffffff;
+        width: 56px; height: 56px;
         display: flex; align-items: center; justify-content: center;
-        font-family: monospace; font-size: 12px; color: #fff; cursor: pointer;
-        position: relative; border-radius: 2px; touch-action: manipulation;
+        font-family: var(--theme-font, monospace); font-size: 12px; color: #fff; cursor: pointer;
+        position: relative; border-radius: 3px; touch-action: manipulation;
       `;
       slotEl.addEventListener('mousedown', (e) => this.onArmorSlotClick(e, slotType));
       this.attachTouchListeners(slotEl, { type: 'armor', index: 0, armorSlot: slotType });
@@ -399,10 +416,10 @@ export class InventoryScreen {
     // 2. Crafting Area (Middle Column)
     this.craftColumnEl = document.createElement('div');
     this.craftColumnEl.className = 'inv-section-col';
-    this.craftColumnEl.style.cssText = 'display: flex; flex-direction: column; gap: 8px; align-items: center; background: #8b8b8b; padding: 14px; border: 3px solid #373737; border-radius: 4px; box-sizing: border-box;';
+    this.craftColumnEl.style.cssText = 'display: flex; flex-direction: column; gap: 8px; align-items: center; padding: 14px; box-sizing: border-box;';
 
     const craftTitle = document.createElement('div');
-    craftTitle.style.cssText = 'font-family: monospace; font-size: 14px; color: #222; font-weight: bold; text-shadow: 1px 1px 0 #fff; margin-bottom: 4px; text-align: center;';
+    craftTitle.style.cssText = 'font-family: var(--theme-font, monospace); font-size: 14px; color: var(--theme-accent-gold-text, #ffd56b); font-weight: bold; text-shadow: 1px 1px 0 #000; margin-bottom: 4px; text-align: center;';
     craftTitle.textContent = '🔨 Crafting Table (3x3)';
     this.craftColumnEl.appendChild(craftTitle);
 
@@ -417,12 +434,10 @@ export class InventoryScreen {
       el.className = 'inv-slot-box';
       el.dataset.slotType = 'craft';
       el.style.cssText = `
-        width: 56px; height: 56px; background: #8b8b8b;
-        border-top: 3px solid #373737; border-left: 3px solid #373737;
-        border-bottom: 3px solid #ffffff; border-right: 3px solid #ffffff;
+        width: 56px; height: 56px;
         display: flex; align-items: center; justify-content: center;
-        font-family: monospace; font-size: 12px; color: #fff; cursor: pointer;
-        position: relative; border-radius: 2px; touch-action: manipulation;
+        font-family: var(--theme-font, monospace); font-size: 12px; color: #fff; cursor: pointer;
+        position: relative; border-radius: 3px; touch-action: manipulation;
       `;
       const r = Math.floor(i / 3), c = i % 3;
       el.addEventListener('mousedown', (e) => this.onCraftSlotClick(e, r, c));
@@ -436,19 +451,17 @@ export class InventoryScreen {
 
     const arrow = document.createElement('div');
     arrow.textContent = '➔';
-    arrow.style.cssText = 'color: #373737; font-size: 32px; font-weight: bold; margin: 0 6px; text-shadow: 1px 1px 0 #fff;';
+    arrow.style.cssText = 'color: var(--theme-accent-gold, #c8963e); font-size: 32px; font-weight: bold; margin: 0 6px; text-shadow: 2px 2px 0 #000;';
     craftContent.appendChild(arrow);
 
     this.craftOutput = document.createElement('div');
     this.craftOutput.className = 'inv-slot-box';
     this.craftOutput.dataset.slotType = 'output';
     this.craftOutput.style.cssText = `
-      width: 64px; height: 64px; background: #8b8b8b;
-      border-top: 3px solid #373737; border-left: 3px solid #373737;
-      border-bottom: 3px solid #ffffff; border-right: 3px solid #ffffff;
+      width: 64px; height: 64px;
       display: flex; align-items: center; justify-content: center;
-      font-family: monospace; font-size: 12px; color: #fff; cursor: pointer; position: relative;
-      border-radius: 4px; box-shadow: 0 0 10px rgba(255,204,0,0.6); touch-action: manipulation;
+      font-family: var(--theme-font, monospace); font-size: 12px; color: #fff; cursor: pointer; position: relative;
+      border-radius: 4px; box-shadow: 0 0 14px var(--theme-accent-gold-border, #ffcc55); touch-action: manipulation;
     `;
     this.craftOutput.addEventListener('mousedown', (e) => {
       e.preventDefault();
@@ -474,7 +487,7 @@ export class InventoryScreen {
     this.invColumnEl.style.cssText = 'display: flex; flex-direction: column; gap: 10px;';
 
     const invTitle = document.createElement('div');
-    invTitle.style.cssText = 'font-family: monospace; font-size: 14px; color: #222; font-weight: bold; text-shadow: 1px 1px 0 #fff;';
+    invTitle.style.cssText = 'font-family: var(--theme-font, monospace); font-size: 14px; color: var(--theme-accent-gold-text, #ffd56b); font-weight: bold; text-shadow: 1px 1px 0 #000;';
     invTitle.textContent = '🎒 Tas Karakter (27 Slot)';
     this.invColumnEl.appendChild(invTitle);
 
@@ -487,7 +500,7 @@ export class InventoryScreen {
     this.invColumnEl.appendChild(invGrid);
 
     const hotbarTitle = document.createElement('div');
-    hotbarTitle.style.cssText = 'font-family: monospace; font-size: 14px; color: #222; font-weight: bold; margin-top: 4px; text-shadow: 1px 1px 0 #fff;';
+    hotbarTitle.style.cssText = 'font-family: var(--theme-font, monospace); font-size: 14px; color: var(--theme-accent-gold-text, #ffd56b); font-weight: bold; margin-top: 4px; text-shadow: 1px 1px 0 #000;';
     hotbarTitle.textContent = '⚡ Hotbar Aktif (9 Slot)';
     this.invColumnEl.appendChild(hotbarTitle);
 
@@ -507,7 +520,7 @@ export class InventoryScreen {
     this.dragEl.style.cssText = `
       position: fixed; pointer-events: none; z-index: 300; display: none;
       width: 56px; height: 56px; background: rgba(255,255,255,0.3);
-      border: 2px solid #fff; font-family: monospace; font-size: 12px; color: #fff;
+      border: 2px solid var(--theme-accent-gold, #c8963e); font-family: var(--theme-font, monospace); font-size: 12px; color: #fff;
       align-items: center; justify-content: center; border-radius: 4px;
     `;
     document.body.appendChild(this.dragEl);
@@ -516,9 +529,10 @@ export class InventoryScreen {
     this.tooltipEl = document.createElement('div');
     this.tooltipEl.style.cssText = `
       position: fixed; pointer-events: none; z-index: 400; display: none;
-      background: rgba(16, 0, 32, 0.95); border: 2px solid #5000ff; border-radius: 4px;
-      padding: 8px 12px; font-family: monospace; font-size: 14px; color: #fff;
-      box-shadow: 3px 3px 10px rgba(0,0,0,0.8); white-space: nowrap;
+      background: var(--theme-panel-bg-dark, rgba(18, 12, 8, 0.96));
+      border: 2px solid var(--theme-border-gold, #c8963e); border-radius: 4px;
+      padding: 8px 12px; font-family: var(--theme-font, monospace); font-size: 13px; color: var(--theme-text-light, #f7f1e3);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.85); white-space: nowrap; text-shadow: 1px 1px 0 #000;
     `;
     document.body.appendChild(this.tooltipEl);
 
@@ -815,43 +829,46 @@ export class InventoryScreen {
   private createSplitModal(): void {
     this.splitModal = document.createElement('div');
     this.splitModal.id = 'stack-split-modal';
+    this.splitModal.className = 'wood-panel';
     this.splitModal.style.cssText = `
       display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      z-index: 500; background: #22222e; border: 3px solid #ffcc00; border-radius: 8px;
-      padding: 16px; color: #fff; width: 290px; max-width: 90vw; box-shadow: 0 12px 36px rgba(0,0,0,0.9);
-      flex-direction: column; gap: 10px; font-family: monospace; user-select: none;
+      z-index: 500; background: var(--theme-panel-bg-translucent, rgba(35, 23, 16, 0.96));
+      border: 3px solid var(--theme-border-gold, #c8963e); border-radius: 8px;
+      padding: 16px; color: var(--theme-text-light, #f7f1e3); width: 290px; max-width: 90vw; box-shadow: 0 12px 36px rgba(0,0,0,0.9);
+      flex-direction: column; gap: 10px; font-family: var(--theme-font, monospace); user-select: none;
+      backdrop-filter: blur(10px);
     `;
 
     this.splitModal.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #444; padding-bottom: 8px;">
+      <div style="display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--theme-border-muted, #543926); padding-bottom: 8px;">
         <div id="split-item-icon" style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;"></div>
         <div>
-          <div id="split-item-name" style="font-weight: bold; font-size: 13px; color: #ffcc00;"></div>
-          <div id="split-item-total" style="font-size: 11px; color: #aaa;"></div>
+          <div id="split-item-name" style="font-weight: bold; font-size: 13px; color: var(--theme-accent-gold-text, #ffd56b);"></div>
+          <div id="split-item-total" style="font-size: 11px; color: var(--theme-text-muted, #c4b097);"></div>
         </div>
       </div>
       
       <div style="text-align: center; margin: 4px 0;">
-        <div style="font-size: 11px; color: #aaa; margin-bottom: 2px;">Jumlah yang Dipindah:</div>
-        <div id="split-count-display" style="font-size: 22px; font-weight: bold; color: #00ffcc; text-shadow: 0 0 8px rgba(0,255,204,0.5);">1</div>
+        <div style="font-size: 11px; color: var(--theme-text-muted, #c4b097); margin-bottom: 2px;">Jumlah yang Dipindah:</div>
+        <div id="split-count-display" style="font-size: 22px; font-weight: bold; color: var(--theme-accent-gold-text, #ffd56b); text-shadow: 0 0 8px rgba(255,213,107,0.5);">1</div>
       </div>
 
-      <input type="range" id="split-slider" min="1" max="64" value="1" style="width: 100%; cursor: pointer; accent-color: #00ffcc;">
+      <input type="range" id="split-slider" min="1" max="64" value="1" style="width: 100%; cursor: pointer; accent-color: var(--theme-accent-gold, #c8963e);">
 
       <div style="display: flex; gap: 6px; justify-content: center;">
-        <button id="split-btn-1" style="flex: 1; padding: 6px 2px; font-size: 11px; font-weight: bold; background: #37474f; color: #fff; border: 1px solid #78909c; border-radius: 3px; cursor: pointer; touch-action: manipulation;">1 Saja</button>
-        <button id="split-btn-half" style="flex: 1; padding: 6px 2px; font-size: 11px; font-weight: bold; background: #37474f; color: #fff; border: 1px solid #78909c; border-radius: 3px; cursor: pointer; touch-action: manipulation;">Setengah</button>
-        <button id="split-btn-all" style="flex: 1; padding: 6px 2px; font-size: 11px; font-weight: bold; background: #37474f; color: #fff; border: 1px solid #78909c; border-radius: 3px; cursor: pointer; touch-action: manipulation;">Semua</button>
+        <button id="split-btn-1" class="mc-button" style="flex: 1; padding: 6px 2px; font-size: 11px;">1 Saja</button>
+        <button id="split-btn-half" class="mc-button" style="flex: 1; padding: 6px 2px; font-size: 11px;">Setengah</button>
+        <button id="split-btn-all" class="mc-button" style="flex: 1; padding: 6px 2px; font-size: 11px;">Semua</button>
       </div>
 
       <div style="display: flex; gap: 8px; justify-content: center;">
-        <button id="split-btn-dec" style="flex: 1; padding: 6px; font-size: 14px; font-weight: bold; background: #424242; color: #fff; border: 1px solid #616161; border-radius: 3px; cursor: pointer; touch-action: manipulation;">- 1</button>
-        <button id="split-btn-inc" style="flex: 1; padding: 6px; font-size: 14px; font-weight: bold; background: #424242; color: #fff; border: 1px solid #616161; border-radius: 3px; cursor: pointer; touch-action: manipulation;">+ 1</button>
+        <button id="split-btn-dec" class="mc-button" style="flex: 1; padding: 6px; font-size: 14px;">- 1</button>
+        <button id="split-btn-inc" class="mc-button" style="flex: 1; padding: 6px; font-size: 14px;">+ 1</button>
       </div>
 
       <div style="display: flex; gap: 8px; margin-top: 6px;">
-        <button id="split-btn-confirm" style="flex: 1; background: #2e7d32; padding: 9px; font-size: 13px; font-weight: bold; border: 2px solid #81c784; border-radius: 4px; color: #fff; cursor: pointer; touch-action: manipulation;">✓ Pilih</button>
-        <button id="split-btn-cancel" style="flex: 1; background: #c62828; padding: 9px; font-size: 13px; font-weight: bold; border: 2px solid #ef5350; border-radius: 4px; color: #fff; cursor: pointer; touch-action: manipulation;">✕ Batal</button>
+        <button id="split-btn-confirm" class="mc-button mc-button-green" style="flex: 1; padding: 9px; font-size: 13px;">✓ Pilih</button>
+        <button id="split-btn-cancel" class="mc-button mc-button-red" style="flex: 1; padding: 9px; font-size: 13px;">✕ Batal</button>
       </div>
     `;
 
@@ -1189,6 +1206,7 @@ export class InventoryScreen {
           }
         }
         this.consumeCraftGrid(maxPossibleBatches);
+        statsTracker.recordItemCrafted(totalYield);
       }
     } else {
       if (this.dragItem) {
@@ -1196,6 +1214,7 @@ export class InventoryScreen {
           if (this.dragItem.count + recipe.result.count <= maxStack) {
             this.dragItem.count += recipe.result.count;
             this.consumeCraftGrid(1);
+            statsTracker.recordItemCrafted(recipe.result.count);
           }
         }
       } else {
@@ -1203,6 +1222,7 @@ export class InventoryScreen {
         if (rem > 0) rem = this.hotbar.addItem(recipe.result.itemId, rem);
         if (rem > 0) this.dragItem = { itemId: recipe.result.itemId, count: rem };
         this.consumeCraftGrid(1);
+        statsTracker.recordItemCrafted(recipe.result.count);
       }
     }
     this.refresh();

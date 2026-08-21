@@ -1,3 +1,74 @@
+/* ==========================================================================
+   FOREST SURVIVAL THEME (UI / HUD / MENUS DESIGN SYSTEM)
+   Palet: Coklat Kayu Tua, Krem Kertas Usang, Hijau Daun Hutan, Merah Bara
+   ========================================================================== */
+
+:root {
+  /* --- Panel & Containers --- */
+  --theme-panel-bg: #2b1d14;
+  --theme-panel-bg-subtle: #38261a;
+  --theme-panel-bg-translucent: rgba(35, 23, 16, 0.94);
+  --theme-panel-bg-dark: rgba(18, 12, 8, 0.97);
+  --theme-panel-overlay: rgba(10, 7, 5, 0.75);
+
+  /* --- Wood Frames & Borders --- */
+  --theme-border-outer: #150d08;
+  --theme-border-inner: #452d1d;
+  --theme-border-highlight: #704b31;
+  --theme-border-gold: #c8963e;
+  --theme-border-muted: #543926;
+
+  /* --- Parchment / Aged Paper --- */
+  --theme-parchment-bg: #ebd9b4;
+  --theme-parchment-bg-dark: #261b12;
+  --theme-parchment-text: #2c1a0c;
+  --theme-parchment-border: #b89b6c;
+
+  /* --- Recessed Item / Crafting Slots --- */
+  --theme-slot-bg: #1a110a;
+  --theme-slot-border-dark: #0f0a06;
+  --theme-slot-border-light: #4d3320;
+  --theme-slot-hover: #3f291a;
+  --theme-slot-active: #c8963e;
+
+  /* --- Buttons --- */
+  --theme-btn-bg: #4a3222;
+  --theme-btn-hover: #63432e;
+  --theme-btn-border-light: #7a543a;
+  --theme-btn-border-dark: #21160e;
+  --theme-btn-text: #f5eedc;
+
+  /* --- Nature Accents --- */
+  /* Green: Positive / Action / Heal / Start */
+  --theme-accent-green: #3d6a2e;
+  --theme-accent-green-hover: #4e823b;
+  --theme-accent-green-border: #6fa854;
+  --theme-accent-green-text: #8ee063;
+
+  /* Red: Danger / Bleed / Warning / Defeat */
+  --theme-accent-red: #7c2d1b;
+  --theme-accent-red-hover: #9c3c26;
+  --theme-accent-red-border: #bf553b;
+  --theme-accent-red-text: #ff785a;
+
+  /* Gold / Amber: Day / Crown / Notice / Craft */
+  --theme-accent-gold: #c8963e;
+  --theme-accent-gold-hover: #deb054;
+  --theme-accent-gold-border: #ffcc55;
+  --theme-accent-gold-text: #ffd56b;
+
+  /* River Teal: Info / Oxygen / Portal */
+  --theme-accent-info: #2b6360;
+  --theme-accent-info-border: #4aa8a3;
+  --theme-accent-info-text: #6ce0d8;
+
+  /* --- Typography --- */
+  --theme-text-light: #f7f1e3;
+  --theme-text-muted: #c4b097;
+  --theme-text-shadow: 2px 2px 0 #0f0a06;
+  --theme-font: 'Courier New', monospace;
+}
+
 *,
 *::before,
 *::after {
@@ -21,7 +92,9 @@ body {
   -webkit-user-select: none;
   user-select: none;
   touch-action: none;
-  background: #000;
+  background: #0d0906;
+  font-family: var(--theme-font);
+  color: var(--theme-text-light);
 }
 
 #game {
@@ -32,3 +105,108 @@ body {
   touch-action: none;
 }
 
+/* ==========================================================================
+   REUSABLE WOOD UI UTILITY CLASSES
+   ========================================================================== */
+
+/* Standard Rustic Wood Panel */
+.wood-panel {
+  background: var(--theme-panel-bg-translucent);
+  border-top: 3px solid var(--theme-border-highlight);
+  border-left: 3px solid var(--theme-border-highlight);
+  border-bottom: 3px solid var(--theme-border-outer);
+  border-right: 3px solid var(--theme-border-outer);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85);
+  border-radius: 6px;
+  color: var(--theme-text-light);
+}
+
+/* Aged Parchment Box (High contrast reading) */
+.parchment-box {
+  background: var(--theme-parchment-bg-dark);
+  border-left: 4px solid var(--theme-accent-gold);
+  border-radius: 4px;
+  color: var(--theme-text-light);
+  line-height: 1.55;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Classic Wood/Stone Beveled Button */
+.mc-button,
+.mc-btn {
+  font-family: var(--theme-font);
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--theme-btn-text);
+  background: var(--theme-btn-bg);
+  border-top: 3px solid var(--theme-btn-border-light);
+  border-left: 3px solid var(--theme-btn-border-light);
+  border-bottom: 3px solid var(--theme-btn-border-dark);
+  border-right: 3px solid var(--theme-btn-border-dark);
+  border-radius: 4px;
+  cursor: pointer;
+  text-shadow: var(--theme-text-shadow);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+  transition: background 0.12s, transform 0.08s, box-shadow 0.12s;
+  touch-action: manipulation;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.mc-button:hover,
+.mc-btn:hover {
+  background: var(--theme-btn-hover);
+  color: #fff8e7;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.7);
+}
+
+.mc-button:active,
+.mc-btn:active {
+  transform: translateY(1px);
+  border-top: 3px solid var(--theme-btn-border-dark);
+  border-left: 3px solid var(--theme-btn-border-dark);
+  border-bottom: 3px solid var(--theme-btn-border-light);
+  border-right: 3px solid var(--theme-btn-border-light);
+  background: var(--theme-slot-bg);
+}
+
+/* Green Action Button */
+.mc-button-green {
+  background: var(--theme-accent-green);
+  border-top: 3px solid var(--theme-accent-green-border);
+  border-left: 3px solid var(--theme-accent-green-border);
+  border-bottom: 3px solid #1c3314;
+  border-right: 3px solid #1c3314;
+  color: #ffffa0;
+}
+.mc-button-green:hover {
+  background: var(--theme-accent-green-hover);
+  color: #ffffff;
+}
+
+/* Red Danger Button */
+.mc-button-red {
+  background: var(--theme-accent-red);
+  border-top: 3px solid var(--theme-accent-red-border);
+  border-left: 3px solid var(--theme-accent-red-border);
+  border-bottom: 3px solid #361009;
+  border-right: 3px solid #361009;
+  color: #ffcccc;
+}
+.mc-button-red:hover {
+  background: var(--theme-accent-red-hover);
+  color: #ffffff;
+}
+
+/* Inset Slot Box (for Inventories, Grids) */
+.inv-slot-box {
+  background: var(--theme-slot-bg);
+  border-top: 2px solid var(--theme-slot-border-dark);
+  border-left: 2px solid var(--theme-slot-border-dark);
+  border-bottom: 2px solid var(--theme-slot-border-light);
+  border-right: 2px solid var(--theme-slot-border-light);
+  border-radius: 4px;
+}

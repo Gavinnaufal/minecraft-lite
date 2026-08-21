@@ -90,10 +90,11 @@ export class HUD {
     this.coordsDisplay.id = 'hud-coords';
     this.coordsDisplay.style.cssText = `
       position: fixed; top: 12px; left: 16px; z-index: 100; pointer-events: none;
-      font-family: monospace; font-size: 12px; color: #fff; line-height: 1.4;
-      background: rgba(0, 0, 0, 0.5); border: 2px solid #555; border-radius: 4px;
-      padding: 6px 14px; box-shadow: 2px 2px 8px rgba(0,0,0,0.6);
-      display: flex; align-items: center; gap: 8px;
+      font-family: var(--theme-font, monospace); font-size: 12px; color: var(--theme-text-light, #f7f1e3); line-height: 1.4;
+      background: var(--theme-panel-bg-translucent, rgba(35, 23, 16, 0.94));
+      border: 2px solid var(--theme-border-muted, #543926); border-radius: 4px;
+      padding: 6px 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+      display: flex; align-items: center; gap: 8px; text-shadow: 1px 1px 0 #000;
     `;
     this.coordsDisplay.innerHTML = `<span>${SVG_ICONS.location} XYZ: 0.0, 60.0, 0.0</span> <span style="color:rgba(255,255,255,0.3)">|</span> <span>${SVG_ICONS.compass} South</span> <span style="color:rgba(255,255,255,0.3)">|</span> <span>${SVG_ICONS.fps} 60 FPS</span>`;
     document.body.appendChild(this.coordsDisplay);
@@ -103,9 +104,11 @@ export class HUD {
     this.timeDisplayContainer.id = 'hud-time';
     this.timeDisplayContainer.style.cssText = `
       position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 100;
-      font-family: monospace; font-size: 13px; font-weight: bold; color: #ffcc00; pointer-events: none;
-      background: rgba(0, 0, 0, 0.5); border: 2px solid #555; border-radius: 4px;
-      padding: 5px 16px; box-shadow: 2px 2px 8px rgba(0,0,0,0.6);
+      font-family: var(--theme-font, monospace); font-size: 13px; font-weight: bold;
+      color: var(--theme-accent-gold-text, #ffd56b); pointer-events: none;
+      background: var(--theme-panel-bg-translucent, rgba(35, 23, 16, 0.94));
+      border: 2px solid var(--theme-border-gold, #c8963e); border-radius: 4px;
+      padding: 5px 16px; box-shadow: 0 4px 14px rgba(0,0,0,0.7), 0 0 10px rgba(200, 150, 62, 0.25);
       display: flex; align-items: center; gap: 6px; text-shadow: 1px 1px 2px #000;
     `;
     this.timeIcon = document.createElement('span');
@@ -119,12 +122,13 @@ export class HUD {
     this.controlsGuide = document.createElement('div');
     this.controlsGuide.style.cssText = `
       position: fixed; top: 12px; right: 16px; z-index: 100; pointer-events: none;
-      font-family: monospace; font-size: 11px; color: #eee;
-      background: rgba(0, 0, 0, 0.5); border: 2px solid #555; border-radius: 4px;
-      padding: 6px 12px; box-shadow: 2px 2px 8px rgba(0,0,0,0.6);
+      font-family: var(--theme-font, monospace); font-size: 11px; color: var(--theme-text-muted, #c4b097);
+      background: var(--theme-panel-bg-translucent, rgba(35, 23, 16, 0.94));
+      border: 2px solid var(--theme-border-muted, #543926); border-radius: 4px;
+      padding: 6px 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.7);
       display: flex; gap: 12px; align-items: center;
     `;
-    const kStyle = 'background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.3); border-radius:3px; padding:1px 5px; color:#fff; font-weight:bold; font-size:10px;';
+    const kStyle = 'background:var(--theme-slot-bg, #1a110a); border:1px solid var(--theme-border-highlight, #704b31); border-radius:3px; padding:1px 5px; color:var(--theme-accent-gold-text, #ffd56b); font-weight:bold; font-size:10px;';
     this.controlsGuide.innerHTML = `
       <div><span style="${kStyle}">E</span> Inv</div>
       <div><span style="${kStyle}">Shift</span> Run</div>
@@ -157,15 +161,18 @@ export class HUD {
     `;
     document.body.appendChild(this.crosshair);
 
-    // Authentic Minecraft Hotbar Container (Gray GUI Bar)
+    // Authentic Forest Survival Wood Hotbar Container
     this.container = document.createElement('div');
     this.container.id = 'hud-hotbar';
     this.container.style.cssText = `
       position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%);
-      display: flex; gap: 0; z-index: 100; pointer-events: auto;
-      background: #8b8b8b; border-top: 3px solid #373737; border-left: 3px solid #373737;
-      border-bottom: 3px solid #ffffff; border-right: 3px solid #ffffff;
-      padding: 3px; border-radius: 2px; box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+      display: flex; gap: 2px; z-index: 100; pointer-events: auto;
+      background: var(--theme-panel-bg-translucent, rgba(35, 23, 16, 0.94));
+      border-top: 3px solid var(--theme-border-highlight, #704b31);
+      border-left: 3px solid var(--theme-border-highlight, #704b31);
+      border-bottom: 3px solid var(--theme-border-outer, #150d08);
+      border-right: 3px solid var(--theme-border-outer, #150d08);
+      padding: 3px; border-radius: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.85);
       touch-action: manipulation;
     `;
     document.body.appendChild(this.container);
@@ -240,15 +247,19 @@ export class HUD {
 
     for (let i = 0; i < 9; i++) {
       const slot = document.createElement('div');
-      slot.className = 'hotbar-slot';
+      slot.className = 'hotbar-slot inv-slot-box';
       slot.style.cssText = `
-        width: 56px; height: 56px; background: #8b8b8b;
-        border-top: 3px solid #373737; border-left: 3px solid #373737;
-        border-bottom: 3px solid #ffffff; border-right: 3px solid #ffffff;
+        width: 54px; height: 54px;
+        background: var(--theme-slot-bg, #1a110a);
+        border-top: 2px solid var(--theme-slot-border-dark, #0f0a06);
+        border-left: 2px solid var(--theme-slot-border-dark, #0f0a06);
+        border-bottom: 2px solid var(--theme-slot-border-light, #4d3320);
+        border-right: 2px solid var(--theme-slot-border-light, #4d3320);
         display: flex; align-items: center; justify-content: center; position: relative;
-        font-family: monospace; font-size: 13px; color: #fff;
+        font-family: var(--theme-font, monospace); font-size: 13px; color: var(--theme-text-light, #f7f1e3);
         margin: 1px; transition: all 0.1s ease; box-sizing: border-box;
         cursor: pointer; pointer-events: auto; touch-action: manipulation;
+        border-radius: 3px;
       `;
 
       const selectSlot = (e?: Event) => {
@@ -419,12 +430,13 @@ export class HUD {
     }, 1800);
   }
 
-  setTime(timeOfDay: number): void {
+  setTime(timeOfDay: number, currentDay: number = 1): void {
     this.timeIcon.innerHTML = timeOfDay > 0.25 && timeOfDay < 0.75 ? SVG_ICONS.sun : SVG_ICONS.moon;
 
     const hour = Math.floor(timeOfDay * 24);
     const min = Math.floor((timeOfDay * 24 - hour) * 60);
-    this.timeDisplay.textContent = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+    const timeStr = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+    this.timeDisplay.innerHTML = `<span style="color:#ffcc00; font-weight:bold;">Hari ${currentDay}</span><span style="color:rgba(255,255,255,0.4); margin:0 5px;">•</span><span>${timeStr}</span>`;
   }
 
   setCrosshairState(state: 'none' | 'block' | 'mob'): void {
@@ -493,19 +505,21 @@ export class HUD {
       const isActive = i === this.hotbar.activeSlotIndex;
 
       if (isActive) {
-        slot.style.borderTopColor = '#ffffff';
-        slot.style.borderLeftColor = '#ffffff';
-        slot.style.borderBottomColor = '#ffffff';
-        slot.style.borderRightColor = '#ffffff';
-        slot.style.boxShadow = '0 0 12px rgba(255,255,255,0.9), inset 0 0 6px rgba(255,255,255,0.5)';
+        slot.style.borderTopColor = 'var(--theme-accent-gold-border, #ffcc55)';
+        slot.style.borderLeftColor = 'var(--theme-accent-gold-border, #ffcc55)';
+        slot.style.borderBottomColor = 'var(--theme-accent-gold-border, #ffcc55)';
+        slot.style.borderRightColor = 'var(--theme-accent-gold-border, #ffcc55)';
+        slot.style.boxShadow = '0 0 14px rgba(255,204,85,0.85), inset 0 0 8px rgba(255,204,85,0.4)';
         slot.style.transform = 'scale(1.08)';
+        slot.style.zIndex = '10';
       } else {
-        slot.style.borderTopColor = '#373737';
-        slot.style.borderLeftColor = '#373737';
-        slot.style.borderBottomColor = '#ffffff';
-        slot.style.borderRightColor = '#ffffff';
+        slot.style.borderTopColor = 'var(--theme-slot-border-dark, #0f0a06)';
+        slot.style.borderLeftColor = 'var(--theme-slot-border-dark, #0f0a06)';
+        slot.style.borderBottomColor = 'var(--theme-slot-border-light, #4d3320)';
+        slot.style.borderRightColor = 'var(--theme-slot-border-light, #4d3320)';
         slot.style.boxShadow = 'none';
         slot.style.transform = 'scale(1.0)';
+        slot.style.zIndex = '1';
       }
 
       if (item.itemId) {

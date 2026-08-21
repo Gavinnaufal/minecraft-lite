@@ -86,16 +86,18 @@ export class ChestScreen {
 
     const panel = document.createElement('div');
     panel.id = 'chest-panel';
+    panel.className = 'wood-panel';
     panel.style.cssText = `
-      background: rgba(20, 20, 32, 0.92); border: 2px solid rgba(255, 204, 0, 0.4);
-      border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8); color: #fff; position: relative;
+      background: var(--theme-panel-bg-translucent, rgba(35, 23, 16, 0.96));
+      border: 3px solid var(--theme-border-highlight, #704b31);
+      border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.85); color: var(--theme-text-light, #f7f1e3); position: relative;
     `;
 
     // Header
     const header = document.createElement('div');
     header.style.cssText = 'display: flex; justify-content: space-between; align-items: center;';
-    header.innerHTML = '<span style="font-size: 16px; font-weight: bold; color: #ffcc00;"><svg width="16" height="16" viewBox="0 0 24 24" fill="#ffcc00" style="vertical-align:middle;margin-right:6px;"><path d="M20 6h-8l-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2zm-6 10H6v-2h8v2zm4-4H6V10h12v2z"/></svg>Peti Penyimpanan (Chest)</span>';
+    header.innerHTML = '<span style="font-size: 16px; font-weight: bold; color: var(--theme-accent-gold-text, #ffd56b);"><svg width="16" height="16" viewBox="0 0 24 24" fill="#c8963e" style="vertical-align:middle;margin-right:6px;"><path d="M20 6h-8l-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2zm-6 10H6v-2h8v2zm4-4H6V10h12v2z"/></svg>Peti Kayu Penyimpanan (Chest)</span>';
 
     const closeBtn = document.createElement('button');
     closeBtn.id = 'chest-close-btn';
@@ -107,9 +109,9 @@ export class ChestScreen {
     `;
     closeBtn.title = 'Tutup Peti (Esc / E)';
     closeBtn.style.cssText = `
-      width: 44px; height: 44px; background: #c62828; border: 2px solid #ffffff;
-      border-radius: 6px; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; touch-action: manipulation; box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      width: 40px; height: 40px; background: var(--theme-accent-red, #7c2d1b); border: 2px solid var(--theme-accent-red-border, #bf553b);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: transform 0.1s; touch-action: manipulation; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     `;
     const triggerClose = (e?: Event) => {
       if (e && e.cancelable) e.preventDefault();

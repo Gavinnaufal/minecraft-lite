@@ -53,22 +53,23 @@ export class FurnaceScreen {
 
     this.container = document.createElement('div');
     this.container.id = 'furnace-screen';
-    this.container.className = 'ui-modal hidden';
+    this.container.className = 'ui-modal hidden wood-panel';
     this.container.style.cssText = `
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       width: 440px;
-      background: rgba(30, 30, 35, 0.95);
-      border: 3px solid #5d4037;
-      border-radius: 12px;
+      background: var(--theme-panel-bg-translucent, rgba(35, 23, 16, 0.96));
+      border: 3px solid var(--theme-border-highlight, #704b31);
+      border-radius: 10px;
       padding: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.85);
       z-index: 1000;
-      color: #fff;
-      font-family: 'Segoe UI', Tahoma, sans-serif;
+      color: var(--theme-text-light, #f7f1e3);
+      font-family: var(--theme-font, monospace);
       display: none;
+      backdrop-filter: blur(10px);
     `;
     document.body.appendChild(this.container);
   }

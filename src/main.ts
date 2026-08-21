@@ -68,6 +68,9 @@ import { BlockHighlight } from './interaction/BlockHighlight';
 import { DebugScreen } from './ui/DebugScreen';
 import { ToastSystem } from './ui/ToastSystem';
 import { FurnaceScreen } from './ui/FurnaceScreen';
+import { survivalManager } from './survival/SurvivalManager';
+import { statsTracker } from './survival/StatsTracker';
+import { EndGameScreen } from './ui/EndGameScreen';
 import * as THREE from 'three';
 import { CHUNK_SIZE_X, CHUNK_SIZE_Z, CHUNK_HEIGHT, WATER_LEVEL } from './utils/constants';
 import type { Chunk } from './world/Chunk';
@@ -439,6 +442,7 @@ const BLOCK_PARTICLE_COLORS: Record<number, number> = {
 };
 
 blockBreaker.setOnBlockBroken((x, y, z, blockId) => {
+  statsTracker.recordBlockBroken(1);
   particleSystem.spawnBlockBreakParticles(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), BLOCK_PARTICLE_COLORS[blockId] ?? 0x8d6e63);
 
   const blockDef = getBlockById(blockId);
@@ -590,6 +594,15 @@ touchControls.onTogglePauseMenu = () => {
   updateTouchControlsState();
 };
 
+const endGameScreen = new EndGameScreen(async () => {
+  await saveManager.clearSave();
+  survivalManager.resetState();
+  statsTracker.reset();
+  AudioManager.getInstance().stopMusic();
+  mainMenu.show();
+  updateTouchControlsState();
+});
+
 const updateTouchControlsState = (): void => {
   const modalOpen =
     mainMenu.isOpen ||
@@ -599,7 +612,8 @@ const updateTouchControlsState = (): void => {
     chestScreen.isOpen ||
     furnaceScreen.getIsOpen() ||
     tradingScreen.isOpen ||
-    chatBox.visible;
+    chatBox.visible ||
+    endGameScreen.isOpen;
   touchControls.setEnabled(!modalOpen);
   hud.setVisible(!modalOpen);
 };
@@ -738,7 +752,68 @@ function getFacingDirection(cam: THREE.PerspectiveCamera): string {
 
 const engine = new Engine();
 
+survivalManager.onGameOver = (reason: string) => {
+  console.warn(`[Survival Event] >>> GAME_OVER <<< ${reason}`);
+  toastSystem.show(`☠️ GAME OVER: ${reason}`, 'error');
+  endGameScreen.show('lose', reason);
+  updateTouchControlsState();
+};
+
+survivalManager.onGameWon = () => {
+  console.log(`[Survival Event] >>> GAME_WON <<< Berhasil bertahan 15 Hari!`);
+  toastSystem.show('🎉 SELAMAT! Kamu berhasil bertahan hidup sampai Hari 15!', 'success');
+  endGameScreen.show('win');
+  updateTouchControlsState();
+};
+
+survivalManager.onDayChange = (newDay: number) => {
+  console.log(`[Survival Event] Hari berganti ke: Hari ${newDay}`);
+  toastSystem.show(`📅 Hari ke-${newDay} dimulai!`, 'info');
+};
+
+function dropPartialInventory(dropPos: THREE.Vector3): void {
+  for (let i = 0; i < hotbar.slots.length; i++) {
+    const slot = hotbar.slots[i];
+    if (slot && slot.itemId && slot.count > 0) {
+      const dropCount = Math.max(1, Math.floor(slot.count / 2));
+      itemDropManager.spawnDrop(dropPos, slot.itemId, dropCount);
+      slot.count -= dropCount;
+      if (slot.count <= 0) {
+        slot.itemId = null;
+        slot.count = 0;
+      }
+    }
+  }
+
+  for (let i = 0; i < inventory.slots.length; i++) {
+    const slot = inventory.slots[i];
+    if (slot && slot.itemId && slot.count > 0) {
+      const dropCount = Math.max(1, Math.floor(slot.count / 2));
+      itemDropManager.spawnDrop(dropPos, slot.itemId, dropCount);
+      slot.count -= dropCount;
+      if (slot.count <= 0) {
+        slot.itemId = null;
+        slot.count = 0;
+      }
+    }
+  }
+}
+
 function restartPlayer() {
+  const deathPos = new THREE.Vector3(player.position.x, Math.max(1, player.position.y), player.position.z);
+  const deathResult = survivalManager.handlePlayerDeath();
+
+  if (deathResult.dropPartialItems) {
+    dropPartialInventory(deathPos);
+    toastSystem.show('⚠️ Kamu pingsan! Sebagian item terjatuh.', 'warning');
+  } else if (!deathResult.isGameOver) {
+    toastSystem.show(`💀 Kamu mati! Sisa nyawa: ${deathResult.remainingLives}/3`, 'error');
+  }
+
+  if (deathResult.isGameOver) {
+    toastSystem.show('☠️ GAME OVER! Petualanganmu berakhir.', 'error');
+  }
+
   player.health = 20;
   lastPlayerHealth = 20;
   const spawnY = heightMap.getHeight(0.5, 0.5) + 2.1;
@@ -773,10 +848,23 @@ crosshairRay.far = 5.0;
 let cachedHitMobIdx = -1;
 let lastMobRaycastTime = 0;
 
+let prevPlayerX = player.position.x;
+let prevPlayerZ = player.position.z;
+
 engine.setUpdateCallback((deltaTime) => {
-  if (mainMenu.isOpen || pauseMenu.isOpen || inventoryScreen.isOpen || chestScreen.isOpen || furnaceScreen.getIsOpen() || chatBox.visible) {
+  if (mainMenu.isOpen || pauseMenu.isOpen || inventoryScreen.isOpen || chestScreen.isOpen || furnaceScreen.getIsOpen() || chatBox.visible || endGameScreen.isOpen) {
+    prevPlayerX = player.position.x;
+    prevPlayerZ = player.position.z;
     return;
   }
+
+  statsTracker.updatePlayTime(deltaTime);
+  const moveDist = Math.hypot(player.position.x - prevPlayerX, player.position.z - prevPlayerZ);
+  if (moveDist > 0.001 && moveDist < 20) {
+    statsTracker.recordDistance(moveDist);
+  }
+  prevPlayerX = player.position.x;
+  prevPlayerZ = player.position.z;
 
   if (player.health <= 0 || player.position.y < -20) {
     restartPlayer();
@@ -1135,6 +1223,7 @@ engine.setUpdateCallback((deltaTime) => {
     networkManager.sendMobDamage(hitMobIdx, damage);
 
     if (deadMob) {
+      statsTracker.recordMonsterKill(1);
       const dropPos = targetMob ? targetMob.position.clone() : new THREE.Vector3(player.position.x, player.position.y, player.position.z);
       dropPos.y += 0.5;
       particleSystem.spawnDeathParticles(dropPos);
@@ -1263,6 +1352,7 @@ engine.setUpdateCallback((deltaTime) => {
           handModel.triggerSwing();
           AudioManager.getInstance().playSFX('eat');
           hud.update(player.health);
+          statsTracker.recordFoodEaten(1);
           toastSystem.show(`Memakan ${getItemById(activeItem.itemId)?.name} (+${healAmount} HP)`, 'success');
         } else {
           toastSystem.show('Darah sudah penuh! (20/20 HP)', 'info');
@@ -1275,6 +1365,7 @@ engine.setUpdateCallback((deltaTime) => {
           networkManager.sendBlockChange(targetHit.blockX, targetHit.blockY, targetHit.blockZ, 13);
           handModel.triggerSwing();
           AudioManager.getInstance().playSFX('footstep');
+          statsTracker.recordBlockPlaced(1);
           if (activeItem.durability !== undefined) {
             activeItem.durability--;
             if (activeItem.durability <= 0) {
@@ -1302,6 +1393,7 @@ engine.setUpdateCallback((deltaTime) => {
             hotbar.removeItem('wheat_seeds', 1);
             handModel.triggerSwing();
             AudioManager.getInstance().playSFX('place');
+            statsTracker.recordBlockPlaced(1);
             toastSystem.show('Wheat Seeds Planted! 🌱', 'success');
           }
         }
@@ -1310,6 +1402,7 @@ engine.setUpdateCallback((deltaTime) => {
         if (blockIdToPlace) {
           const placed = blockPlacer.place(camera, blockIdToPlace, player.position.x, player.position.y, player.position.z);
           if (placed) {
+            statsTracker.recordBlockPlaced(1);
             hotbar.removeItem(activeItem.itemId, 1);
             if (targetHit) {
               const px = targetHit.blockX + targetHit.normalX;
@@ -1444,7 +1537,7 @@ engine.setUpdateCallback((deltaTime) => {
   hud.updatePlayerPos(player.position.x, player.position.y, player.position.z, camera.rotation.y, clock.getFPS());
   hud.setSubmergedState(playerController.isSubmerged, playerController.oxygen);
   hud.update(player.health);
-  hud.setTime(dayNight.timeOfDay);
+  hud.setTime(dayNight.timeOfDay, survivalManager.currentDay);
 });
 
 engine.start();
@@ -1457,6 +1550,8 @@ if (import.meta.env.DEV) {
   win.world = world; win.chunkManager = chunkManager; win.camera = camera;
   win.player = player; win.hotbar = hotbar; win.inventory = inventory;
   win.saveManager = saveManager; win.touchControls = touchControls;
+  win.dayNight = dayNight; win.survival = survivalManager; win.stats = statsTracker; win.endGameScreen = endGameScreen;
+
   win.clearSave = async () => {
     await saveManager.clearSave();
     console.log('[Save] Clearing world save data and reloading...');
@@ -1477,5 +1572,30 @@ if (import.meta.env.DEV) {
   };
   win.save = () => saveManager.save();
   win.load = () => saveManager.load();
-  console.log('[Debug] Helper commands: clearSave(), setSeed(str), tp(x,y,z), save(), load()');
+
+  // Survival Mode Debug Helpers
+  win.setDay = (day: number) => {
+    survivalManager.setDay(day);
+    console.log(`[Debug] Hari diubah menjadi: Hari ${day}`);
+  };
+  win.advanceDay = () => {
+    survivalManager.advanceDay();
+  };
+  win.setDifficulty = (diff: 'santai' | 'normal' | 'susah') => {
+    survivalManager.setDifficulty(diff);
+  };
+  win.setSpeed = (multiplier: number) => {
+    dayNight.timeMultiplier = multiplier;
+    console.log(`[Debug] Kecepatan siklus waktu diatur ke ${multiplier}x`);
+  };
+  win.killPlayer = () => {
+    player.health = 0;
+    console.log('[Debug] Player health set to 0 (trigger death)');
+  };
+  win.showEndGame = (type: 'win' | 'lose') => {
+    endGameScreen.show(type);
+    updateTouchControlsState();
+  };
+
+  console.log('[Debug] Helper commands: clearSave(), setSeed(str), tp(x,y,z), save(), load(), setDay(n), advanceDay(), setDifficulty("santai"|"normal"|"susah"), setSpeed(n), killPlayer(), showEndGame("win"|"lose")');
 }

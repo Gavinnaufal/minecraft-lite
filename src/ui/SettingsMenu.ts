@@ -16,23 +16,25 @@ export class SettingsMenu {
 
     this.container = document.createElement('div');
     this.container.id = 'settings-menu';
+    this.container.className = 'wood-panel';
     this.container.style.cssText = `
       display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      z-index: 550; background: #c6c6c6; border-top: 4px solid #ffffff; border-left: 4px solid #ffffff;
-      border-bottom: 4px solid #555555; border-right: 4px solid #555555;
-      color: #222; font-family: monospace; font-size: 14px; padding: 24px;
-      border-radius: 4px; width: 440px; max-width: 92vw; max-height: 88vh;
-      overflow-y: auto; box-sizing: border-box; box-shadow: 0 16px 50px rgba(0,0,0,0.85); user-select: none;
+      z-index: 550; background: var(--theme-panel-bg-translucent, rgba(35, 23, 16, 0.96));
+      border: 3px solid var(--theme-border-highlight, #704b31);
+      color: var(--theme-text-light, #f7f1e3); font-family: var(--theme-font, monospace); font-size: 14px; padding: 24px;
+      border-radius: 8px; width: 440px; max-width: 92vw; max-height: 88vh;
+      overflow-y: auto; box-sizing: border-box; box-shadow: 0 16px 50px rgba(0,0,0,0.9); user-select: none;
+      backdrop-filter: blur(10px);
     `;
 
     const title = document.createElement('div');
-    title.style.cssText = 'font-weight: bold; font-size: 20px; margin-bottom: 20px; color: #222; text-align: center; text-shadow: 1px 1px 0 #fff;';
-    title.textContent = 'Options & Game Settings';
+    title.style.cssText = 'font-weight: bold; font-size: 20px; margin-bottom: 20px; color: var(--theme-accent-gold-text, #ffd56b); text-align: center; text-shadow: 2px 2px 0 #000; letter-spacing: 1px;';
+    title.textContent = '⚙️ Options & Game Settings';
     this.container.appendChild(title);
 
     // Render Distance
     const rdLabel = document.createElement('div');
-    rdLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: #333;';
+    rdLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: var(--theme-text-light, #f7f1e3);';
     rdLabel.textContent = `Render Distance: ${gameSettings.renderDistance} Chunks`;
 
     const rdSlider = document.createElement('input');

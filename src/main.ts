@@ -25,6 +25,7 @@ import { MainMenu } from './ui/MainMenu';
 import { HandModel } from './ui/HandModel';
 import { ParticleSystem } from './world/ParticleSystem';
 import { ItemDropManager } from './world/ItemDropManager';
+import { Mob } from './mobs/Mob';
 import { IronGolem } from './mobs/npc/IronGolem';
 import { Villager } from './mobs/npc/Villager';
 import { isFoodForMob } from './mobs/ai/MobFoodRegistry';
@@ -302,7 +303,7 @@ chunkManager.terrainFiller = (chunk: Chunk) => {
 };
 
 function spawnNaturalMobsForChunk(chunk: Chunk, mobManager: MobManager, heightMap: HeightMap, biomeGen: BiomeGenerator): void {
-  if (mobManager.mobs.length >= mobManager.mobCap) return;
+  if (!mobManager.canSpawnPassive()) return;
   if (Math.random() > 0.45) return;
 
   const worldX = chunk.chunkX * CHUNK_SIZE_X + Math.floor(Math.random() * (CHUNK_SIZE_X - 2)) + 1;
@@ -1052,21 +1053,47 @@ engine.setUpdateCallback((deltaTime) => {
   lights.ambient.intensity = Math.max(0.25, dayNight.lightIntensity * 0.55);
   if (lights.hemi) lights.hemi.intensity = Math.max(0.2, dayNight.lightIntensity * 0.5);
 
+  // Dynamic Hostile Mob Cap & Spawn Rate Scaling based on Day & Difficulty
+  const currentDay = survivalManager.currentDay;
+  const diffConfig = survivalManager.getDifficultyConfig();
+  const diffFactor = diffConfig.mobDifficultyFactor; // 0.7 (santai), 1.0 (normal), 1.4 (susah)
+
+  // 1. Dynamic Hostile Mob Cap (scaling from 5 -> 18 on desktop, 3 -> 10 on mobile)
+  const baseHostileCap = gameSettings.isMobilePreset ? 3 : 5;
+  const maxHostileCap = gameSettings.isMobilePreset ? 10 : 18;
+  const dayGrowth = gameSettings.isMobilePreset ? 0.5 : 0.9;
+  mobManager.mobCapHostile = Math.min(maxHostileCap, Math.floor(baseHostileCap + (currentDay - 1) * dayGrowth * diffFactor));
+
+  // 2. Dynamic Hostile Spawn Rate (Day 1: ~0.014, Day 6-10: ~0.025, Day 11-15: ~0.040)
+  const baseSpawnChance = 0.014;
+  const daySpawnFactor = (currentDay - 1) * 0.002 * diffFactor;
+  const hostileSpawnChance = Math.min(0.045, baseSpawnChance + daySpawnFactor);
+
   // Spawn hostile mobs at night on solid land (Overworld only)
-  if (!DimensionManager.getInstance().isNether() && dayNight.isNight && mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.01) {
-    const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 25, 70);
+  if (!DimensionManager.getInstance().isNether() && dayNight.isNight && mobManager.canSpawnHostile() && Math.random() < hostileSpawnChance) {
+    const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 20, 50);
     if (spawnPos) {
+      // Scaled Mob Health with day (+0.8 HP per day * diffFactor)
+      const extraHp = Math.floor((currentDay - 1) * 0.8 * diffFactor);
       const rand = Math.random();
-      if (rand < 0.35) mobManager.spawn(spawnPos, new Zombie(spawnPos));
-      else if (rand < 0.65) mobManager.spawn(spawnPos, new Skeleton(spawnPos));
-      else if (rand < 0.85) mobManager.spawn(spawnPos, new Spider(spawnPos));
-      else mobManager.spawn(spawnPos, new Enderman(spawnPos));
+      let mobToSpawn: Mob;
+      if (rand < 0.35) {
+        mobToSpawn = new Zombie(spawnPos);
+      } else if (rand < 0.65) {
+        mobToSpawn = new Skeleton(spawnPos);
+      } else if (rand < 0.85) {
+        mobToSpawn = new Spider(spawnPos);
+      } else {
+        mobToSpawn = new Enderman(spawnPos);
+      }
+      mobToSpawn.health += extraHp;
+      mobManager.spawn(spawnPos, mobToSpawn);
     }
   }
 
   // Nether mob spawning: Skeletons, Spiders & Endermen (always dangerous, higher rate)
-  if (DimensionManager.getInstance().isNether() && mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.015) {
-    const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 20, 60);
+  if (DimensionManager.getInstance().isNether() && mobManager.canSpawnHostile() && Math.random() < 0.02) {
+    const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 20, 50);
     if (spawnPos) {
       const rand = Math.random();
       if (rand < 0.4) {
@@ -1087,8 +1114,8 @@ engine.setUpdateCallback((deltaTime) => {
     if (Math.random() < 0.006) {
       AudioManager.getInstance().playSFX('lava_bubble');
     }
-    if (mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.006) {
-      const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 20, 60);
+    if (mobManager.canSpawnHostile() && Math.random() < 0.008) {
+      const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 20, 50);
       if (spawnPos) {
         const rand = Math.random();
         if (rand < 0.45) mobManager.spawn(spawnPos, new Blaze(spawnPos));
@@ -1099,7 +1126,7 @@ engine.setUpdateCallback((deltaTime) => {
   }
 
   // Spawn passive animals during daytime in appropriate biomes (Overworld only)
-  if (!DimensionManager.getInstance().isNether() && !dayNight.isNight && mobManager.mobs.length < mobManager.mobCap && Math.random() < 0.008) {
+  if (!DimensionManager.getInstance().isNether() && !dayNight.isNight && mobManager.canSpawnPassive() && Math.random() < 0.008) {
     const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 25, 75);
     if (spawnPos) {
       const topBlock = world.getBlock(Math.floor(spawnPos.x), Math.floor(spawnPos.y - 1), Math.floor(spawnPos.z));

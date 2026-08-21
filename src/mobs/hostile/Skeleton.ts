@@ -99,7 +99,7 @@ export class Skeleton extends Mob {
 
       const state = this.stateMachine.update(deltaTime, dist3D);
 
-      if (state === State.Chase || horizDist < 15) {
+      if (state === State.Chase || horizDist < 35) {
         // Face player
         this.mesh.rotation.y = Math.atan2(dx, dz);
 

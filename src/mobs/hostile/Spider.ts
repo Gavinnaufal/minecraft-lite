@@ -108,7 +108,7 @@ export class Spider extends Mob {
 
       const isAggressive = isNight || this.isProvoked;
 
-      if (isAggressive && (state === State.Chase || dist3D < 14)) {
+      if (isAggressive && (state === State.Chase || dist3D < 35)) {
         const dx = playerPos.x - this.position.x;
         const dz = playerPos.z - this.position.z;
         const dy = Math.abs(playerPos.y - this.position.y);

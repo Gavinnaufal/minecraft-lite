@@ -11,6 +11,8 @@ export class MobManager {
   private scene: THREE.Scene;
   private world?: World;
   mobCap = gameSettings.mobCap;
+  mobCapPassive: number = gameSettings.isMobilePreset ? 6 : 10;
+  mobCapHostile: number = gameSettings.isMobilePreset ? 6 : 12;
 
   constructor(scene: THREE.Scene, world?: World) {
     this.scene = scene;
@@ -21,8 +23,36 @@ export class MobManager {
     this.world = world;
   }
 
+  getHostileCount(): number {
+    let count = 0;
+    for (const m of this.mobs) {
+      if (m.isHostile) count++;
+    }
+    return count;
+  }
+
+  getPassiveCount(): number {
+    let count = 0;
+    for (const m of this.mobs) {
+      if (!m.isHostile) count++;
+    }
+    return count;
+  }
+
+  canSpawnHostile(): boolean {
+    return this.getHostileCount() < this.mobCapHostile;
+  }
+
+  canSpawnPassive(): boolean {
+    return this.getPassiveCount() < this.mobCapPassive;
+  }
+
   spawn(position: THREE.Vector3, mob: Mob): Mob {
-    if (this.mobs.length >= this.mobCap) return mob;
+    if (mob.isHostile) {
+      if (this.getHostileCount() >= this.mobCapHostile) return mob;
+    } else {
+      if (this.getPassiveCount() >= this.mobCapPassive) return mob;
+    }
 
     const mobClass = mob.constructor as new (pos: THREE.Vector3) => Mob;
     const poolIdx = this.pool.findIndex((m) => m instanceof mobClass);

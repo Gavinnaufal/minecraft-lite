@@ -9,11 +9,11 @@ export class StateMachine {
   current = State.Idle;
   private timer = 0;
 
-  update(deltaTime: number, distanceToPlayer: number): State {
+  update(deltaTime: number, distanceToPlayer: number, detectRadius = 35): State {
     this.timer += deltaTime;
 
-    if (distanceToPlayer < 5) {
-      if (distanceToPlayer < 1.5) return State.Attack;
+    if (distanceToPlayer < detectRadius) {
+      if (distanceToPlayer < 1.8) return State.Attack;
       return State.Chase;
     }
 

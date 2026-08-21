@@ -111,7 +111,7 @@ export class Zombie extends Mob {
             AudioManager.getInstance().playSFX('hit');
           }
         }
-      } else if (state === State.Chase || horizDist < 16) {
+      } else if (state === State.Chase || horizDist < 35) {
         if (horizDist > 0.001) {
           const nx = dx / horizDist;
           const nz = dz / horizDist;

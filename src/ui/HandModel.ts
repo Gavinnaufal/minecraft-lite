@@ -387,6 +387,22 @@ export class HandModel {
       seedGroup.position.set(0, 0.08, -0.12);
       this.itemMesh = seedGroup;
       this.handGroup.add(this.itemMesh);
+    } else if (itemId === 'bandage') {
+      // 3D Bandage Medical Roll with Red Cross
+      const bandageGroup = new THREE.Group();
+      const clothMat = new THREE.MeshStandardMaterial({ color: 0xedebe6, roughness: 0.9 });
+      const redMat = new THREE.MeshStandardMaterial({ color: 0xd32f2f, roughness: 0.5 });
+      const rollMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.16, 12), clothMat);
+      rollMesh.rotation.z = Math.PI / 2;
+      bandageGroup.add(rollMesh);
+      const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.08, 0.15), redMat);
+      bandageGroup.add(crossV);
+      const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.035, 0.15), redMat);
+      bandageGroup.add(crossH);
+      bandageGroup.position.set(0, 0.08, -0.12);
+      bandageGroup.rotation.set(0.2, 0.3, 0);
+      this.itemMesh = bandageGroup;
+      this.handGroup.add(this.itemMesh);
     } else if (itemId === 'coal' || itemId === 'charcoal') {
       // Dark Lump of Coal with Faceted Cubes
       const coalGroup = new THREE.Group();

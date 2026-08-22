@@ -37,6 +37,7 @@ const ITEM_COLORS: Record<string, number> = {
   raw_porkchop: 0xf48fb1,
   raw_chicken: 0xffcc80,
   feather: 0xeeeeee,
+  bandage: 0xf5f5f0,
   mutton: 0xc62828,
   raw_beef: 0xb71c1c,
   cooked_beef: 0x4e342e,

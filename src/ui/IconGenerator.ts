@@ -263,6 +263,14 @@ export function createItemIcon(itemId: string, size = 28): HTMLElement {
       <line x1="12" y1="13" x2="14" y2="17" stroke="#795548" stroke-width="1.5"/>
       <line x1="18" y1="13" x2="20" y2="17" stroke="#795548" stroke-width="1.5"/>
     `;
+  } else if (itemId === 'bandage') {
+    svg.innerHTML = `
+      <rect x="5" y="8" width="22" height="16" rx="4" fill="#fdfbf7" stroke="#c4b9a3" stroke-width="1.2"/>
+      <line x1="10" y1="8" x2="10" y2="24" stroke="#e3dcce" stroke-width="1"/>
+      <line x1="22" y1="8" x2="22" y2="24" stroke="#e3dcce" stroke-width="1"/>
+      <rect x="14" y="11" width="4" height="10" rx="1" fill="#e53935"/>
+      <rect x="11" y="14" width="10" height="4" rx="1" fill="#e53935"/>
+    `;
   } else if (itemId === 'torch') {
     svg.innerHTML = `
       <line x1="10" y1="26" x2="20" y2="12" stroke="#6d4c41" stroke-width="4" stroke-linecap="round"/>

@@ -877,12 +877,17 @@ let prevPlayerX = player.position.x;
 let prevPlayerZ = player.position.z;
 let starveTimer = 0;
 let regenTimer = 0;
+let bandageCooldownTimer = 0;
 
 engine.setUpdateCallback((deltaTime) => {
   if (mainMenu.isOpen || pauseMenu.isOpen || inventoryScreen.isOpen || chestScreen.isOpen || furnaceScreen.getIsOpen() || chatBox.visible || endGameScreen.isOpen) {
     prevPlayerX = player.position.x;
     prevPlayerZ = player.position.z;
     return;
+  }
+
+  if (bandageCooldownTimer > 0) {
+    bandageCooldownTimer = Math.max(0, bandageCooldownTimer - deltaTime);
   }
 
   statsTracker.updatePlayTime(deltaTime);
@@ -1444,7 +1449,21 @@ engine.setUpdateCallback((deltaTime) => {
         rotten_flesh: { hunger: 2, name: 'Rotten Flesh' },
       };
 
-      if (FOOD_DATA[activeItem.itemId]) {
+      if (activeItem.itemId === 'bandage') {
+        if (player.health >= 20) {
+          toastSystem.show('Kesehatan sudah maksimal! (20/20 HP)', 'info');
+        } else if (bandageCooldownTimer > 0) {
+          toastSystem.show(`Tunggu ${Math.ceil(bandageCooldownTimer)}d untuk memakai perban lagi!`, 'warning');
+        } else {
+          player.health = Math.min(20, player.health + 6);
+          hotbar.removeItem('bandage', 1);
+          bandageCooldownTimer = 5.0;
+          handModel.triggerSwing();
+          AudioManager.getInstance().playSFX('eat');
+          hud.update(player.health, player.hunger);
+          toastSystem.show('🩹 Memakai Perban! (+6 HP Instan)', 'success');
+        }
+      } else if (FOOD_DATA[activeItem.itemId]) {
         const food = FOOD_DATA[activeItem.itemId];
         if (player.hunger < 20) {
           player.feed(food.hunger);
@@ -1708,6 +1727,10 @@ if (import.meta.env.DEV) {
     endGameScreen.show(type);
     updateTouchControlsState();
   };
+  win.giveBandage = (count = 5) => {
+    hotbar.addItem('bandage', count);
+    console.log(`[Debug] Added ${count}x Bandage to hotbar`);
+  };
 
-  console.log('[Debug] Helper commands: clearSave(), setSeed(str), tp(x,y,z), save(), load(), setHunger(n), setHealth(n), setDay(n), advanceDay(), setDifficulty("santai"|"normal"|"susah"), setSpeed(n), killPlayer(), showEndGame("win"|"lose")');
+  console.log('[Debug] Helper commands: clearSave(), setSeed(str), tp(x,y,z), save(), load(), setHunger(n), setHealth(n), giveBandage(n), setDay(n), advanceDay(), setDifficulty("santai"|"normal"|"susah"), setSpeed(n), killPlayer(), showEndGame("win"|"lose")');
 }

@@ -1,9 +1,20 @@
 import { survivalManager } from '../survival/SurvivalManager';
 
 export class DayNightCycle {
-  timeOfDay = 0.25; // Mulai di pagi hari (06:00) pada Hari 1
+  static readonly DEFAULT_TIME = 0.25; // Mulai di pagi hari (06:00) pada Hari 1
+  timeOfDay = DayNightCycle.DEFAULT_TIME;
   readonly cycleDuration = 600; // 10 menit (600 detik) per siklus 1 hari penuh
   public timeMultiplier = 1.0; // Pengali kecepatan waktu untuk debug/testing
+
+  constructor() {
+    survivalManager.onReset = () => {
+      this.resetTime();
+    };
+  }
+
+  resetTime(): void {
+    this.timeOfDay = DayNightCycle.DEFAULT_TIME;
+  }
 
   get currentDay(): number {
     return survivalManager.currentDay;

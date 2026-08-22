@@ -62,6 +62,7 @@ export class SurvivalManager {
   public onLivesChange?: (remainingLives: number, maxLives: number) => void;
   public onGameOver?: (reason: string) => void;
   public onGameWon?: () => void;
+  public onReset?: () => void;
 
   private constructor() {
     this.loadFromStorage();
@@ -163,6 +164,7 @@ export class SurvivalManager {
     this.lives = config.initialLives;
     this.gameState = 'playing';
     this.saveToStorage();
+    this.onReset?.();
     this.onDayChange?.(this.currentDay);
     this.onLivesChange?.(this.lives, config.initialLives);
   }

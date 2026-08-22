@@ -511,8 +511,25 @@ const mainMenu = new MainMenu(settingsMenu, (isLoad) => {
     saveManager.load().then((savedSeed) => {
       if (savedSeed !== null) {
         camera.position.set(player.position.x, player.position.y + player.eyeHeight, player.position.z);
+        hud.update(player.health, player.hunger);
+        hud.setTime(dayNight.timeOfDay, survivalManager.currentDay);
       }
     }).catch(() => {});
+  } else {
+    // Fresh New World: ensure 06:00 pagi on Day 1, full health and hunger
+    dayNight.resetTime();
+    player.health = 20;
+    player.hunger = 20;
+    const spawnY = heightMap.getHeight(0.5, 0.5) + 2.1;
+    player.position.x = 0.5;
+    player.position.y = spawnY;
+    player.position.z = 0.5;
+    player.velocity.x = 0;
+    player.velocity.y = 0;
+    player.velocity.z = 0;
+    camera.position.set(0.5, spawnY + player.eyeHeight, 0.5);
+    hud.update(player.health, player.hunger);
+    hud.setTime(dayNight.timeOfDay, survivalManager.currentDay);
   }
   inputManager.requestPointerLock();
   updateTouchControlsState();
@@ -598,7 +615,12 @@ touchControls.onTogglePauseMenu = () => {
 const endGameScreen = new EndGameScreen(async () => {
   await saveManager.clearSave();
   survivalManager.resetState();
+  dayNight.resetTime();
   statsTracker.reset();
+  player.health = 20;
+  player.hunger = 20;
+  hud.update(20, 20);
+  hud.setTime(dayNight.timeOfDay, survivalManager.currentDay);
   AudioManager.getInstance().stopMusic();
   mainMenu.show();
   updateTouchControlsState();
@@ -1619,6 +1641,8 @@ if (import.meta.env.DEV) {
 
   win.clearSave = async () => {
     await saveManager.clearSave();
+    survivalManager.resetState();
+    dayNight.resetTime();
     console.log('[Save] Clearing world save data and reloading...');
     window.location.reload();
   };

@@ -53,7 +53,7 @@ export function raycaster(world: World, camera: THREE.PerspectiveCamera): Raycas
 
     const blockId = world.getBlock(blockX, blockY, blockZ);
     const block = getBlockById(blockId);
-    if (block && block.solid) {
+    if (block && (block.solid || block.hardness > 0)) {
       return { blockX, blockY, blockZ, normalX, normalY, normalZ, blockId };
     }
 

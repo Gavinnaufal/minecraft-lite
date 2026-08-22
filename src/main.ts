@@ -478,6 +478,7 @@ blockBreaker.setOnBlockBroken((x, y, z, blockId) => {
     // Wheat Crop drops 1 Wheat + 1-2 Seeds
     itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), 'wheat', 1);
     itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), 'wheat_seeds', Math.floor(Math.random() * 2) + 1);
+    toastSystem.show('🌾 Panen Gandum! (+1 Wheat, +Seeds)', 'success');
   } else if (blockId === 21) {
     // Coal Ore drops 1 Coal with any tool / bare hands
     itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), 'coal', 1);
@@ -1412,6 +1413,18 @@ engine.setUpdateCallback((deltaTime) => {
         return;
       } else if (hitBlockId === 23) { // Furnace block (ID 23)
         furnaceScreen.open(targetHit.blockX, targetHit.blockY, targetHit.blockZ);
+        wasRightDown = inputManager.isRightMouseDown;
+        return;
+      } else if (hitBlockId === 14) { // Wheat Crop (ID 14) Quick Harvest
+        world.setBlock(targetHit.blockX, targetHit.blockY, targetHit.blockZ, 0);
+        networkManager.sendBlockChange(targetHit.blockX, targetHit.blockY, targetHit.blockZ, 0);
+        itemDropManager.spawnDrop(new THREE.Vector3(targetHit.blockX + 0.5, targetHit.blockY + 0.5, targetHit.blockZ + 0.5), 'wheat', 1);
+        itemDropManager.spawnDrop(new THREE.Vector3(targetHit.blockX + 0.5, targetHit.blockY + 0.5, targetHit.blockZ + 0.5), 'wheat_seeds', Math.floor(Math.random() * 2) + 1);
+        particleSystem.spawnBlockBreakParticles(new THREE.Vector3(targetHit.blockX + 0.5, targetHit.blockY + 0.5, targetHit.blockZ + 0.5), 0x88bb33);
+        AudioManager.getInstance().playSFX('break');
+        handModel.triggerSwing();
+        statsTracker.recordBlockBroken(1);
+        toastSystem.show('🌾 Panen Gandum! (+1 Wheat, +Seeds)', 'success');
         wasRightDown = inputManager.isRightMouseDown;
         return;
       }

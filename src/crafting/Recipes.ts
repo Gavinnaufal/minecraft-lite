@@ -33,10 +33,15 @@ export const recipes: Recipe[] = [
   { pattern: [['wood_log'], ['stick']], result: { itemId: 'torch', count: 4 } },
   // 14. 8 Planks to Chest
   { pattern: [['plank', 'plank', 'plank'], ['plank', null, 'plank'], ['plank', 'plank', 'plank']], result: { itemId: 'chest', count: 1 } },
-  // 15. Wooden Hoe
+  // 15. Wooden Hoe (both right-facing and left-facing)
   { pattern: [['plank', 'plank'], [null, 'stick'], [null, 'stick']], result: { itemId: 'wooden_hoe', count: 1 } },
-  // 16. Stone Hoe
+  { pattern: [['plank', 'plank'], ['stick', null], ['stick', null]], result: { itemId: 'wooden_hoe', count: 1 } },
+  // 16. Stone Hoe (both right-facing and left-facing)
   { pattern: [['stone', 'stone'], [null, 'stick'], [null, 'stick']], result: { itemId: 'stone_hoe', count: 1 } },
+  { pattern: [['stone', 'stone'], ['stick', null], ['stick', null]], result: { itemId: 'stone_hoe', count: 1 } },
+  // Iron Hoe (both right-facing and left-facing)
+  { pattern: [['iron_ingot', 'iron_ingot'], [null, 'stick'], [null, 'stick']], result: { itemId: 'iron_hoe', count: 1 } },
+  { pattern: [['iron_ingot', 'iron_ingot'], ['stick', null], ['stick', null]], result: { itemId: 'iron_hoe', count: 1 } },
   // 17. Wheat to Bread
   { pattern: [['wheat', 'wheat', 'wheat']], result: { itemId: 'bread', count: 1 } },
   // v2.0 Recipes

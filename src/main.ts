@@ -1154,19 +1154,19 @@ engine.setUpdateCallback((deltaTime) => {
   }
 
   // Spawn passive animals during daytime in appropriate biomes (Overworld only)
-  if (!DimensionManager.getInstance().isNether() && !dayNight.isNight && mobManager.canSpawnPassive() && Math.random() < 0.008) {
-    const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 25, 75);
+  if (!DimensionManager.getInstance().isNether() && !dayNight.isNight && mobManager.canSpawnPassive() && Math.random() < 0.016) {
+    const spawnPos = getLandSpawnPos(player.position.x, player.position.z, 20, 60);
     if (spawnPos) {
       const topBlock = world.getBlock(Math.floor(spawnPos.x), Math.floor(spawnPos.y - 1), Math.floor(spawnPos.z));
       if (topBlock === 1 || topBlock === 2) { // Grass (1) or Dirt (2) -> Plains / Forest
         const rand = Math.random();
-        if (rand < 0.25) {
+        if (rand < 0.28) {
           mobManager.spawn(spawnPos, new Pig(spawnPos));
-        } else if (rand < 0.50) {
+        } else if (rand < 0.55) {
           mobManager.spawn(spawnPos, new Chicken(spawnPos));
-        } else if (rand < 0.70) {
+        } else if (rand < 0.80) {
           mobManager.spawn(spawnPos, new Cow(spawnPos));
-        } else if (rand < 0.88) {
+        } else if (rand < 0.94) {
           mobManager.spawn(spawnPos, new Villager(spawnPos));
         } else {
           mobManager.spawn(spawnPos, new Enderman(spawnPos));
@@ -1437,16 +1437,17 @@ engine.setUpdateCallback((deltaTime) => {
 
     if (activeItem.itemId && activeItem.count > 0) {
       const FOOD_DATA: Record<string, { hunger: number; name: string }> = {
-        cooked_beef: { hunger: 8, name: 'Cooked Beef' },
-        cooked_porkchop: { hunger: 8, name: 'Cooked Porkchop' },
-        cooked_chicken: { hunger: 7, name: 'Cooked Chicken' },
-        cooked_mutton: { hunger: 7, name: 'Cooked Mutton' },
-        bread: { hunger: 5, name: 'Bread' },
-        raw_beef: { hunger: 3, name: 'Raw Beef' },
-        raw_porkchop: { hunger: 3, name: 'Raw Porkchop' },
-        raw_chicken: { hunger: 2, name: 'Raw Chicken' },
-        raw_mutton: { hunger: 2, name: 'Raw Mutton' },
-        rotten_flesh: { hunger: 2, name: 'Rotten Flesh' },
+        cooked_beef: { hunger: 11, name: 'Cooked Beef' },
+        cooked_porkchop: { hunger: 11, name: 'Cooked Porkchop' },
+        cooked_chicken: { hunger: 10, name: 'Cooked Chicken' },
+        cooked_mutton: { hunger: 10, name: 'Cooked Mutton' },
+        bread: { hunger: 7, name: 'Bread' },
+        raw_beef: { hunger: 4, name: 'Raw Beef' },
+        raw_porkchop: { hunger: 4, name: 'Raw Porkchop' },
+        raw_chicken: { hunger: 3, name: 'Raw Chicken' },
+        raw_mutton: { hunger: 3, name: 'Raw Mutton' },
+        wheat: { hunger: 2, name: 'Wheat' },
+        rotten_flesh: { hunger: 3, name: 'Rotten Flesh' },
       };
 
       if (activeItem.itemId === 'bandage') {
@@ -1537,7 +1538,7 @@ engine.setUpdateCallback((deltaTime) => {
               }
             }
           }
-        } else if (activeItem.itemId === 'stick' || activeItem.itemId === 'wheat') {
+        } else if (activeItem.itemId === 'stick') {
           const itemDef = getItemById(activeItem.itemId);
           const craftHint = InputManager.isTouchDevice() ? 'Buka Inventory untuk craft.' : 'Tekan [E] untuk craft.';
           toastSystem.show(`${itemDef?.name || activeItem.itemId} digunakan untuk resep crafting! ${craftHint}`, 'info');

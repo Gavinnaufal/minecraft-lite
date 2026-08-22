@@ -11,7 +11,7 @@ export class MobManager {
   private scene: THREE.Scene;
   private world?: World;
   mobCap = gameSettings.mobCap;
-  mobCapPassive: number = gameSettings.isMobilePreset ? 6 : 10;
+  mobCapPassive: number = gameSettings.isMobilePreset ? 9 : 16;
   mobCapHostile: number = gameSettings.isMobilePreset ? 6 : 12;
 
   constructor(scene: THREE.Scene, world?: World) {

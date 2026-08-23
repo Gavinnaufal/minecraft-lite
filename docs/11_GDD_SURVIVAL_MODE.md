@@ -1,114 +1,112 @@
 # GAME DESIGN DOCUMENT — SURVIVAL MODE
-## Mini Minecraft → "15 Hari di Hutan" (nama sementara)
+## Mini Minecraft → "15 Hari di Hutan" (Forest Survival Edition)
 
-**Versi:** 1.0
-**Sifat perubahan:** TOTAL TRANSFORMATION — mengganti mode sandbox bebas jadi satu-satunya cara main
-**Terinspirasi dari:** "99 Nights in the Forest" (Roblox) — hanya konsep genre, semua nama/aset/cerita orisinal buatan sendiri
+**Versi:** 2.0 (FINAL IMPLEMENTED)  
+**Status:** 100% Selesai & Terintegrasi Penuh  
+**Platform:** Web (Three.js + TypeScript + Vite) — Kompatibel Desktop & Mobile
 
 ---
 
 ## 1. VISI GAME
 
-Pemain terdampar sendirian di hutan setelah sebuah kejadian tragis (detail cerita di bagian 6). Dia harus bertahan hidup selama **15 hari** — membangun tempat berlindung, mencari makanan, membuat alat, dan melawan/menghindar dari monster yang makin berbahaya tiap harinya — sampai akhirnya diselamatkan di hari terakhir.
+Pemain terdampar sendirian di hutan setelah sebuah kejadian tak terduga. Dia harus bertahan hidup selama **15 hari** — membangun tempat berlindung, mengumpulkan dan menanam makanan, meracik obat darurat, serta menghadapi serbuan monster malam yang semakin ganas — sampai akhirnya bala bantuan penyelamat tiba di fajar Hari ke-15.
 
-**Pilar desain:**
-1. **Ada tujuan jelas** — bukan sandbox tanpa akhir, tapi ada "menang" (bertahan sampai hari 15) dan "kalah" (nyawa habis).
-2. **Makin hari makin susah** — pemain harus terus beradaptasi, bukan cuma jalan santai selamanya.
-3. **Base camp jadi pusat strategi** — bukan cuma tempat tinggal, tapi benteng yang harus dikembangkan.
-4. **Kesulitan bisa dipilih** — biar pemain baru dan pemain yang suka tantangan sama-sama bisa menikmati.
+**Pilar Desain:**
+1. **Objektif Jelas** — Bukan sekadar sandbox tanpa arah; memiliki kondisi **Menang** (mencapai Hari 15) dan **Kalah** (nyawa habis).
+2. **Kurva Eskalasi Bertahap** — Keganasan monster malam, jumlah kemunculan, dan bonus HP musuh meningkat secara bertahap setiap harinya.
+3. **Kebutuhan Hidup & Strategi Markas** — Pemain harus mengelola *Health*, *Hunger Bar*, zirah pertahanan, dan stok obat perban (*Bandage*).
+4. **Fleksibilitas Kesulitan** — Tersedia 3 tingkat kesulitan untuk pemain kasual hingga pecinta hardcore permadeath.
 
 ---
 
 ## 2. GAMEPLAY LOOP UTAMA
 
 ```
-Pilih Kesulitan → Mulai Hari 1 → Cari bahan siang hari 
-  → Bangun/perkuat base camp → Masak makanan → Bertahan malam hari
-  → Hari berganti → (makin susah) → ... → Bertahan sampai Hari 15
-  → MENANG (cerita akhir bahagia) 
+Pilih Kesulitan (Menu Utama) → Mulai Hari 1 (06:00 Pagi)
+  → Eksplorasi Siang: Berburu hewan, tebang kayu, tambang bijih besi & batubara
+  → Pertanian: Cangkul tanah (Hoe) → Tanam benih gandum → Panen gandum & buat roti
+  → Medis: Kumpulkan daun & benang laba-laba untuk membuat Perban (Bandage)
+  → Bangun/Perkuat Markas & Zirah: Pasang obor, dinding pelindung, peti, dan tungku
+  → Bertahan dari Serbuan Monster Malam (AI aggro 35 blok)
+  → Fajar Tiba & Hari Berganti (Hari 1 s/d 15)
+  → Fajar Hari 15: MENANG (Layar Kemenangan + Statistik Bermain)
   
-  ATAU jika nyawa habis di tengah jalan → KALAH (sesuai aturan nyawa 
-  dari kesulitan yang dipilih)
+  ATAU jika nyawa habis: KALAH (Layar Kekalahan + Ringkasan Statistik + Reset ke Hari 1 06:00)
 ```
 
 ---
 
-## 3. SISTEM KESULITAN (mengatur semuanya sekaligus)
+## 3. SISTEM KESULITAN (DIFFICULTY SYSTEM)
 
-Dipilih 1x di awal permainan, lewat layar baru sebelum mulai main.
-
-| | 🟢 Santai | 🟡 Normal | 🔴 Susah |
+| Parameter | 🟢 Santai (Casual) | 🟡 Normal (Standard) | 🔴 Susah (Hardcore) |
 |---|---|---|---|
-| **Kalau mati** | Kena penalti kecil (kehilangan sebagian item dari inventory), lanjut terus dari posisi terakhir | Dikasih 3 kesempatan (nyawa), baru setelah 3x mati ulang dari Hari 1 | Sekali mati langsung ulang dari Hari 1 total |
-| **Kecepatan lapar** | Pelan — hunger berkurang lambat | Sedang | Cepat — harus rajin makan |
-| **Kenaikan kesulitan harian** | Monster bertambah pelan, cuaca jarang mengganggu | Monster + kadang cuaca buruk, kenaikan sedang | Monster + cuaca buruk, kenaikan paling cepat dari semua tingkat |
+| **Kapasitas Nyawa** | Nyawa Bebas (`∞`) | **3 Nyawa** | **1 Nyawa (Permadeath)** |
+| **Laju Kelaparan** | $0.5\times$ *(Lambat)* | $1.0\times$ *(Normal)* | $1.5\times$ *(Cepat)* |
+| **Faktor Monster** | $0.7\times$ *(Ringan)* | $1.0\times$ *(Standar)* | $1.4\times$ *(Sangat Ganas & Tebal)* |
+| **Konsekuensi Kematian** | Hari berjalan tetap lanjut, inventaris aman | Nyawa berkurang 1, ulang dari Hari 1 jika habis | Sekali mati langsung Game Over total |
 
 ---
 
-## 4. SISTEM HARI & KURVA KESULITAN
+## 4. SISTEM KEBUTUHAN HIDUP & KESEHATAN
 
-- Total **15 hari** untuk menang.
-- 1 hari = kombinasi siang (waktu aman/kerja) + malam (waktu berbahaya), memakai `DayNightCycle.ts` yang sudah ada, cukup disesuaikan durasinya kalau perlu.
-- Dibagi 3 fase:
+### 4.1 Bilah Lapar (Hunger Bar)
+- Kapasitas: **20 Poin Lapar** (10 Ikon Drumstick SVG).
+- Drain Rate: Diam ($\sim 40$s per poin), Jalan ($1.4\times$), Sprint ($2.0\times$).
+- **Starvation**: Jika Hunger $= 0$, pemain terkena damage $-1$ HP setiap $3.5$ detik.
+- **Natural Regen**: Jika Hunger $\ge 18$ dan HP belum penuh, pulih $+1$ HP setiap $4.0$ detik.
+- **Nilai Nutrisi Makanan**:
+  - *Cooked Beef / Porkchop*: $+11$ Lapar
+  - *Cooked Chicken / Mutton*: $+10$ Lapar
+  - *Bread (Roti)*: $+7$ Lapar
+  - *Raw Beef / Porkchop*: $+4$ Lapar
+  - *Raw Chicken / Mutton*: $+3$ Lapar
+  - *Wheat (Gandum Mentah)*: $+2$ Lapar (Camilan darurat instan)
+  - *Rotten Flesh*: $+3$ Lapar
 
-| Fase | Hari | Karakteristik |
-|---|---|---|
-| **Awal** | 1–5 | Monster sedikit, waktu buat belajar, kumpul bahan dasar, bangun base awal |
-| **Tengah** | 6–10 | Monster bertambah jumlah & variasi, base camp mulai diuji |
-| **Akhir** | 11–15 | Paling berat — monster terbanyak/terkuat, cuaca buruk (jika ada), base camp harus sudah kuat |
+### 4.2 Item Medis Darurat: Perban (Bandage)
+- Khasiat: **$+6$ HP Instan** seketika saat Klik Kanan.
+- Terpisah dari hunger bar.
+- Cooldown: 5.0 detik dengan proteksi anti-spam.
+- Resep Crafting: `3x Leaves + 1x String` $\rightarrow$ `2x Bandage`.
 
-- Di akhir Hari 15 (kalau pemain masih hidup) → trigger layar **Menang** dengan cerita penutup.
-- Kalau nyawa habis sebelum Hari 15 → trigger layar **Kalah**, perlakuan sesuai tabel kesulitan di atas.
-
----
-
-## 5. BASE CAMP (pusat strategi)
-
-### 5.1 Membangun
-- Pemain bebas pilih lokasi kapan saja (tidak dibatasi 1 tempat permanen — tapi disarankan menetap karena efisiensi waktu).
-- Menggunakan sistem build blok yang sudah ada (break/place block, crafting).
-
-### 5.2 Pertahanan
-- **Pagar (Fence):** blok baru, tinggi 1.5 blok, menghalangi jalan mob darat tapi tidak menghalangi pandangan/serangan pemain. Bisa di-craft dari plank.
-- **Perangkap (Spike Trap):** blok baru, taruh di tanah, otomatis memberi damage ke mob (BUKAN ke pemain) yang melangkah di atasnya. Di-craft dari stick + stone.
-- *(Stretch/opsional nanti: perangkap tipe lain, pagar yang bisa dibuka-tutup kayak pintu — belum untuk versi pertama.)*
-
----
-
-## 6. CERITA (AWAL → AKHIR)
-
-### 6.1 Pembukaan (ditampilkan sebagai teks singkat sebelum Hari 1 dimulai)
-Contoh kerangka (boleh disesuaikan/diperhalus nanti):
-> *"Dalam perjalanan pulang, semuanya berubah begitu cepat. Saat kau tersadar, yang tersisa hanya hutan lebat dan keheningan. Tidak ada tanda arah, tidak ada seorang pun. Yang kau tahu, kau harus bertahan — sampai seseorang datang mencarimu."*
-
-### 6.2 Penutup — MENANG (ditampilkan setelah bertahan sampai Hari 15)
-Contoh kerangka:
-> *"Hari ke-15. Di kejauhan, kau melihat cahaya — bukan dari api unggunmu sendiri. Suara familiar memanggil namamu. Setelah semua yang telah kau lalui, akhirnya... kau pulang."*
-
-### 6.3 Penutup — KALAH (ditampilkan sesuai aturan kesulitan, saat benar-benar habis nyawa)
-Contoh kerangka (nada berbeda dari menang, tapi tidak harus terasa "game over" yang dingin):
-> *"Kegelapan menelanmu. Hutan ini menang kali ini — tapi ceritamu belum selesai."* (lalu tombol "Coba Lagi")
-
-*(Detail teks final bisa diperhalus belakangan sama-sama — kerangka di atas cukup buat mulai implementasi sistemnya dulu.)*
+### 4.3 Sistem Pertanian & Panen (Farming)
+- Cangkul (*Wooden / Stone / Iron Hoe*) dengan resep simetris kiri-kanan.
+- Klik Kanan rumput/tanah $\rightarrow$ *Farmland (13)*.
+- Tanam *Wheat Seeds* di atas Farmland $\rightarrow$ *Wheat Crop (14)*.
+- Panen 2 cara: Klik Kiri (hancurkan) atau Klik Kanan (*Quick Harvest*) menjatuhkan `1x Wheat` + `1-2x Wheat Seeds`.
 
 ---
 
-## 7. PERUBAHAN DARI GAME SEKARANG (implikasi teknis, level desain)
+## 5. KURVA ESKALASI MALAM & AI MONSTER
 
-Karena ini **mengganti total**, bukan menambah mode terpisah, berikut yang berubah dari game yang sudah ada:
-
-- **Main Menu**: sebelum "New Game" dimulai, ada layar baru pilih kesulitan.
-- **Tidak ada lagi main "bebas tanpa akhir"** — selalu ada hari berjalan & kondisi menang/kalah.
-- **Sistem nyawa baru** — belum ada di game sekarang, perlu dibuat dari nol (beda dari HP/health biasa yang sudah ada).
-- **Hunger sudah direncanakan sebelumnya** (di dokumen v2.0 lama, Fase 26) — tinggal dipastikan kecepatannya bisa diatur sesuai kesulitan.
-- **Sprint sudah ada** — cukup dipastikan tetap berfungsi baik dalam konteks kabur dari bahaya.
-- **World generation, crafting, mob, dll yang sudah ada** — TETAP DIPAKAI SEMUA, tidak dibuang. Survival Mode ini "membungkus" semua sistem yang sudah ada dengan tujuan/aturan baru, bukan membangun ulang dari nol.
+- **Pemisahan Kuota Mob**:
+  - `mobCapPassive`: 16 ekor di PC / 9 di HP (Sapi, Ayam, Babi, Kambing, Kura-kura, Villager).
+  - `mobCapHostile`: 5 hingga 18 ekor di PC / 3 hingga 10 di HP.
+- **Radius AI Aggro**: 35 Blok.
+- **Fase Malam Hari**:
+  - **Fase Awal (Hari 1–5)**: 5 monster, spawn reguler, HP standar (20 HP).
+  - **Fase Menengah (Hari 6–10)**: 11 monster, spawn beruntun, monster $+7$ HP ekstra.
+  - **Fase Puncak Survival (Hari 11–15)**: 18 monster agresif, spawn sangat padat, bonus hingga $+15$ HP ekstra.
 
 ---
 
-## 8. HAL YANG BELUM DIPUTUSKAN (akan dibahas belakangan, jangan dikerjakan dulu)
+## 6. CERITA & LAYAR AKHIR PERMAINAN
 
-- Detail final teks cerita pembuka/penutup
-- Apakah ada variasi cerita tergantung kesulitan yang dipilih
-- Detail suara/musik untuk momen menang/kalah
-- Apakah base camp bisa lebih dari 1 titik atau harus 1 saja
+### 6.1 Pembukaan (Prolog)
+> *"Dalam perjalanan pulang, segalanya berubah begitu cepat. Saat kau tersadar, yang tersisa hanyalah hutan belantara yang sunyi dan dingin. Kau harus bertahan hidup selama 15 Hari sampai tim penyelamat tiba!"*
+
+### 6.2 Layar Kemenangan (Victory Screen — Hari 15)
+> *"Hari ke-15. Di kejauhan, kau melihat cahaya terang — bukan dari api unggunmu sendiri. Suara langkah dan panggilan familiar memanggil namamu. Bala bantuan akhirnya tiba. Kau selamat dan pulang!"*
+
+### 6.3 Layar Kekalahan (Defeat Screen)
+> *"Kegelapan menelanmu di Hari ke-X. Hutan lebat ini menang kali ini — tapi jangan berkecil hati, pengalaman petualangan ini akan membuatmu bertahan lebih kuat berikutnya!"*
+
+### 6.4 Pelacak Statistik (Stats Tracker)
+Melacak 9 metrik: Hari Bertahan, Tingkat Kesulitan, Waktu Bermain, Monster Kalah, Blok Hancur, Blok Pasang, Item Dibuat, Makanan Dimakan, dan Jarak Ditempuh.
+
+---
+
+## 7. SINKRONISASI SIKLUS WAKTU
+
+- Durasi 1 Hari = **10 Menit** (600 detik).
+- Setiap Game Over / Reset Progres / New Game, waktu di-reset secara mutlak ke **Hari 1 • Pukul 06:00 Pagi (Fajar Cerah)**.

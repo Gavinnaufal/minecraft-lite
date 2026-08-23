@@ -2,7 +2,7 @@
 
 Mini Minecraft adalah game sandbox & survival voxel 3D berkinerja tinggi yang dibangun dari nol berbasis **Three.js**, **TypeScript**, dan **Vite**. Project ini menerapkan arsitektur *game engine* modern dengan generasi *mesh* multithreaded (*Web Worker Zero-Copy Transferable ArrayBuffers*), *Frustum Culling*, *Mob Object Pooling*, *Procedural Web Audio API Synthesizer*, *Combat & Armor Mitigation System*, *Procedural Structure & Biome Generation*, *WebSocket Multiplayer*, serta mode permainan **15-Day Forest Survival** berbalut antarmuka bertema **Rustic Wood & Parchment**.
 
-🏆 **100% Selesai & Lolos Pengujian Production Build (`tsc && vite build` — 0 Errors)**.
+🏆 **Status Proyek: 100% Selesai & Lolos Pengujian Production Build (`tsc && vite build` — 0 Errors)**.
 
 ---
 
@@ -10,88 +10,169 @@ Mini Minecraft adalah game sandbox & survival voxel 3D berkinerja tinggi yang di
 
 Pemain terdampar di tengah hutan lebat yang liar dan berbahaya. Misimu adalah **bertahan hidup selama 15 Hari** sampai tim penyelamat dan bala bantuan tiba.
 
+```
+Pilih Kesulitan → Mulai Hari 1 (06:00 Pagi) → Kumpulkan Sumber Daya Siang Hari
+  → Bangun Markas / Benteng Pertahanan → Tanam & Olah Makanan → Bertahan dari Serbuan Monster Malam
+  → Eskalasi Kesulitan Meningkat Tiap Hari → Capai Fajar Hari ke-15 → 🎉 MENANG & PULANG!
+  
+  (Jika Nyawa Habis di Tengah Jalan → ☠️ GAME OVER & Layar Ringkasan Statistik)
+```
+
 ### ⚔️ 1. Tingkat Kesulitan Permainan (Difficulty Settings)
-Saat memulai dunia baru, pemain dapat memilih 3 tingkat tantangan:
-- 🌿 **Santai**: Nyawa tak terbatas. Kematian hanya mereset hari berjalan tanpa menghapus progres inventaris/peralatan.
-- 🛡️ **Normal**: Pemain memiliki **3 Nyawa**. Monster malam lebih agresif. Nyawa berkurang setiap kali mati.
-- ☠️ **Susah (Hardcore / Permadeath)**: Pemain hanya memiliki **1 Nyawa**. Kematian memicu *Game Over* instan dan mereset dunia permainan.
+Saat memulai dunia baru dari Menu Utama, pemain dapat memilih 3 tingkat tantangan:
+- 🌿 **Santai (Casual)**: Nyawa tak terbatas (`∞`). Laju lapar lambat ($0.5\times$). Kematian tidak menghapus dunia.
+- 🛡️ **Normal (Standard)**: Pemain memiliki **3 Nyawa**. Laju lapar normal ($1.0\times$). Monster malam agresif dan bertambah kuat.
+- ☠️ **Susah (Hardcore / Permadeath)**: Pemain hanya memiliki **1 Nyawa**. Laju lapar cepat ($1.5\times$). Kematian memicu *Game Over* seketika dan mereset dunia permainan.
 
-### 📜 2. Prolog Narasi & Epilog Akhir Permainan (End Game Screen)
-- 📖 **Prolog Catatan Survival**: Muncul sebelum petualangan dimulai, memberikan narasi cerita dan arahan objektif misi 15 hari.
-- 🏆 **Layar Kemenangan (Victory Screen)**: Terpicu otomatis saat mencapai fajar Hari ke-15 dengan cerita penyelamatan.
-- ☠️ **Layar Kekalahan (Defeat Screen)**: Terpicu saat nyawa pemain habis atau waktu gagal dipenuhi.
-- 🔄 **Tombol Reset Progres**: Menghapus save lama dan mempersiapkan petualangan baru secara mulus.
+### ⏰ 2. Siklus Waktu Terpadu (Day/Night Cycle)
+- Durasi 1 hari penuh = **10 menit** (600 detik nyata).
+- **Sinkronisasi Otomatis**: Setiap memulai game baru (*New Game*) atau mereset game setelah *Game Over*, waktu selalu dimulai *fresh* dari **Hari 1 • Pukul 06:00 Pagi (Fajar Cerah)**.
 
-### 📊 3. Pelacak Statistik Real-Time (`StatsTracker.ts`)
-Melacak dan menampilkan ringkasan performa bermain pemain di akhir permainan:
-1. 📅 **Hari Bertahan**: Total hari yang berhasil dilewati (/ 15 Hari).
+### 📜 3. Prolog Narasi & Layar Akhir Permainan (End Game Screen)
+- 📖 **Prolog Catatan Survival**: Dialog pembuka saat menginjakkan kaki pertama kali di hutan.
+- 🏆 **Layar Kemenangan (Victory Screen)**: Terpicu otomatis di fajar Hari ke-15 dengan cerita penyelamatan epik.
+- ☠️ **Layar Kekalahan (Defeat Screen)**: Terpicu saat nyawa habis, menampilkan sebab gugur dan kata penutup.
+- 🔄 **Tombol Kembali ke Menu Utama**: Mereset seluruh progres, menyelaraskan waktu ke jam 06:00 pagi, dan siap untuk petualangan berikutnya.
+
+### 📊 4. Pelacak Statistik Lengkap (`StatsTracker.ts`)
+Melacak performa permainan secara real-time dan menampilkannya di Layar Akhir:
+1. 📅 **Hari Bertahan**: Total hari yang berhasil dilalui (/ 15 Hari).
 2. 🛡️ **Tingkat Kesulitan**: Santai / Normal / Susah.
-3. ⏱️ **Waktu Bermain**: Durasi total bermain (Jam, Menit, Detik).
-4. ⚔️ **Monster Dikalahkan**: Total monster yang berhasil dibasmi.
+3. ⏱️ **Waktu Bermain**: Durasi nyata permainan (Jam, Menit, Detik).
+4. ⚔️ **Monster Dikalahkan**: Total musuh yang ditumbangkan.
 5. ⛏️ **Blok Dihancurkan**: Jumlah blok yang ditambang/dipecahkan.
-6. 🧱 **Blok Dipasang**: Jumlah blok yang ditempatkan/dibangun.
-7. 🛠️ **Item Dibuat**: Total item yang berhasil di-craft di Crafting Table.
-8. 🍖 **Makanan Dimakan**: Porsi makanan yang dikonsumsi untuk mengisi lapar/darah.
-9. 🏃 **Jarak Ditempuh**: Akumulasi jarak perjalanan kaki dalam meter (blok).
+6. 🧱 **Blok Dipasang**: Jumlah blok yang dibangun.
+7. 🛠️ **Item Dibuat**: Total item yang di-craft di Meja Crafting.
+8. 🍖 **Makanan Dimakan**: Porsi makanan yang dikonsumsi.
+9. 🏃 **Jarak Ditempuh**: Akumulasi jarak berjalan kaki dalam satuan meter (blok).
+
+---
+
+## 🍖 Sistem Kebutuhan Hidup & Medis (Hunger & Health System)
+
+### 🍗 1. Bilah Lapar (Hunger Bar)
+- Terletak simetris di sebelah kanan bilah Hotbar, dirender dengan **10 ikon paha ayam (Drumstick SVG)** beresolusi tajam.
+- Kapasitas maksimal: **20 Poin Lapar**.
+- **Laju Pengurangan**:
+  - Posisi Diam (*Idle*): Berkurang 1 poin setiap $\sim 40$ detik.
+  - Berjalan Normal: $1.4\times$ lebih cepat.
+  - Berlari Sprint (*Shift*): $2.0\times$ lebih cepat.
+- **Efek Status Lapar**:
+  - ☠️ **Kelaparan (Hunger = 0)**: Pemain menerima damage $-1$ HP setiap $3.5$ detik disertai kilatan merah dan notifikasi peringatan.
+  - 💖 **Regenerasi Alami (Hunger $\ge 18$)**: Jika darah belum penuh, pemain memulihkan $+1$ HP setiap $4.0$ detik dengan mengonsumsi sedikit energi lapar.
+
+### 🥗 2. Nilai Nutrisi Makanan
+Pemain dapat memakan makanan dengan memegang item di Hotbar lalu melakukan **Klik Kanan**:
+
+| Makanan | Tipe | Nilai Lapar | Deskripsi |
+|---|---|:---:|---|
+| 🥩 **Cooked Beef (Steak)** | Matang | **$+11$** | Daging sapi bakar lezat dan mengenyangkan. |
+| 🍖 **Cooked Porkchop** | Matang | **$+11$** | Daging babi bakar nutrisi tinggi. |
+| 🍗 **Cooked Chicken** | Matang | **$+10$** | Daging ayam panggang. |
+| 🥩 **Cooked Mutton** | Matang | **$+10$** | Daging kambing panggang. |
+| 🍞 **Bread (Roti)** | Olahan | **$+7$** | Makanan pokok olahan dari 3x Gandum. |
+| 🥩 **Raw Beef** | Mentah | **$+4$** | Daging sapi mentah hasil berburu. |
+| 🍖 **Raw Porkchop** | Mentah | **$+4$** | Daging babi mentah hasil berburu. |
+| 🍗 **Raw Chicken** | Mentah | **$+3$** | Daging ayam mentah. |
+| 🥩 **Raw Mutton** | Mentah | **$+3$** | Daging kambing mentah. |
+| 🌾 **Wheat (Gandum Mentah)** | Tanaman | **$+2$** | Camilan gandum darurat yang bisa dimakan langsung. |
+| 🧟 **Rotten Flesh** | Monster Drop | **$+3$** | Daging busuk dari Zombie untuk situasi darurat. |
+
+### 🩹 3. Item Medis Darurat: Perban (Bandage)
+Item penyembuh instan yang murni independen dari sistem makanan:
+- **Khasiat**: Menyembuhkan **$+6$ HP Instan** (setara 3 simbol hati penuh) seketika.
+- **Cooldown**: 5.0 Detik dengan proteksi *anti-spam*.
+- **Proteksi HP Penuh**: Tidak dapat digunakan saat darah sudah maksimal (20/20 HP).
+- **Resep Crafting**: `3x Leaves` (Daun herbal) + `1x String` (Benang pengikat) $\rightarrow$ **2x Bandage**.
+
+---
+
+## 🌾 Sistem Pertanian & Panen (Farming System)
+
+Aktivitas bertani memungkinkan pemain memproduksi makanan melimpah di dekat markas:
+1. **Membajak Tanah**: Pegang Cangkul (*Hoe*), lalu **Klik Kanan** pada blok Rumput (*Grass*) atau Tanah (*Dirt*) $\rightarrow$ Berubah menjadi tanah gembur (**Farmland - ID 13**).
+2. **Menanam Benih**: Pegang Benih Gandum (*Wheat Seeds*), lalu **Klik Kanan** di atas Farmland $\rightarrow$ Tertanam tanaman gandum (**Wheat Crop - ID 14**).
+3. **Memanen Gandum**: Arahkan kursor ke tanaman gandum dewasa:
+   - **Klik Kiri (Pukul)**: Menghancurkan tanaman gandum $\rightarrow$ Menjatuhkan **1x Wheat** + **1–2x Wheat Seeds**.
+   - **Klik Kanan (*Quick Harvest*)**: Panen instan langsung ke inventaris dengan efek suara & notifikasi.
+
+---
+
+## 👹 Eskalasi Bahaya Malam Hari & Kecerdasan AI Monster
+
+Sistem malam hari dirancang menantang dengan eskalasi bertahap:
+- **Pemisahan Kuota Mob (Mob Cap Isolation)**:
+  - **Hewan Siang (`mobCapPassive`)**: 16 ekor di PC / 9 ekor di Mobile (Sapi, Babi, Ayam, Kambing, Kura-kura, Penduduk Desa).
+  - **Monster Malam (`mobCapHostile`)**: Kuota mandiri yang bertambah dinamis seiring bergantinya hari.
+- **Radius Deteksi AI 35 Blok**: Monster malam (Zombie, Skeleton, Spider, Enderman) mendeteksi dan mengejar pemain dari jarak 35 blok.
+- **Kurva Eskalasi Malam (Hari 1 s/d 15)**:
+  - 🟢 **Hari 1–5 (Fase Awal)**: Kuota monster 5 ekor, spawn santai, HP normal (20 HP).
+  - 🟡 **Hari 6–10 (Fase Menengah)**: Kuota monster 11 ekor, spawn lebih sering, monster lebih alot ($+7$ HP ekstra).
+  - 🔴 **Hari 11–15 (Fase Puncak Survival)**: Kuota monster 18 ekor, spawn sangat intensif, monster memiliki darah tebal (hingga $+15$ HP ekstra). Memaksa pemain berlindung di dalam benteng markas!
 
 ---
 
 ## 🎨 Tema Visual UI/UX "Hutan Survival" (Rustic Wood & Parchment Theme)
 
-Seluruh antarmuka grafis (GUI) didesain ulang dengan tema alam dan petualangan hutan:
-- 🪵 **Panel Kayu Tua Rustic (`--theme-panel-bg`)**: Panel jendela bertekstur bevel kayu gelap yang hangat.
+Seluruh antarmuka grafis (GUI) didesain konsisten dengan tema alam dan petualangan:
+- 🪵 **Panel Kayu Tua Rustic (`--theme-panel-bg`)**: Panel jendela bertekstur kayu gelap yang hangat.
 - 📜 **Kotak Catatan Perkamen (`--theme-parchment-bg-dark`)**: Area teks berlatar kertas usang dengan tipografi kontras tinggi yang mudah dibaca.
 - 🍃 **Aksen Hijau Daun & Emas Hangat (`--theme-accent-green`, `--theme-accent-gold`)**: Tombol aksi primer dan highlight item terpilih dengan efek *amber glow*.
 - 🍞 **Slot Inset Kayu Gelap (`--theme-slot-bg`)**: Tampilan slot inventaris dan hotbar yang menyatu dengan estetika kayu.
-- 💬 **Sistem Toast Notifikasi (`ToastSystem.ts`)**: Notifikasi mengambang dengan aksen warna kategori (Sukses, Peringatan, Bahaya, Info).
+- 💬 **Sistem Toast Notifikasi (`ToastSystem.ts`)**: Notifikasi mengambang dengan tema warna kategori (Sukses, Peringatan, Bahaya, Info).
 
 ---
 
 ## 📱 Optimalisasi Khusus Mobile & Layar Sentuh
 
-Game ini sepenuhnya responsif dan dioptimalkan untuk perangkat ponsel pintar (Android/iOS):
-- 👆 **Sistem Tap-to-Select Aman**: Menggantikan mekanisme *drag-and-drop* pada layar sentuh. Cukup ketuk item sumber lalu ketuk slot tujuan untuk memindahkan item tanpa risiko *item stuck*.
+Game ini sepenuhnya responsif dan nyaman dimainkan di perangkat layar sentuh:
+- 👆 **Sistem Tap-to-Select Aman**: Mengetuk item sumber lalu mengetuk slot tujuan untuk memindahkan item tanpa risiko *item stuck*.
 - ⏱️ **Modal Pemisah Stack (Stack Splitter)**: Sentuh dan tahan (*long press* $\ge 380\text{ms}$) pada item untuk membuka slider pembagi jumlah item (1 Saja, Setengah, Semua, +/-).
-- ☰ **Tombol Menu Cepat (Mobile Pause Button)**: Akses mudah ke Pause Menu, Simpan Dunia, dan Pengaturan Game langsung dari tombol sentuh di layar.
-- 📐 **HUD Responsif Dinamis**: Teks koordinat XYZ, kompas waktu/hari, dan bilah status (Health, Oxygen, Armor) menyesuaikan posisi secara otomatis agar tidak bertumpukan.
-- 🛡️ **Pencegah Player Nyangkut (Spawn Safeguard)**: Elevasi spawn player dihitung $+0.6$ blok di atas permukaan bukit/lereng untuk mencegah AABB pemain menembus tanah saat pertama kali masuk game.
+- ☰ **Tombol Menu Cepat (Mobile Pause Button)**: Akses mudah ke Pause Menu, Simpan Dunia, dan Pengaturan Game langsung dari tombol layar sentuh.
+- 📐 **HUD Responsif Dinamis**: Teks koordinat XYZ, kompas waktu/hari, bilah Health, Hunger, Oxygen, dan Armor menyesuaikan tata letak secara otomatis.
+- 🛡️ **Pencegah Player Nyangkut (Spawn Safeguard)**: Elevasi spawn dihitung $+0.6$ blok di atas permukaan bukit untuk mencegah pemain menembus tanah.
 
 ---
 
-## 🚀 Ringkasan Fitur Lengkap Permainan
+## 📜 Panduan Resep Crafting & Smelting (35+ Resep)
 
-### ⚒️ 1. Penambangan, Peleburan & Pertanian (Mining, Smelting & Farming)
-- ⛏️ **Deposit Ore**: Generasi bijih batubara (`coal_ore`) dan bijih besi (`iron_ore`) bawah tanah. `iron_ore` memerlukan minimal Stone Pickaxe.
-- 🔥 **Furnace Interaktif**: Melebur `raw_iron` menjadi `iron_ingot` serta memasak daging mentah (*Raw Beef, Raw Porkchop, Raw Chicken, Mutton*).
-- 🌾 **Pertanian Gandum**: Mencangkul tanah dengan Cangkul (*Hoe*), menanam *Wheat Seeds*, dan memanen gandum matang untuk membuat roti (*Bread*).
+Gunakan **Crafting Table** (Grid 3x3) atau **Furnace** untuk memproses material:
 
-### 🌾 2. Desa, Struktur & Perdagangan (Villages & Trading)
-- 🏡 **Desa Prosedural (Procedural Villages)**: Rumah kayu ek, jalan setapak kerikil, tiang lampu obor, dan peti rampasan desa (*Village Loot Chest*).
-- 🤝 **Villager Trading**: Berinteraksi dengan penduduk desa untuk menukarkan hasil panen/sumber daya dengan `emerald` atau peralatan langka.
-- 🛡️ **Iron Golem**: Pelindung desa netral yang akan membalas serangan pemain jika diprovokasi.
+### 1. Blok, Komponen Dasar & Medis
+- 🪵 **Plank** (4x): `1x Wood Log`
+- 🥢 **Stick** (4x): `2x Planks` vertikal
+- 🛠️ **Crafting Table** (1x): `4x Planks` (Grid 2x2)
+- 📦 **Chest** (1x): `8x Planks` melingkar
+- 🔥 **Furnace** (1x): `8x Stone` melingkar
+- 💡 **Torch** (4x): `1x Coal` / `1x Wood Log` / `1x Plank` di atas `1x Stick`
+- 🧱 **Sandstone** (1x): `4x Sand` (Grid 2x2)
+- 💡 **Glowstone** (1x): `4x Netherrack` (Grid 2x2)
+- 🍞 **Bread** (1x): `3x Wheat` horizontal
+- 🩹 **Bandage** (2x): `3x Leaves` horizontal/vertikal + `1x String`
 
-### 💖 3. Pembiakan & Penjinakan Hewan (Animal Breeding)
-- 🌾 **Sistem Pakan**: Memberi makan hewan (*Cow, Pig, Chicken, Goat, Turtle*) dengan gandum/biji-bijian.
-- 💕 **Love Mode**: Hewan yang diberi makan akan memancarkan partikel hati dan melahirkan anak mob 3D dengan skala $0.5\times$ yang akan tumbuh dewasa.
+### 2. Alat & Senjata (Tools & Weapons)
+- ⛏️ **Pickaxe** (*Wood/Stone/Iron*): `3x Bahan` horizontal di atas + `2x Sticks` vertikal di tengah.
+- 🗡️ **Sword** (*Wood/Stone/Iron*): `2x Bahan` vertikal di atas + `1x Stick` di bawah.
+- 🪓 **Axe** (*Wood/Stone/Iron*): `3x Bahan` pola sudut + `2x Sticks` vertikal.
+- 🧹 **Shovel** (*Wood/Stone/Iron*): `1x Bahan` di atas + `2x Sticks` vertikal.
+- 🧑‍🌾 **Hoe** (*Wood/Stone/Iron*): `2x Bahan` sudut atas (mendukung hadap kiri & kanan) + `2x Sticks` vertikal.
+- 🏹 **Bow** (1x): `3x Sticks` melengkung + `3x Strings`.
+- 🏹 **Arrow** (4x): `1x Stone` atas + `1x Stick` tengah + `1x Feather` bawah.
 
-### 🛡️ 4. Sistem Zirah & Mitigasi Kerusakan (Armor System)
-- 🛡️ **4 Slot Zirah**: Helmet, Chestplate, Leggings, dan Boots (Tersedia set *Leather* dan *Iron*).
-- 📊 **Formula Pertahanan**: Tiap 1 poin zirah menyerap $4\%$ kerusakan fisik (maksimal $80\%$ reduksi).
-- 🛡️ **HUD Shield Bar**: Menampilkan bilah 10 perisai SVG di atas bar darah pemain.
+### 3. Set Zirah (Armor Sets)
+- 🪖 **Helmet** (*Leather/Iron*): `5x Bahan` pola helm terbalik.
+- 👕 **Chestplate** (*Leather/Iron*): `8x Bahan` mengisi seluruh slot kecuali tengah atas.
+- 👖 **Leggings** (*Leather/Iron*): `7x Bahan` pola celana panjang.
+- 🥾 **Boots** (*Leather/Iron*): `4x Bahan` pola sepasang sepatu.
 
-### 🏰 5. Dimensi Nether & Boss Mobs
-- 🌀 **Nether Portal**: Membangun portal obsidian $4\times 5$ dan mengaktifkannya untuk berpindah dimensi.
-- 🧱 **Benteng Nether (Nether Fortress)**: Lorong jembatan bata nether, kolam lahar, dan peti harta karun neraka.
-- 👹 **Monster & Boss**:
-  - 🧟 **Zombie & Skeleton**: Membakar saat siang hari, menembakkan panah proyektil.
-  - 🕷️ **Spider**: Memanjat dinding vertikal, pasif di siang hari & agresif di malam hari.
-  - 👁️ **Enderman**: Berteleportasi saat marah atau tersentuh air; marah saat ditatap 0.8 detik.
-  - 🔥 **Blaze**: Boss melayang berputar dengan 12 batang api yang menembakkan bola api beruntun.
-  - 👻 **Ghast**: Boss raksasa melayang dengan proyektil bola api peledak (*Explosive Fireballs*).
+### 4. Peleburan & Memasak (Furnace Smelting)
+- 🪙 **Iron Ingot**: `Raw Iron` + `Bahan Bakar (Coal/Plank/Log)` (5 detik)
+- 🍖 **Cooked Beef / Porkchop / Mutton**: `Daging Mentah` + `Bahan Bakar` (5 detik)
+- 🍗 **Cooked Chicken**: `Raw Chicken` + `Bahan Bakar` (5 detik)
 
 ---
 
-## 🎮 Panduan Kontrol Lengkap (Complete Controls Guide)
+## 🎮 Panduan Kontrol Lengkap
 
 ### Kontrol PC / Desktop
 | Tombol | Fungsi Utama |
@@ -99,8 +180,8 @@ Game ini sepenuhnya responsif dan dioptimalkan untuk perangkat ponsel pintar (An
 | **W, A, S, D** | Bergerak (Maju, Kiri, Mundur, Kanan) / Berenang mengarah ke kamera |
 | **Spacebar** | Melompat (*Jump*) / Berenang naik ke permukaan air |
 | **Shift / C** | Berjalan Pelan (*Sneak*) / Menyelam turun ke dasar air |
-| **Klik Kiri Mouse** | Menghancurkan Blok / Menyerang Musuh |
-| **Klik Kanan Mouse** | Memasang Blok / Membuka Peti & Furnace / Berdagang / Memberi Makan Mob / Mencangkul / Menanam |
+| **Klik Kiri Mouse** | Menghancurkan Blok / Memanen Gandum / Menyerang Musuh |
+| **Klik Kanan Mouse** | Memasang Blok / Memakan Makanan / Menggunakan Perban / Membuka Peti & Tungku / Mencangkul / Menanam / Panen Cepat |
 | **Shift + Klik Kiri** | Memakai Zirah Otomatis (*Auto-Equip Armor*) |
 | **Scroll Mouse / 1-9** | Mengganti Slot Hotbar Aktif |
 | **E** | Membuka / Menutup Layar Inventory, Zirah & Crafting Table (3x3) |
@@ -115,78 +196,11 @@ Game ini sepenuhnya responsif dan dioptimalkan untuk perangkat ponsel pintar (An
 | **Area Kanan Layar** | Mengarahkan sudut kamera pandang (Sentuh & Geser) |
 | **Tombol Lompat (▲)** | Melompat / Berenang naik |
 | **Tombol Serang (⚔️)** | Menghancurkan blok yang disorot / Memukul musuh |
-| **Tombol Pasang (🧱)** | Memasang blok / Berinteraksi dengan peti, furnace, mob |
+| **Tombol Pasang (🧱)** | Memasang blok / Menggunakan item / Berinteraksi |
 | **Tombol Tas (🎒)** | Membuka / Menutup panel inventaris & crafting |
 | **Tombol Menu (☰)** | Membuka Pause Menu & Pengaturan Permainan |
 | **Tap Slot Inventaris** | Memilih item dan memindahkannya ke slot lain (*Tap-to-Select*) |
 | **Tahan Slot Inventaris** | Membuka popup pemisah tumpukan (*Stack Splitter*) |
-
----
-
-## 🧱 Daftar Blok (Block Registry) & ID
-
-| ID | Nama Blok | Karakteristik | Hasil Drop |
-|---|---|---|---|
-| 0 | `air` | Gas Transparan | - |
-| 1 | `grass` | Solid Opaque | Grass / Wheat Seeds |
-| 2 | `dirt` | Solid Opaque | Dirt |
-| 3 | `stone` | Solid Opaque | Stone |
-| 4 | `sand` | Solid Opaque | Sand |
-| 5 | `wood_log` | Solid Opaque | Wood Log |
-| 6 | `leaves` | Transparan Solid | Leaves |
-| 7 | `water` | Liquid Fluid | - |
-| 8 | `plank` | Solid Opaque | Plank |
-| 9 | `crafting_table` | Interaktif (Crafting UI 3x3) | Crafting Table |
-| 10 | `sandstone` | Solid Opaque | Sandstone |
-| 11 | `torch` | Sumber Cahaya Non-Solid | Torch |
-| 12 | `chest` | Interaktif (Peti 27-Slot) | Chest + Isi Item |
-| 13 | `farmland` | Tanah Pertanian | Dirt |
-| 14 | `wheat_crop` | Tanaman Tumbuh | Wheat + Wheat Seeds |
-| 15 | `obsidian` | Tahan Ledakan (Portal Frame) | Obsidian |
-| 16 | `netherrack` | Batuan Nether | Netherrack |
-| 17 | `glowstone` | Sumber Cahaya Nether | Glowstone |
-| 18 | `nether_portal` | Dimensi Portal | - |
-| 19 | `lava` | Cairan Panas Berbahaya | - |
-| 20 | `soul_sand` | Tanah Perlambat Gerak | Soul Sand |
-| 21 | `coal_ore` | Bijih Batubara Bawah Tanah | Coal |
-| 22 | `iron_ore` | Bijih Besi (Req. Stone Pickaxe) | Raw Iron |
-| 23 | `furnace` | Interaktif (Tungku 3-Slot) | Furnace |
-| 24 | `nether_brick` | Bata Benteng Nether | Nether Brick |
-
----
-
-## 📜 Panduan Resep Crafting & Smelting (30+ Resep)
-
-Gunakan **Crafting Table** (Grid 3x3) atau **Furnace** untuk memproses material:
-
-### 1. Blok, Komponen Dasar & Peralatan
-- 🪵 **Plank** (4x): `1x Wood Log`
-- 🥢 **Stick** (4x): `2x Planks` vertikal
-- 🛠️ **Crafting Table** (1x): `4x Planks` (Grid 2x2)
-- 📦 **Chest** (1x): `8x Planks` melingkar
-- 🔥 **Furnace** (1x): `8x Stone` melingkar
-- 💡 **Torch** (4x): `1x Coal / Plank` di atas `1x Stick`
-- 🍞 **Bread** (1x): `3x Wheat` horizontal
-
-### 2. Alat & Senjata (Tools & Weapons)
-- ⛏️ **Pickaxe** (*Wood/Stone/Iron*): `3x Bahan` horizontal di atas + `2x Sticks` vertikal di tengah.
-- 🗡️ **Sword** (*Wood/Stone/Iron*): `2x Bahan` vertikal di atas + `1x Stick` di bawah.
-- 🪓 **Axe** (*Wood/Stone/Iron*): `3x Bahan` pola sudut + `2x Sticks` vertikal.
-- 🧹 **Shovel** (*Wood/Stone/Iron*): `1x Bahan` di atas + `2x Sticks` vertikal.
-- 🧑‍🌾 **Hoe** (*Wood/Stone/Iron*): `2x Bahan` sudut atas + `2x Sticks` vertikal.
-- 🏹 **Bow** (1x): `3x Sticks` melengkung + `3x Strings`.
-- 🏹 **Arrow** (4x): `1x Stone` atas + `1x Stick` tengah + `1x Feather` bawah.
-
-### 3. Set Zirah (Armor Sets)
-- 🪖 **Helmet** (*Leather/Iron*): `5x Bahan` pola helm terbalik.
-- 👕 **Chestplate** (*Leather/Iron*): `8x Bahan` mengisi seluruh slot kecuali tengah atas.
-- 👖 **Leggings** (*Leather/Iron*): `7x Bahan` pola celana panjang.
-- 🥾 **Boots** (*Leather/Iron*): `4x Bahan` pola sepasang sepatu.
-
-### 4. Peleburan & Memasak (Furnace Smelting)
-- 🪙 **Iron Ingot**: `Raw Iron` + `Bahan Bakar (Coal/Plank/Log)` (5 detik)
-- 🍖 **Cooked Beef / Porkchop / Mutton**: `Daging Mentah` + `Bahan Bakar` (5 detik)
-- 🍗 **Cooked Chicken**: `Raw Chicken` + `Bahan Bakar` (5 detik)
 
 ---
 
@@ -222,6 +236,23 @@ Server WebSocket multiplayer akan aktif di `ws://localhost:8080`.
 npm run build
 ```
 Hasil bundle minifikasi siap rilis akan disimpan di folder `dist/`.
+
+---
+
+## 🛠️ Perintah Console untuk Pengujian (Debug Helpers)
+
+Tekan **`F12`** di browser untuk membuka Developer Tools Console:
+- `setHealth(n)`: Mengatur HP pemain ($0-20$).
+- `setHunger(n)`: Mengatur tingkat lapar ($0-20$).
+- `giveBandage(n)`: Memberikan $n$ buah perban ke hotbar.
+- `setDay(n)`: Melompat ke Hari tertentu ($1-15$).
+- `advanceDay()`: Memajukan 1 hari ke depan secara langsung.
+- `setSpeed(n)`: Mengubah kecepatan waktu (contoh: `setSpeed(20)` untuk mempercepat siklus hari).
+- `setDifficulty("santai" | "normal" | "susah")`: Mengganti tingkat kesulitan aktif.
+- `killPlayer()`: Memicu kematian pemain untuk menguji mekanisme nyawa & Game Over.
+- `showEndGame("win" | "lose")`: Menampilkan layar akhir kemenangan atau kekalahan.
+- `tp(x, y, z)`: Berpindah tempat (teleportasi) ke koordinat tertentu.
+- `clearSave()`: Menghapus data simpanan dan memuat ulang permainan dari awal.
 
 ---
 

@@ -56,4 +56,11 @@ export class Hotbar {
     }
     return false;
   }
+
+  clear(): void {
+    for (let i = 0; i < 9; i++) {
+      this.slots[i] = { itemId: null, count: 0 };
+    }
+    this.activeSlotIndex = 0;
+  }
 }

@@ -37,4 +37,8 @@ export class ChestManager {
     this.chests.delete(key);
     return slots;
   }
+
+  clearAllChests(): void {
+    this.chests.clear();
+  }
 }

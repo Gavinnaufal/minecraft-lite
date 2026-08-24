@@ -56,4 +56,10 @@ export class Inventory {
       slot.count = 0;
     }
   }
+
+  clear(): void {
+    for (let i = 0; i < 27; i++) {
+      this.slots[i] = { itemId: null, count: 0 };
+    }
+  }
 }

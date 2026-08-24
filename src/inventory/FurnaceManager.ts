@@ -64,4 +64,8 @@ export class FurnaceManager {
     this.furnaces.delete(key);
     return data;
   }
+
+  clearAllFurnaces(): void {
+    this.furnaces.clear();
+  }
 }

@@ -69,6 +69,7 @@ import { BlockHighlight } from './interaction/BlockHighlight';
 import { DebugScreen } from './ui/DebugScreen';
 import { ToastSystem } from './ui/ToastSystem';
 import { FurnaceScreen } from './ui/FurnaceScreen';
+import { FurnaceManager } from './inventory/FurnaceManager';
 import { survivalManager } from './survival/SurvivalManager';
 import { statsTracker } from './survival/StatsTracker';
 import { EndGameScreen } from './ui/EndGameScreen';
@@ -404,21 +405,8 @@ for (let i = 0; i < 14; i++) {
 
 // Save/Load (async, non-blocking)
 const saveManager = new SaveManager(chunkManager, world, player, inventory, hotbar, dayNight, () => worldSeed, mobManager);
-saveManager.init().then(() => saveManager.load()).then((savedSeed) => {
-  if (savedSeed !== null) {
-    if (savedSeed !== worldSeed) {
-      // Seed changed since save — regenerate
-      worldSeed = savedSeed;
-      const gens = createGenerators(worldSeed);
-      heightMap = gens.heightMap; biomeGen = gens.biomeGen; caveNoise = gens.caveNoise; lakeNoise = gens.lakeNoise;
-      chunkManager.unloadAllChunks();
-      chunkManager.update(player.position.x, player.position.z, gameSettings.renderDistance);
-    }
-    console.log(`[Save] Loaded saved game (seed: ${savedSeed})`);
-    camera.position.set(player.position.x, player.position.y + player.eyeHeight, player.position.z);
-  }
-}).catch((err) => {
-  console.warn('[Save] Failed to load:', err);
+saveManager.init().catch((err) => {
+  console.warn('[Save] Failed to init save adapter:', err);
 });
 
 const playerCamera = new PlayerCamera(camera);
@@ -504,60 +492,7 @@ blockBreaker.setOnBlockBroken((x, y, z, blockId) => {
   }
 });
 
-// UI
-const settingsMenu = new SettingsMenu();
-
-const mainMenu = new MainMenu(settingsMenu, (isLoad) => {
-  if (isLoad) {
-    saveManager.load().then((savedSeed) => {
-      if (savedSeed !== null) {
-        camera.position.set(player.position.x, player.position.y + player.eyeHeight, player.position.z);
-        hud.update(player.health, player.hunger);
-        hud.setTime(dayNight.timeOfDay, survivalManager.currentDay);
-      }
-    }).catch(() => {});
-  } else {
-    // Fresh New World: ensure 06:00 pagi on Day 1, full health and hunger
-    dayNight.resetTime();
-    player.health = 20;
-    player.hunger = 20;
-    const spawnY = heightMap.getHeight(0.5, 0.5) + 2.1;
-    player.position.x = 0.5;
-    player.position.y = spawnY;
-    player.position.z = 0.5;
-    player.velocity.x = 0;
-    player.velocity.y = 0;
-    player.velocity.z = 0;
-    camera.position.set(0.5, spawnY + player.eyeHeight, 0.5);
-    hud.update(player.health, player.hunger);
-    hud.setTime(dayNight.timeOfDay, survivalManager.currentDay);
-  }
-  inputManager.requestPointerLock();
-  updateTouchControlsState();
-});
-
-settingsMenu.create(
-  () => {
-    renderer.setPixelRatio(gameSettings.pixelRatio);
-    chunkManager.forceReload(gameSettings.renderDistance, camera.position.x, camera.position.z);
-    updateTouchControlsState();
-  },
-  () => {
-    // Reset World: clear saved data and reload the page for a fresh new seed
-    saveManager.clearSave().then(() => {
-      window.location.reload();
-    }).catch(() => {
-      window.location.reload();
-    });
-  },
-  () => {
-    // Quit to Main Menu: stop music, show main menu
-    AudioManager.getInstance().stopMusic();
-    mainMenu.show();
-    updateTouchControlsState();
-  },
-);
-
+// UI & Screens Setup
 const hud = new HUD(hotbar);
 scene.add(camera);
 const handModel = new HandModel(camera, hotbar);
@@ -579,6 +514,114 @@ furnaceScreen.onClose = () => updateTouchControlsState();
 const tradingScreen = new TradingScreen(inventory, hotbar, particleSystem);
 tradingScreen.create();
 tradingScreen.onClose = () => updateTouchControlsState();
+
+const settingsMenu = new SettingsMenu();
+
+/**
+ * Reset seluruh status permainan ke kondisi awal (New Game):
+ * 1. Hentikan autosave & bersihkan IndexedDB
+ * 2. Reset state survival (Hari 1, nyawa penuh, status playing)
+ * 3. Reset jam waktu ke 06:00 pagi
+ * 4. Reset statistik permainan ke 0
+ * 5. Kosongkan semua 27 slot inventory, 9 slot hotbar, 4 slot zirah, crafting grid
+ * 6. Kosongkan semua peti & furnace
+ * 7. Bersihkan semua item drop di dunia
+ * 8. Kembalikan HP (20), Hunger (20), dan posisi ke titik spawn awal
+ * 9. Reset HUD & visual tangan
+ * 10. Mulai kembali autosave
+ */
+async function resetEntireGameState(clearSavedDb = true): Promise<void> {
+  saveManager.stopAutoSave();
+  if (clearSavedDb) {
+    try {
+      await saveManager.clearSave();
+    } catch (e) {
+      console.warn('[Save] Error clearing save data:', e);
+    }
+  }
+  survivalManager.resetState();
+  dayNight.resetTime();
+  statsTracker.reset();
+
+  // Clear all inventories, hotbars, equipment, chests, and furnaces
+  inventory.clear();
+  hotbar.clear();
+  equipmentSlots.clear();
+  inventoryScreen.reset();
+  ChestManager.getInstance().clearAllChests();
+  FurnaceManager.getInstance().clearAllFurnaces();
+  itemDropManager.clearAll();
+
+  // Reset player physics & stats
+  player.health = 20;
+  player.hunger = 20;
+  player.velocity.x = 0;
+  player.velocity.y = 0;
+  player.velocity.z = 0;
+
+  // Reset player spawn position
+  const spawnY = heightMap.getHeight(0.5, 0.5) + 2.1;
+  player.position.x = 0.5;
+  player.position.y = spawnY;
+  player.position.z = 0.5;
+  camera.position.set(0.5, spawnY + player.eyeHeight, 0.5);
+
+  // Reset dimension & HUD
+  DimensionManager.getInstance().currentDimension = DimensionType.OVERWORLD;
+  hud.update(20, 20);
+  hud.setTime(dayNight.timeOfDay, survivalManager.currentDay);
+  hud.setDimension('overworld');
+  hud.updateArmor(0);
+
+  saveManager.startAutoSave();
+}
+
+const mainMenu = new MainMenu(settingsMenu, async (isLoad) => {
+  if (isLoad) {
+    try {
+      const savedSeed = await saveManager.load();
+      if (savedSeed !== null) {
+        if (savedSeed !== worldSeed) {
+          worldSeed = savedSeed;
+          const gens = createGenerators(worldSeed);
+          heightMap = gens.heightMap; biomeGen = gens.biomeGen; caveNoise = gens.caveNoise; lakeNoise = gens.lakeNoise;
+          chunkManager.unloadAllChunks();
+          chunkManager.update(player.position.x, player.position.z, gameSettings.renderDistance);
+        }
+        camera.position.set(player.position.x, player.position.y + player.eyeHeight, player.position.z);
+        hud.update(player.health, player.hunger);
+        hud.setTime(dayNight.timeOfDay, survivalManager.currentDay);
+        hud.updateArmor(equipmentSlots.getTotalDefense());
+      }
+    } catch (err) {
+      console.warn('[Save] Failed to load:', err);
+    }
+  } else {
+    // Fresh New World: ensure 100% clean reset of inventory, hotbar, equipment, time, and spawn point
+    await resetEntireGameState(true);
+  }
+  inputManager.requestPointerLock();
+  updateTouchControlsState();
+});
+
+settingsMenu.create(
+  () => {
+    renderer.setPixelRatio(gameSettings.pixelRatio);
+    chunkManager.forceReload(gameSettings.renderDistance, camera.position.x, camera.position.z);
+    updateTouchControlsState();
+  },
+  async () => {
+    // Reset World: clear saved data and reset state
+    await resetEntireGameState(true);
+    window.location.reload();
+  },
+  () => {
+    // Quit to Main Menu: stop music, show main menu
+    AudioManager.getInstance().stopMusic();
+    mainMenu.show();
+    updateTouchControlsState();
+  },
+);
 
 const pauseMenu = new PauseMenu(saveManager, settingsMenu, () => {
   inputManager.requestPointerLock();
@@ -614,14 +657,7 @@ touchControls.onTogglePauseMenu = () => {
 };
 
 const endGameScreen = new EndGameScreen(async () => {
-  await saveManager.clearSave();
-  survivalManager.resetState();
-  dayNight.resetTime();
-  statsTracker.reset();
-  player.health = 20;
-  player.hunger = 20;
-  hud.update(20, 20);
-  hud.setTime(dayNight.timeOfDay, survivalManager.currentDay);
+  await resetEntireGameState(true);
   AudioManager.getInstance().stopMusic();
   mainMenu.show();
   updateTouchControlsState();
@@ -1673,10 +1709,8 @@ if (import.meta.env.DEV) {
   win.dayNight = dayNight; win.survival = survivalManager; win.stats = statsTracker; win.endGameScreen = endGameScreen;
 
   win.clearSave = async () => {
-    await saveManager.clearSave();
-    survivalManager.resetState();
-    dayNight.resetTime();
-    console.log('[Save] Clearing world save data and reloading...');
+    await resetEntireGameState(true);
+    console.log('[Save] Clearing world save data and resetting game state...');
     window.location.reload();
   };
   win.tp = (x: number, y: number, z: number) => {

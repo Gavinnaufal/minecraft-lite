@@ -1322,6 +1322,22 @@ export class InventoryScreen {
     }
   }
 
+  reset(): void {
+    this.visible = false;
+    if (this.container) this.container.style.display = 'none';
+    if (this.dragEl) this.dragEl.style.display = 'none';
+    if (this.tooltipEl) this.tooltipEl.style.display = 'none';
+    this.closeSplitModal();
+    this.selectedSlot = null;
+    this.dragItem = null;
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 3; c++) {
+        this.craftGrid[r][c] = null;
+      }
+    }
+    this.refresh();
+  }
+
   refresh(): void {
     if (!this.container || !this.panel) return;
 

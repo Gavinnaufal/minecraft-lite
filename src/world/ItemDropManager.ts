@@ -148,4 +148,12 @@ export class ItemDropManager {
       drop.mesh.position.y += Math.sin(time + i) * 0.003; // Gentle float
     }
   }
+
+  clearAll(): void {
+    for (const drop of this.drops) {
+      this.scene.remove(drop.mesh);
+      drop.mesh.geometry.dispose();
+    }
+    this.drops = [];
+  }
 }

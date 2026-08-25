@@ -55,10 +55,10 @@ export class SettingsMenu {
     this.container.appendChild(rdLabel);
     this.container.appendChild(rdSlider);
 
-    // Touch Camera Sensitivity (Mobile)
+    // Touch Camera Sensitivity (Mobile & Tablet)
     const tsLabel = document.createElement('div');
-    tsLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: #333;';
-    tsLabel.textContent = `Camera Sensitivity (Mobile): ${gameSettings.touchSensitivity.toFixed(1)}x`;
+    tsLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: var(--theme-text-light, #f7f1e3);';
+    tsLabel.textContent = `Camera Sensitivity (Mobile/Tablet): ${gameSettings.touchSensitivity.toFixed(1)}x`;
 
     const tsSlider = document.createElement('input');
     tsSlider.type = 'range';
@@ -70,7 +70,7 @@ export class SettingsMenu {
 
     tsSlider.addEventListener('input', () => {
       gameSettings.touchSensitivity = parseFloat(tsSlider.value);
-      tsLabel.textContent = `Camera Sensitivity (Mobile): ${gameSettings.touchSensitivity.toFixed(1)}x`;
+      tsLabel.textContent = `Camera Sensitivity (Mobile/Tablet): ${gameSettings.touchSensitivity.toFixed(1)}x`;
       gameSettings.save();
       this.onChange?.();
     });
@@ -81,7 +81,7 @@ export class SettingsMenu {
     // SFX Volume
     const audioMgr = AudioManager.getInstance();
     const sfxLabel = document.createElement('div');
-    sfxLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: #333;';
+    sfxLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: var(--theme-text-light, #f7f1e3);';
     sfxLabel.textContent = `SFX Volume: ${Math.round(audioMgr.sfxVolume * 100)}%`;
 
     const sfxSlider = document.createElement('input');
@@ -103,7 +103,7 @@ export class SettingsMenu {
 
     // Music Volume
     const musicLabel = document.createElement('div');
-    musicLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: #333;';
+    musicLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: var(--theme-text-light, #f7f1e3);';
     musicLabel.textContent = `Music Volume: ${Math.round(audioMgr.musicVolume * 100)}%`;
 
     const musicSlider = document.createElement('input');
@@ -123,15 +123,17 @@ export class SettingsMenu {
     this.container.appendChild(musicLabel);
     this.container.appendChild(musicSlider);
 
+    const selectStyle = 'width: 100%; margin-bottom: 16px; cursor: pointer; font-family: monospace; font-size: 13px; padding: 8px 10px; background: var(--theme-slot-bg, #1a110a); color: #fff; border: 2px solid var(--theme-border-highlight, #704b31); border-radius: 4px;';
+
     // Resolution / Pixel Ratio (Mobile Performance Optimization)
     const prLabel = document.createElement('div');
-    prLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: #333;';
+    prLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: var(--theme-text-light, #f7f1e3);';
     prLabel.textContent = `Resolution: ${gameSettings.pixelRatio <= 1.0 ? '1.0x (Optimal / High FPS)' : 'Native High-DPI (Crisp / Heavy)'}`;
 
     const prSelect = document.createElement('select');
-    prSelect.style.cssText = 'width: 100%; margin-bottom: 16px; cursor: pointer; font-family: monospace; font-size: 14px; padding: 6px;';
+    prSelect.style.cssText = selectStyle;
     const prOptions = [
-      { val: '1.0', text: '1.0x (Recommended for Mobile / High FPS)' },
+      { val: '1.0', text: '1.0x (Recommended for Mobile/Tablet / High FPS)' },
       { val: '2.0', text: 'Native High-DPI (Crisp, Higher GPU Load)' },
     ];
     for (const opt of prOptions) {
@@ -153,11 +155,11 @@ export class SettingsMenu {
 
     // Particle Detail
     const pdLabel = document.createElement('div');
-    pdLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: #333;';
+    pdLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: var(--theme-text-light, #f7f1e3);';
     pdLabel.textContent = `Particle Detail: ${gameSettings.particleDetail.charAt(0).toUpperCase() + gameSettings.particleDetail.slice(1)}`;
 
     const pdSelect = document.createElement('select');
-    pdSelect.style.cssText = 'width: 100%; margin-bottom: 16px; cursor: pointer; font-family: monospace; font-size: 14px; padding: 6px;';
+    pdSelect.style.cssText = selectStyle;
     for (const opt of ['low', 'medium', 'high']) {
       const option = document.createElement('option');
       option.value = opt;
@@ -177,11 +179,11 @@ export class SettingsMenu {
 
     // Item Graphics Style (Independent setting for Items & Hand models)
     const igLabel = document.createElement('div');
-    igLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: #333;';
+    igLabel.style.cssText = 'font-weight: bold; margin-bottom: 6px; color: var(--theme-text-light, #f7f1e3);';
     igLabel.textContent = `Item Graphics Style: ${gameSettings.itemGraphicsStyle === 'fancy' ? 'Fancy (3D High Detail)' : (gameSettings.itemGraphicsStyle === 'voxel' ? 'Voxel Retro (Pixel 3D)' : 'Fast (Simple 2D)')}`;
 
     const igSelect = document.createElement('select');
-    igSelect.style.cssText = 'width: 100%; margin-bottom: 20px; cursor: pointer; font-family: monospace; font-size: 14px; padding: 6px;';
+    igSelect.style.cssText = 'width: 100%; margin-bottom: 20px; cursor: pointer; font-family: monospace; font-size: 13px; padding: 8px 10px; background: var(--theme-slot-bg, #1a110a); color: #fff; border: 2px solid var(--theme-border-highlight, #704b31); border-radius: 4px;';
     const igOptions = [
       { val: 'fancy', text: 'Fancy (3D High Detail)' },
       { val: 'voxel', text: 'Voxel Retro (Pixel 3D)' },

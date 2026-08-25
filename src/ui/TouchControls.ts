@@ -295,6 +295,44 @@ export class TouchControls {
 
     this.container.appendChild(this.menuButton);
 
+    // Responsive Touch Controls Stylesheet for Tablets & Mobile
+    const touchStyle = document.createElement('style');
+    touchStyle.textContent = `
+      @media (min-width: 768px) and (min-height: 540px) {
+        #joystick-zone {
+          width: 170px !important;
+          height: 170px !important;
+          left: 36px !important;
+          bottom: 36px !important;
+        }
+        #touch-jump-btn {
+          width: 78px !important;
+          height: 78px !important;
+          right: 36px !important;
+          bottom: 36px !important;
+        }
+        #touch-attack-btn {
+          width: 74px !important;
+          height: 74px !important;
+          right: 132px !important;
+          bottom: 36px !important;
+        }
+        #touch-place-btn {
+          width: 74px !important;
+          height: 74px !important;
+          right: 80px !important;
+          bottom: 130px !important;
+        }
+        #touch-inv-btn,
+        #touch-menu-btn {
+          width: 48px !important;
+          height: 48px !important;
+          top: 16px !important;
+        }
+      }
+    `;
+    document.head.appendChild(touchStyle);
+
     document.body.appendChild(this.container);
 
     this.setupEventListeners();
@@ -333,8 +371,14 @@ export class TouchControls {
   }
 
   private setupEventListeners(): void {
-    // Window Resize / Orientation listener
+    // Window Resize, Orientation, & Dynamic Touch Detection listeners
     window.addEventListener('resize', () => {
+      this.checkDevice();
+    });
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => this.checkDevice(), 150);
+    });
+    window.addEventListener('touch-device-detected', () => {
       this.checkDevice();
     });
 
@@ -412,13 +456,14 @@ export class TouchControls {
         continue;
       }
 
-      // 5. Joystick Zone (Left half, bottom region or inside joystickZone)
+      // 5. Joystick Zone (Left quadrant)
       const rect = this.joystickZone.getBoundingClientRect();
       const inJoystickArea =
-        touch.clientX >= rect.left - 20 &&
-        touch.clientX <= rect.right + 20 &&
-        touch.clientY >= rect.top - 20 &&
-        touch.clientY <= rect.bottom + 20;
+        (touch.clientX >= rect.left - 25 &&
+        touch.clientX <= rect.right + 25 &&
+        touch.clientY >= rect.top - 25 &&
+        touch.clientY <= rect.bottom + 25) ||
+        (touch.clientX <= window.innerWidth * 0.4 && touch.clientY >= window.innerHeight * 0.5);
 
       if (this.joystickTouchId === null && inJoystickArea) {
         this.joystickTouchId = touch.identifier;
@@ -429,8 +474,13 @@ export class TouchControls {
         continue;
       }
 
-      // 6. Camera Look Area (Right side of screen or top-left, not inside joystick or buttons)
-      if (this.lookTouchId === null && touch.clientX > window.innerWidth * 0.35) {
+      // 6. Action Button Quadrant (Avoid look hijacking when tapping near buttons)
+      const inActionButtonZone =
+        touch.clientX >= window.innerWidth - 220 &&
+        touch.clientY >= window.innerHeight - 220;
+
+      // 7. Camera Look Area (Entire screen outside joystick & action buttons)
+      if (this.lookTouchId === null && !inJoystickArea && !inActionButtonZone) {
         this.lookTouchId = touch.identifier;
         this.lastLookX = touch.clientX;
         this.lastLookY = touch.clientY;

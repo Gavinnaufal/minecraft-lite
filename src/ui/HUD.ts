@@ -186,11 +186,11 @@ export class HUD {
 
     const hudStyle = document.createElement('style');
     hudStyle.textContent = `
-      @media (max-width: 900px) {
+      @media (max-width: 1400px), (hover: none), (pointer: coarse) {
         #hud-coords {
-          left: 64px !important;
+          left: 68px !important;
           font-size: 11px !important;
-          padding: 4px 8px !important;
+          padding: 4px 10px !important;
           gap: 6px !important;
           white-space: nowrap !important;
         }
@@ -366,7 +366,9 @@ export class HUD {
 
     this.checkDevice();
     window.addEventListener('resize', () => this.checkDevice());
+    window.addEventListener('orientationchange', () => setTimeout(() => this.checkDevice(), 150));
     window.addEventListener('touchstart', () => this.checkDevice(), { passive: true, once: true });
+    window.addEventListener('touch-device-detected', () => this.checkDevice());
   }
 
   private isVisible = true;
@@ -395,6 +397,11 @@ export class HUD {
     const isTouch = InputManager.isTouchDevice();
     if (this.controlsGuide) {
       this.controlsGuide.style.display = this.isVisible && !isTouch ? 'flex' : 'none';
+    }
+    if (this.coordsDisplay) {
+      if (isTouch) {
+        this.coordsDisplay.style.left = '68px';
+      }
     }
   }
 

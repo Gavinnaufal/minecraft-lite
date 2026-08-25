@@ -7,6 +7,7 @@ export class InputManager {
   isLeftMouseDown = false;
   isRightMouseDown = false;
 
+  private static hasTouchDetected = false;
   private readonly canvas: HTMLCanvasElement | null;
 
   private constructor() {
@@ -19,6 +20,22 @@ export class InputManager {
     document.addEventListener('mousedown', this.onMouseDown);
     document.addEventListener('mouseup', this.onMouseUp);
     document.addEventListener('pointerlockchange', this.onPointerLockChange);
+
+    // Dynamic Touch & Tablet Detection Listener
+    const onTouchDetected = () => {
+      if (!InputManager.hasTouchDetected) {
+        InputManager.hasTouchDetected = true;
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('touch-device-detected'));
+        }
+      }
+    };
+    window.addEventListener('touchstart', onTouchDetected, { passive: true });
+    window.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+        onTouchDetected();
+      }
+    }, { passive: true });
   }
 
   static readonly instance = new InputManager();
@@ -57,15 +74,23 @@ export class InputManager {
   }
 
   static isTouchDevice(): boolean {
+    if (typeof window === 'undefined') return false;
+    if (InputManager.hasTouchDetected) return true;
     return (
       'ontouchstart' in window ||
-      navigator.maxTouchPoints > 0 ||
+      (typeof navigator !== 'undefined' && (navigator.maxTouchPoints > 0 || ((navigator as unknown as { msMaxTouchPoints?: number }).msMaxTouchPoints ?? 0) > 0)) ||
       window.matchMedia('(pointer: coarse)').matches ||
+      window.matchMedia('(hover: none)').matches ||
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Tablet/i.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) || // iPadOS Safari
       window.innerWidth <= 1024
     );
   }
 
   requestPointerLock(): void {
+    if (InputManager.isTouchDevice()) {
+      return; // Do not lock pointer on touch devices / tablets
+    }
     if (this.canvas?.requestPointerLock) {
       try {
         const p = this.canvas.requestPointerLock() as unknown;

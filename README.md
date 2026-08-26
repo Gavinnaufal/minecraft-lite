@@ -78,23 +78,37 @@ Pemain dapat memakan makanan dengan memegang item di Hotbar lalu melakukan **Kli
 | 🌾 **Wheat (Gandum Mentah)** | Tanaman | **$+2$** | Camilan gandum darurat yang bisa dimakan langsung. |
 | 🧟 **Rotten Flesh** | Monster Drop | **$+3$** | Daging busuk dari Zombie untuk situasi darurat. |
 
-### 🩹 3. Item Medis Darurat: Perban (Bandage)
+### 🩹 3. Item Medis Darurat: Perban (Bandage / Medkit)
 Item penyembuh instan yang murni independen dari sistem makanan:
-- **Khasiat**: Menyembuhkan **$+6$ HP Instan** (setara 3 simbol hati penuh) seketika.
-- **Cooldown**: 5.0 Detik dengan proteksi *anti-spam*.
-- **Proteksi HP Penuh**: Tidak dapat digunakan saat darah sudah maksimal (20/20 HP).
-- **Resep Crafting**: `3x Leaves` (Daun herbal) + `1x String` (Benang pengikat) $\rightarrow$ **2x Bandage**.
+- **Khasiat**: Menyembuhkan **$+6$ HP Instan** (setara 3 simbol hati penuh) seketika saat digunakan.
+- **Mekanik Penggunaan**: Pegang Bandage di Hotbar lalu **Klik Kanan**.
+- **Cooldown Proteksi**: **5.0 Detik** antar penggunaan untuk mencegah eksploitasi spam heal.
+- **Proteksi HP Penuh**: Tidak dapat digunakan saat darah sudah maksimal ($20/20$ HP), mencegah pemborosan item.
+- **Bahan & Cara Mendapatkan**:
+  - **Daun (`Leaves`)**: Hancurkan blok daun pohon di hutan.
+  - **Benang (`String`)**: Kalahkan laba-laba (*Spider*) di malam hari.
+  - **Resep Crafting**: `3x Leaves` + `1x String` $\rightarrow$ **`2x Bandage`** (mendukung 12 variasi susunan horizontal/vertikal di grid crafting).
 
 ---
 
-## 🌾 Sistem Pertanian & Panen (Farming System)
+## 🌾 Sistem Pertanian & Panen Bertahap (Multi-Stage Farming System)
 
-Aktivitas bertani memungkinkan pemain memproduksi makanan melimpah di dekat markas:
-1. **Membajak Tanah**: Pegang Cangkul (*Hoe*), lalu **Klik Kanan** pada blok Rumput (*Grass*) atau Tanah (*Dirt*) $\rightarrow$ Berubah menjadi tanah gembur (**Farmland - ID 13**).
-2. **Menanam Benih**: Pegang Benih Gandum (*Wheat Seeds*), lalu **Klik Kanan** di atas Farmland $\rightarrow$ Tertanam tanaman gandum (**Wheat Crop - ID 14**).
-3. **Memanen Gandum**: Arahkan kursor ke tanaman gandum dewasa:
-   - **Klik Kiri (Pukul)**: Menghancurkan tanaman gandum $\rightarrow$ Menjatuhkan **1x Wheat** + **1–2x Wheat Seeds**.
-   - **Klik Kanan (*Quick Harvest*)**: Panen instan langsung ke inventaris dengan efek suara & notifikasi.
+Aktivitas bertani memungkinkan pemain memproduksi bahan makanan berkelanjutan di dekat markas:
+1. **Membajak Tanah (*Tilling*)**: Pegang Cangkul (*Hoe*), lalu **Klik Kanan** pada blok Rumput (*Grass*) atau Tanah (*Dirt*) $\rightarrow$ Berubah menjadi tanah gembur (**Farmland - ID 13**).
+2. **Menanam Benih (*Planting*)**: Pegang Benih Gandum (*Wheat Seeds*), lalu **Klik Kanan** di atas Farmland $\rightarrow$ Tertanam tunas gandum (**Wheat Sprout - ID 25**).
+3. **Pertumbuhan 3 Tahap Dinamis (*Growth Stages*)**:
+   - 🌱 **Tahap 1 — Tunas Muda (`wheat_sprout` ID 25)**: Ketinggian $0.40$ blok.
+   - 🌿 **Tahap 2 — Batang Hijau (`wheat_growing` ID 26)**: Ketinggian $0.65$ blok.
+   - 🌾 **Tahap 3 — Gandum Emas Matang (`wheat_crop` ID 14)**: Ketinggian $0.85$ blok, bulir keemasan siap panen.
+4. **Pemupukan Cepat (*Fertilization*)**: **Klik Kanan** tanaman muda dengan Benih (`wheat_seeds`) atau Tulang (`bone`) untuk mempercepat tanaman langsung naik ke tahap berikutnya seketika!
+5. **Panen Gandum (*Harvesting*)**:
+   - **Tanaman Muda (Tahap 1/2)**: Menjatuhkan **1x Wheat Seeds** (mengembalikan benih, belum menghasilkan gandum).
+   - **Tanaman Matang (Tahap 3)**:
+     - **Klik Kiri (Pukul)** / **Klik Kanan (*Quick Harvest*)**: Menjatuhkan **1x Wheat** + **1–3x Wheat Seeds**.
+     - **Auto-Replant**: Panen cepat dengan klik kanan sambil memegang benih otomatis langsung menanam ulang tunas baru!
+6. **Konsumsi & Olahan Gandum**:
+   - 🌾 **Gandum Mentah**: Dapat dimakan langsung (**+2 Lapar**).
+   - 🍞 **Roti (`Bread`)**: Olah 3x Gandum secara horizontal di Meja Crafting (**+7 Lapar**).
 
 ---
 
@@ -123,20 +137,21 @@ Seluruh antarmuka grafis (GUI) didesain konsisten dengan tema alam dan petualang
 
 ---
 
-## 📱 Optimalisasi Khusus Mobile & Layar Sentuh
+## 📱 Optimalisasi Khusus Mobile & Tablet Touchscreen
 
-Game ini sepenuhnya responsif dan nyaman dimainkan di perangkat layar sentuh:
+Game ini sepenuhnya responsif dan nyaman dimainkan di ponsel maupun tablet:
+- 📱 **Skala Responsif Tablet**: Ukuran D-Pad virtual, tombol aksi (Lompat, Serang, Pasang, Tas), dan zona gerak kamera menyesuaikan layar besar secara otomatis.
 - 👆 **Sistem Tap-to-Select Aman**: Mengetuk item sumber lalu mengetuk slot tujuan untuk memindahkan item tanpa risiko *item stuck*.
 - ⏱️ **Modal Pemisah Stack (Stack Splitter)**: Sentuh dan tahan (*long press* $\ge 380\text{ms}$) pada item untuk membuka slider pembagi jumlah item (1 Saja, Setengah, Semua, +/-).
 - ☰ **Tombol Menu Cepat (Mobile Pause Button)**: Akses mudah ke Pause Menu, Simpan Dunia, dan Pengaturan Game langsung dari tombol layar sentuh.
-- 📐 **HUD Responsif Dinamis**: Teks koordinat XYZ, kompas waktu/hari, bilah Health, Hunger, Oxygen, dan Armor menyesuaikan tata letak secara otomatis.
+- 📐 **HUD Responsif Terpadu**: Koordinat XYZ digeser aman dari tombol Menu, bilah Health, Hunger, Oxygen, dan Armor tersusun proporsional.
 - 🛡️ **Pencegah Player Nyangkut (Spawn Safeguard)**: Elevasi spawn dihitung $+0.6$ blok di atas permukaan bukit untuk mencegah pemain menembus tanah.
 
 ---
 
-## 📜 Panduan Resep Crafting & Smelting (35+ Resep)
+## 📜 Panduan Resep Crafting & Smelting (40+ Resep)
 
-Gunakan **Crafting Table** (Grid 3x3) atau **Furnace** untuk memproses material:
+Gunakan **Crafting Table** (Grid 3x3), Grid 2x2 Inventaris, atau **Furnace** untuk memproses material:
 
 ### 1. Blok, Komponen Dasar & Medis
 - 🪵 **Plank** (4x): `1x Wood Log`
@@ -148,14 +163,14 @@ Gunakan **Crafting Table** (Grid 3x3) atau **Furnace** untuk memproses material:
 - 🧱 **Sandstone** (1x): `4x Sand` (Grid 2x2)
 - 💡 **Glowstone** (1x): `4x Netherrack` (Grid 2x2)
 - 🍞 **Bread** (1x): `3x Wheat` horizontal
-- 🩹 **Bandage** (2x): `3x Leaves` horizontal/vertikal + `1x String`
+- 🩹 **Bandage** (2x): `3x Leaves` + `1x String` (12 variasi orientasi & offset)
 
 ### 2. Alat & Senjata (Tools & Weapons)
 - ⛏️ **Pickaxe** (*Wood/Stone/Iron*): `3x Bahan` horizontal di atas + `2x Sticks` vertikal di tengah.
 - 🗡️ **Sword** (*Wood/Stone/Iron*): `2x Bahan` vertikal di atas + `1x Stick` di bawah.
-- 🪓 **Axe** (*Wood/Stone/Iron*): `3x Bahan` pola sudut + `2x Sticks` vertikal.
+- 🪓 **Axe** (*Wood/Stone/Iron*): `3x Bahan` pola sudut + `2x Sticks` vertikal (mendukung hadap kanan & cermin kiri).
 - 🧹 **Shovel** (*Wood/Stone/Iron*): `1x Bahan` di atas + `2x Sticks` vertikal.
-- 🧑‍🌾 **Hoe** (*Wood/Stone/Iron*): `2x Bahan` sudut atas (mendukung hadap kiri & kanan) + `2x Sticks` vertikal.
+- 🧑‍🌾 **Hoe** (*Wood/Stone/Iron*): `2x Bahan` sudut atas (mendukung hadap kanan & cermin kiri) + `2x Sticks` vertikal.
 - 🏹 **Bow** (1x): `3x Sticks` melengkung + `3x Strings`.
 - 🏹 **Arrow** (4x): `1x Stone` atas + `1x Stick` tengah + `1x Feather` bawah.
 

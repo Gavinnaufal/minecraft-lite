@@ -110,6 +110,28 @@ const blockTypes: BlockType[] = [
     textureBottom: 'netherrack',
     textureSide: 'netherrack',
   },
+  {
+    id: 25,
+    name: 'wheat_sprout',
+    color: 0x7cb342,
+    solid: false,
+    transparent: true,
+    hardness: 0.1,
+    textureTop: 'wheat_crop',
+    textureBottom: 'wheat_crop',
+    textureSide: 'wheat_crop',
+  },
+  {
+    id: 26,
+    name: 'wheat_growing',
+    color: 0x9ccc65,
+    solid: false,
+    transparent: true,
+    hardness: 0.1,
+    textureTop: 'wheat_crop',
+    textureBottom: 'wheat_crop',
+    textureSide: 'wheat_crop',
+  },
 ];
 
 const byId = new Map<number, BlockType>();
@@ -165,13 +187,21 @@ export function createBlockMaterial(blockId: number): THREE.Material | THREE.Mat
     const bottom = new THREE.MeshStandardMaterial({ map: loadBlockTexture(bottomTex) });
     const side = new THREE.MeshStandardMaterial({ map: loadBlockTexture(sideTex) });
 
+    if (block.name === 'wheat_sprout' || block.name === 'wheat_growing') {
+      side.transparent = false;
+      side.alphaTest = 0.5;
+      side.depthWrite = true;
+      side.side = THREE.DoubleSide;
+      return side;
+    }
+
     return [side, side, top, bottom, side, side];
   }
 
   const texture = loadBlockTexture(block.name);
   const material = new THREE.MeshStandardMaterial({ map: texture });
 
-  if (block.name === 'leaves' || block.name === 'torch' || block.name === 'wheat_crop') {
+  if (block.name === 'leaves' || block.name === 'torch' || block.name === 'wheat_crop' || block.name === 'wheat_sprout' || block.name === 'wheat_growing') {
     material.transparent = false;
     material.alphaTest = 0.5;
     material.depthWrite = true;

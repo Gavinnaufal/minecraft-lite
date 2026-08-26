@@ -242,14 +242,15 @@ function meshSolid(
     }
   }
 
-  // Cross-Mesh Pass for Torches (11) and Crops (14)
+  // Cross-Mesh Pass for Torches (11) and Crops (14, 25, 26)
   for (let y = 0; y < CHUNK_HEIGHT; y++) {
     for (let z = 0; z < CHUNK_SIZE_Z; z++) {
       for (let x = 0; x < CHUNK_SIZE_X; x++) {
         const bid = blocks[blockIndex(x, y, z)];
-        if (bid === 11 || bid === 14) {
+        if (bid === 11 || bid === 14 || bid === 25 || bid === 26) {
+          const heightOffset = bid === 25 ? 0.45 : bid === 26 ? 0.65 : 0.85;
           const x0 = x + 0.15, x1 = x + 0.85;
-          const y0 = y, y1 = y + 0.85;
+          const y0 = y, y1 = y + heightOffset;
           const z0 = z + 0.15, z1 = z + 0.85;
 
           const pos1 = [x0, y1, z0, x1, y1, z1, x1, y0, z1, x0, y0, z0];

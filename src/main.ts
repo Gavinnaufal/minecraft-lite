@@ -70,6 +70,7 @@ import { DebugScreen } from './ui/DebugScreen';
 import { ToastSystem } from './ui/ToastSystem';
 import { FurnaceScreen } from './ui/FurnaceScreen';
 import { FurnaceManager } from './inventory/FurnaceManager';
+import { CropManager } from './world/farming/CropManager';
 import { survivalManager } from './survival/SurvivalManager';
 import { statsTracker } from './survival/StatsTracker';
 import { EndGameScreen } from './ui/EndGameScreen';
@@ -426,8 +427,20 @@ let portalTimer = 0;
 import { ChestScreen } from './ui/ChestScreen';
 import { ChestManager } from './inventory/ChestManager';
 
+const cropManager = CropManager.getInstance();
+cropManager.onCropGrow = (x, y, z, stage) => {
+  const pos = new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5);
+  particleSystem.spawnBlockBreakParticles(pos, stage === 2 ? 0xfbc02d : 0x88bb33);
+  AudioManager.getInstance().playSFX('pop');
+  if (stage === 1) {
+    toastSystem.show('🌱 Gandum Tumbuh! (Tahap 2/3: Batang Hijau)', 'info');
+  } else if (stage === 2) {
+    toastSystem.show('🌾 Gandum Telah Matang Sempurna! Siap Dipanen ✨', 'success');
+  }
+};
+
 const BLOCK_PARTICLE_COLORS: Record<number, number> = {
-  1: 0x55aa33, 2: 0x795548, 3: 0x9e9e9e, 4: 0xe4c875, 5: 0x5d4037, 6: 0x2e7d32, 8: 0xb18c5d, 9: 0x8d6e63, 10: 0xe0d6b8, 11: 0xffaa00, 12: 0x8b5a2b, 13: 0x4e3629, 14: 0x88bb33
+  1: 0x55aa33, 2: 0x795548, 3: 0x9e9e9e, 4: 0xe4c875, 5: 0x5d4037, 6: 0x2e7d32, 8: 0xb18c5d, 9: 0x8d6e63, 10: 0xe0d6b8, 11: 0xffaa00, 12: 0x8b5a2b, 13: 0x4e3629, 14: 0xfbc02d, 25: 0x7cb342, 26: 0x9ccc65
 };
 
 blockBreaker.setOnBlockBroken((x, y, z, blockId) => {
@@ -463,10 +476,16 @@ blockBreaker.setOnBlockBroken((x, y, z, blockId) => {
       }
     }
   } else if (blockId === 14) {
-    // Wheat Crop drops 1 Wheat + 1-2 Seeds
+    // Mature Wheat Crop drops 1 Wheat + 1-2 Seeds
+    CropManager.getInstance().unregisterCrop(x, y, z);
     itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), 'wheat', 1);
     itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), 'wheat_seeds', Math.floor(Math.random() * 2) + 1);
-    toastSystem.show('🌾 Panen Gandum! (+1 Wheat, +Seeds)', 'success');
+    toastSystem.show('🌾 Panen Gandum Matang! (+1 Wheat, +Seeds)', 'success');
+  } else if (blockId === 25 || blockId === 26) {
+    // Immature Crop drops 1 Seeds only
+    CropManager.getInstance().unregisterCrop(x, y, z);
+    itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), 'wheat_seeds', 1);
+    toastSystem.show('🌱 Tanaman Gandum Belum Matang! (Hanya dapat 1 benih)', 'info');
   } else if (blockId === 21) {
     // Coal Ore drops 1 Coal with any tool / bare hands
     itemDropManager.spawnDrop(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5), 'coal', 1);
@@ -550,6 +569,7 @@ async function resetEntireGameState(clearSavedDb = true): Promise<void> {
   inventoryScreen.reset();
   ChestManager.getInstance().clearAllChests();
   FurnaceManager.getInstance().clearAllFurnaces();
+  CropManager.getInstance().clear();
   itemDropManager.clearAll();
 
   // Reset player physics & stats
@@ -1003,6 +1023,7 @@ engine.setUpdateCallback((deltaTime) => {
   const isWalking = inputManager.isKeyPressed('w') || inputManager.isKeyPressed('a') || inputManager.isKeyPressed('s') || inputManager.isKeyPressed('d');
   handModel.update(deltaTime, isWalking, inputManager.isLeftMouseDown);
   particleSystem.update(deltaTime);
+  cropManager.update(deltaTime, world);
   const QUIET_ITEMS = new Set(['grass', 'dirt', 'stone', 'sand', 'leaves']);
   itemDropManager.update(deltaTime, new THREE.Vector3(player.position.x, player.position.y, player.position.z), (itemId, count) => {
     if (!QUIET_ITEMS.has(itemId)) {
@@ -1456,18 +1477,57 @@ engine.setUpdateCallback((deltaTime) => {
         furnaceScreen.open(targetHit.blockX, targetHit.blockY, targetHit.blockZ);
         wasRightDown = inputManager.isRightMouseDown;
         return;
-      } else if (hitBlockId === 14) { // Wheat Crop (ID 14) Quick Harvest
-        world.setBlock(targetHit.blockX, targetHit.blockY, targetHit.blockZ, 0);
-        networkManager.sendBlockChange(targetHit.blockX, targetHit.blockY, targetHit.blockZ, 0);
+      } else if (hitBlockId === 14) { // Mature Wheat Crop (ID 14) Quick Harvest
+        cropManager.unregisterCrop(targetHit.blockX, targetHit.blockY, targetHit.blockZ);
         itemDropManager.spawnDrop(new THREE.Vector3(targetHit.blockX + 0.5, targetHit.blockY + 0.5, targetHit.blockZ + 0.5), 'wheat', 1);
         itemDropManager.spawnDrop(new THREE.Vector3(targetHit.blockX + 0.5, targetHit.blockY + 0.5, targetHit.blockZ + 0.5), 'wheat_seeds', Math.floor(Math.random() * 2) + 1);
-        particleSystem.spawnBlockBreakParticles(new THREE.Vector3(targetHit.blockX + 0.5, targetHit.blockY + 0.5, targetHit.blockZ + 0.5), 0x88bb33);
+        particleSystem.spawnBlockBreakParticles(new THREE.Vector3(targetHit.blockX + 0.5, targetHit.blockY + 0.5, targetHit.blockZ + 0.5), 0xfbc02d);
         AudioManager.getInstance().playSFX('break');
         handModel.triggerSwing();
         statsTracker.recordBlockBroken(1);
-        toastSystem.show('🌾 Panen Gandum! (+1 Wheat, +Seeds)', 'success');
+        toastSystem.show('🌾 Panen Gandum Matang! (+1 Wheat, +Seeds)', 'success');
+
+        // If player is holding wheat seeds, auto replant to sprout stage!
+        if (activeItem.itemId === 'wheat_seeds') {
+          world.setBlock(targetHit.blockX, targetHit.blockY, targetHit.blockZ, 25);
+          networkManager.sendBlockChange(targetHit.blockX, targetHit.blockY, targetHit.blockZ, 25);
+          cropManager.registerCrop(targetHit.blockX, targetHit.blockY, targetHit.blockZ, 0);
+          hotbar.removeItem('wheat_seeds', 1);
+          toastSystem.show('🌱 Ditanam Kembali Otomatis!', 'info');
+        } else {
+          world.setBlock(targetHit.blockX, targetHit.blockY, targetHit.blockZ, 0);
+          networkManager.sendBlockChange(targetHit.blockX, targetHit.blockY, targetHit.blockZ, 0);
+        }
+
         wasRightDown = inputManager.isRightMouseDown;
         return;
+      } else if (hitBlockId === 25 || hitBlockId === 26) {
+        // Immature wheat crop interaction
+        if (activeItem.itemId === 'wheat_seeds' || activeItem.itemId === 'bone') {
+          // Fertilize & accelerate crop growth!
+          const accelerated = cropManager.accelerateGrowth(targetHit.blockX, targetHit.blockY, targetHit.blockZ, world);
+          if (accelerated) {
+            hotbar.removeItem(activeItem.itemId, 1);
+            handModel.triggerSwing();
+            particleSystem.spawnBlockBreakParticles(new THREE.Vector3(targetHit.blockX + 0.5, targetHit.blockY + 0.5, targetHit.blockZ + 0.5), 0x88bb33);
+            AudioManager.getInstance().playSFX('pop');
+            toastSystem.show('✨ Pupuk Benih Gandum! Pertumbuhan Dipercepat 🌱', 'success');
+            wasRightDown = inputManager.isRightMouseDown;
+            return;
+          }
+        } else {
+          // Quick harvest immature crop
+          cropManager.unregisterCrop(targetHit.blockX, targetHit.blockY, targetHit.blockZ);
+          world.setBlock(targetHit.blockX, targetHit.blockY, targetHit.blockZ, 0);
+          networkManager.sendBlockChange(targetHit.blockX, targetHit.blockY, targetHit.blockZ, 0);
+          itemDropManager.spawnDrop(new THREE.Vector3(targetHit.blockX + 0.5, targetHit.blockY + 0.5, targetHit.blockZ + 0.5), 'wheat_seeds', 1);
+          particleSystem.spawnBlockBreakParticles(new THREE.Vector3(targetHit.blockX + 0.5, targetHit.blockY + 0.5, targetHit.blockZ + 0.5), 0x88bb33);
+          AudioManager.getInstance().playSFX('break');
+          handModel.triggerSwing();
+          toastSystem.show('🌱 Tanaman Gandum Belum Matang! (Hanya dapat 1 benih)', 'info');
+          wasRightDown = inputManager.isRightMouseDown;
+          return;
+        }
       }
     }
 
@@ -1531,7 +1591,7 @@ engine.setUpdateCallback((deltaTime) => {
           }
         }
       } else if (activeItem.itemId === 'wheat_seeds' && targetHit) {
-        // Plant Wheat Seeds (14) on top of Farmland (13), Grass (1), or Dirt (2)!
+        // Plant Wheat Seeds (Stage 0: 25) on top of Farmland (13), Grass (1), or Dirt (2)!
         const hitBlockId = world.getBlock(targetHit.blockX, targetHit.blockY, targetHit.blockZ);
         if (hitBlockId === 13 || hitBlockId === 1 || hitBlockId === 2) {
           const plantY = targetHit.normalY > 0 ? targetHit.blockY + 1 : targetHit.blockY;
@@ -1544,13 +1604,14 @@ engine.setUpdateCallback((deltaTime) => {
           }
 
           if (world.getBlock(targetHit.blockX, plantY, targetHit.blockZ) === 0) {
-            world.setBlock(targetHit.blockX, plantY, targetHit.blockZ, 14); // Plant wheat crop
-            networkManager.sendBlockChange(targetHit.blockX, plantY, targetHit.blockZ, 14);
+            world.setBlock(targetHit.blockX, plantY, targetHit.blockZ, 25); // Plant wheat sprout (Stage 0)
+            networkManager.sendBlockChange(targetHit.blockX, plantY, targetHit.blockZ, 25);
+            cropManager.registerCrop(targetHit.blockX, plantY, targetHit.blockZ, 0);
             hotbar.removeItem('wheat_seeds', 1);
             handModel.triggerSwing();
             AudioManager.getInstance().playSFX('place');
             statsTracker.recordBlockPlaced(1);
-            toastSystem.show('Wheat Seeds Planted! 🌱', 'success');
+            toastSystem.show('🌱 Menanam Benih Gandum! (Tahap 1/3: Tunas Muda)', 'success');
           }
         }
       } else {

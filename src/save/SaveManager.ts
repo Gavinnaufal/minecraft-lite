@@ -16,6 +16,7 @@ import { Turtle } from '../mobs/passive/Turtle';
 import { gameSettings } from '../core/GameSettings';
 import { DimensionManager } from '../world/dimension/DimensionManager';
 import { FurnaceManager, type FurnaceData } from '../inventory/FurnaceManager';
+import { CropManager } from '../world/farming/CropManager';
 
 const SAVE_VERSION = 3;
 
@@ -121,6 +122,7 @@ export class SaveManager {
         timeOfDay,
         modifiedBlocks,
         furnaces,
+        crops: CropManager.getInstance().toJSON(),
         mobsData,
       };
 
@@ -142,6 +144,7 @@ export class SaveManager {
       timeOfDay: number;
       modifiedBlocks?: BlockModification[];
       furnaces?: Record<string, FurnaceData>;
+      crops?: Array<{ x: number; y: number; z: number; stage: number; growthTimer: number }>;
       mobsData?: {
         type: string;
         x: number;
@@ -158,6 +161,10 @@ export class SaveManager {
 
     if (data.furnaces) {
       FurnaceManager.getInstance().loadFurnaces(data.furnaces);
+    }
+
+    if (data.crops) {
+      CropManager.getInstance().fromJSON(data.crops);
     }
 
     if (data.mobsData && this.mobManager) {

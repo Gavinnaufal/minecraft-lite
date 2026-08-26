@@ -74,11 +74,19 @@ export const recipes: Recipe[] = [
   { pattern: [['iron_ingot', null, 'iron_ingot'], ['iron_ingot', 'iron_ingot', 'iron_ingot'], ['iron_ingot', 'iron_ingot', 'iron_ingot']], result: { itemId: 'iron_chestplate', count: 1 } },
   { pattern: [['iron_ingot', 'iron_ingot', 'iron_ingot'], ['iron_ingot', null, 'iron_ingot'], ['iron_ingot', null, 'iron_ingot']], result: { itemId: 'iron_leggings', count: 1 } },
   { pattern: [['iron_ingot', null, 'iron_ingot'], ['iron_ingot', null, 'iron_ingot']], result: { itemId: 'iron_boots', count: 1 } },
-  // 26. Bandage (3x leaves + 1x string -> 2x bandage)
+  // 26. Bandage (3x leaves + 1x string -> 2x bandage, multiple orientations)
   { pattern: [['leaves', 'leaves', 'leaves'], [null, 'string', null]], result: { itemId: 'bandage', count: 2 } },
+  { pattern: [['leaves', 'leaves', 'leaves'], ['string', null, null]], result: { itemId: 'bandage', count: 2 } },
+  { pattern: [['leaves', 'leaves', 'leaves'], [null, null, 'string']], result: { itemId: 'bandage', count: 2 } },
   { pattern: [[null, 'string', null], ['leaves', 'leaves', 'leaves']], result: { itemId: 'bandage', count: 2 } },
+  { pattern: [['string', null, null], ['leaves', 'leaves', 'leaves']], result: { itemId: 'bandage', count: 2 } },
+  { pattern: [[null, null, 'string'], ['leaves', 'leaves', 'leaves']], result: { itemId: 'bandage', count: 2 } },
   { pattern: [['leaves', 'string'], ['leaves', null], ['leaves', null]], result: { itemId: 'bandage', count: 2 } },
+  { pattern: [['leaves', null], ['leaves', 'string'], ['leaves', null]], result: { itemId: 'bandage', count: 2 } },
+  { pattern: [['leaves', null], ['leaves', null], ['leaves', 'string']], result: { itemId: 'bandage', count: 2 } },
   { pattern: [['string', 'leaves'], [null, 'leaves'], [null, 'leaves']], result: { itemId: 'bandage', count: 2 } },
+  { pattern: [[null, 'leaves'], ['string', 'leaves'], [null, 'leaves']], result: { itemId: 'bandage', count: 2 } },
+  { pattern: [[null, 'leaves'], [null, 'leaves'], ['string', 'leaves']], result: { itemId: 'bandage', count: 2 } },
 ];
 
 export interface SmeltingRecipe {

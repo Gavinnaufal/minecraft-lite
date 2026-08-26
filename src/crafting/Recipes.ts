@@ -16,19 +16,22 @@ export const recipes: Recipe[] = [
   { pattern: [['plank'], ['plank'], ['stick']], result: { itemId: 'wooden_sword', count: 1 } },
   // 6. Wooden Shovel
   { pattern: [['plank'], ['stick'], ['stick']], result: { itemId: 'wooden_shovel', count: 1 } },
-  // 7. Wooden Axe
+  // 7. Wooden Axe (both right-facing and left-facing)
   { pattern: [['plank', 'plank'], ['plank', 'stick'], [null, 'stick']], result: { itemId: 'wooden_axe', count: 1 } },
+  { pattern: [['plank', 'plank'], ['stick', 'plank'], ['stick', null]], result: { itemId: 'wooden_axe', count: 1 } },
   // 8. Stone Pickaxe
   { pattern: [['stone', 'stone', 'stone'], [null, 'stick', null], [null, 'stick', null]], result: { itemId: 'stone_pickaxe', count: 1 } },
   // 9. Stone Sword
   { pattern: [['stone'], ['stone'], ['stick']], result: { itemId: 'stone_sword', count: 1 } },
-  // 10. Stone Axe
+  // 10. Stone Axe (both right-facing and left-facing)
   { pattern: [['stone', 'stone'], ['stone', 'stick'], [null, 'stick']], result: { itemId: 'stone_axe', count: 1 } },
+  { pattern: [['stone', 'stone'], ['stick', 'stone'], ['stick', null]], result: { itemId: 'stone_axe', count: 1 } },
   // 11. Stone Shovel
   { pattern: [['stone'], ['stick'], ['stick']], result: { itemId: 'stone_shovel', count: 1 } },
   // 12. Sand to Sandstone
   { pattern: [['sand', 'sand'], ['sand', 'sand']], result: { itemId: 'sandstone', count: 1 } },
-  // 13. Stick + Plank to Torch
+  // 13. Stick + Coal / Plank / Wood Log to Torch
+  { pattern: [['coal'], ['stick']], result: { itemId: 'torch', count: 4 } },
   { pattern: [['plank'], ['stick']], result: { itemId: 'torch', count: 4 } },
   { pattern: [['wood_log'], ['stick']], result: { itemId: 'torch', count: 4 } },
   // 14. 8 Planks to Chest
@@ -49,8 +52,9 @@ export const recipes: Recipe[] = [
   { pattern: [['iron_ingot'], ['iron_ingot'], ['stick']], result: { itemId: 'iron_sword', count: 1 } },
   // 19. Iron Pickaxe
   { pattern: [['iron_ingot', 'iron_ingot', 'iron_ingot'], [null, 'stick', null], [null, 'stick', null]], result: { itemId: 'iron_pickaxe', count: 1 } },
-  // 20. Iron Axe
+  // 20. Iron Axe (both right-facing and left-facing)
   { pattern: [['iron_ingot', 'iron_ingot'], ['iron_ingot', 'stick'], [null, 'stick']], result: { itemId: 'iron_axe', count: 1 } },
+  { pattern: [['iron_ingot', 'iron_ingot'], ['stick', 'iron_ingot'], ['stick', null]], result: { itemId: 'iron_axe', count: 1 } },
   // 21. Iron Shovel
   { pattern: [['iron_ingot'], ['stick'], ['stick']], result: { itemId: 'iron_shovel', count: 1 } },
   // 22. Bow (stick + string)

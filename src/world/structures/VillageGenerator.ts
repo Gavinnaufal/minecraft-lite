@@ -3,7 +3,7 @@ import type { Chunk } from '../Chunk';
 import type { HeightMap } from '../terrain/HeightMap';
 import type { BiomeGenerator } from '../terrain/BiomeGenerator';
 import { BiomeType } from '../terrain/BiomeGenerator';
-import { CHUNK_SIZE_X, CHUNK_SIZE_Z, WATER_LEVEL } from '../../utils/constants';
+import { CHUNK_SIZE_X, CHUNK_SIZE_Z, CHUNK_HEIGHT, WATER_LEVEL } from '../../utils/constants';
 import { buildOakHousePrefab } from './prefabs/HousePrefab';
 import { buildStoneHousePrefab } from './prefabs/StoneHousePrefab';
 import { buildFarmPrefab } from './prefabs/FarmPrefab';
@@ -150,31 +150,26 @@ export class VillageGenerator {
     for (const loc of oakHouseLocations) {
       const hWX = villageCX + loc.relX;
       const hWZ = villageCZ + loc.relZ;
-      let groundY = WATER_LEVEL;
-      for (let dx = 0; dx < 5; dx++) {
-        for (let dz = 0; dz < 5; dz++) {
-          groundY = Math.max(groundY, heightMap.getHeight(hWX + dx, hWZ + dz));
-        }
-      }
-      if (groundY > WATER_LEVEL) {
-        buildOakHousePrefab(chunk, chunkMinWX, chunkMinWZ, hWX, groundY, hWZ);
-        this.clearHouseEntrance(chunk, hWX + 2, hWZ, groundY, 'north', 2);
+      // Reference ground height at the front doorway (dx = 2, dz = 0)
+      const doorGroundY = heightMap.getHeight(hWX + 2, hWZ);
+      if (doorGroundY > WATER_LEVEL) {
+        // 1. Flatten build site (5x5 footprint + 2-block buffer perimeter) to doorway ground level
+        this.flattenBuildSite(chunk, hWX, hWZ, 5, 5, 2, doorGroundY, heightMap);
+        // 2. Build Oak House on leveled ground
+        buildOakHousePrefab(chunk, chunkMinWX, chunkMinWZ, hWX, doorGroundY, hWZ);
       }
     }
 
     for (const loc of stoneHouseLocations) {
       const hWX = villageCX + loc.relX;
       const hWZ = villageCZ + loc.relZ;
-      let groundY = WATER_LEVEL;
-      for (let dx = 0; dx < 6; dx++) {
-        for (let dz = 0; dz < 6; dz++) {
-          groundY = Math.max(groundY, heightMap.getHeight(hWX + dx, hWZ + dz));
-        }
-      }
-      if (groundY > WATER_LEVEL) {
-        buildStoneHousePrefab(chunk, chunkMinWX, chunkMinWZ, hWX, groundY, hWZ);
-        this.clearHouseEntrance(chunk, hWX + 2, hWZ, groundY, 'north', 2);
-        this.clearHouseEntrance(chunk, hWX + 3, hWZ, groundY, 'north', 2);
+      // Reference ground height at the front double doorway (dx = 2, dz = 0)
+      const doorGroundY = heightMap.getHeight(hWX + 2, hWZ);
+      if (doorGroundY > WATER_LEVEL) {
+        // 1. Flatten build site (6x6 footprint + 2-block buffer perimeter) to doorway ground level
+        this.flattenBuildSite(chunk, hWX, hWZ, 6, 6, 2, doorGroundY, heightMap);
+        // 2. Build Stone House on leveled ground
+        buildStoneHousePrefab(chunk, chunkMinWX, chunkMinWZ, hWX, doorGroundY, hWZ);
       }
     }
 
@@ -187,99 +182,77 @@ export class VillageGenerator {
     for (const loc of farmLocations) {
       const fWX = villageCX + loc.relX;
       const fWZ = villageCZ + loc.relZ;
-      let groundY = WATER_LEVEL;
-      for (let dx = 0; dx < 4; dx++) {
-        for (let dz = 0; dz < 6; dz++) {
-          groundY = Math.max(groundY, heightMap.getHeight(fWX + dx, fWZ + dz));
-        }
-      }
-      if (groundY > WATER_LEVEL) {
-        buildFarmPrefab(chunk, chunkMinWX, chunkMinWZ, fWX, groundY, fWZ);
+      const farmGroundY = heightMap.getHeight(fWX + 2, fWZ + 3);
+      if (farmGroundY > WATER_LEVEL) {
+        this.flattenBuildSite(chunk, fWX, fWZ, 4, 6, 1, farmGroundY, heightMap);
+        buildFarmPrefab(chunk, chunkMinWX, chunkMinWZ, fWX, farmGroundY, fWZ);
       }
     }
   }
 
   /**
-   * Clears air space in front of house doors and creates an approach walkway with foundation.
-   * Ensures natural entry without mountain terrain or cliffs blocking the doorway.
-   * GUARANTEES that the doorway (step = 0) itself is cleared to AIR as the absolute final step.
+   * Flattens a rectangular building plot and its surrounding buffer to a uniform reference level.
+   * - Eliminates hill cliffs and buried doorways before structure construction.
+   * - Fills gaps downward with solid dirt/stone if terrain is lower.
+   * - Carves/clears air overhead if natural terrain or vegetation is higher.
+   * - Seamlessly spans cross-chunk boundaries using global world coordinates.
    */
-  private clearHouseEntrance(
+  private flattenBuildSite(
     chunk: Chunk,
-    entranceWX: number,
-    entranceWZ: number,
-    groundY: number,
-    facingDirection: 'north' | 'south' | 'east' | 'west' = 'north',
-    walkwayBlockId = 2,
+    originWX: number,
+    originWZ: number,
+    width: number,
+    depth: number,
+    buffer: number,
+    referenceGroundY: number,
+    heightMap: HeightMap,
   ): void {
     const chunkMinWX = chunk.chunkX * CHUNK_SIZE_X;
     const chunkMinWZ = chunk.chunkZ * CHUNK_SIZE_Z;
 
-    let dirX = 0;
-    let dirZ = 0;
+    const minWX = originWX - buffer;
+    const maxWX = originWX + width - 1 + buffer;
+    const minWZ = originWZ - buffer;
+    const maxWZ = originWZ + depth - 1 + buffer;
 
-    switch (facingDirection) {
-      case 'north': dirZ = -1; break; // Facing -Z
-      case 'south': dirZ = 1; break;  // Facing +Z
-      case 'west': dirX = -1; break;  // Facing -X
-      case 'east': dirX = 1; break;   // Facing +X
-    }
+    for (let wz = minWZ; wz <= maxWZ; wz++) {
+      for (let wx = minWX; wx <= maxWX; wx++) {
+        const lx = wx - chunkMinWX;
+        const lz = wz - chunkMinWZ;
 
-    // Phase 1: Process approach walkway (step = 1 and step = 2 outward from door)
-    for (let step = 1; step <= 2; step++) {
-      const wx = entranceWX + dirX * step;
-      const wz = entranceWZ + dirZ * step;
-      const lx = wx - chunkMinWX;
-      const lz = wz - chunkMinWZ;
+        if (lx < 0 || lx >= CHUNK_SIZE_X || lz < 0 || lz >= CHUNK_SIZE_Z) continue;
 
-      if (lx < 0 || lx >= CHUNK_SIZE_X || lz < 0 || lz >= CHUNK_SIZE_Z) continue;
+        const naturalH = heightMap.getHeight(wx, wz);
+        const isInFootprint = wx >= originWX && wx < originWX + width && wz >= originWZ && wz < originWZ + depth;
 
-      // 1. Foundation under walkway: fill downward until hitting solid ground (prevents floating walkways on slopes)
-      for (let fillY = groundY - 1; fillY >= 1; fillY--) {
-        const below = chunk.getBlock(lx, fillY, lz);
-        if (below === 0 || below === 7 || below === 6) {
-          chunk.setBlock(lx, fillY, lz, 3); // Stone foundation
-        } else {
-          break; // Solid ground reached
+        // 1. Fill downward foundation if natural terrain is lower
+        for (let fillY = referenceGroundY - 1; fillY >= 1; fillY--) {
+          const current = chunk.getBlock(lx, fillY, lz);
+          if (current === 0 || current === 7 || current === 6) {
+            chunk.setBlock(lx, fillY, lz, fillY === referenceGroundY - 1 ? 2 : 3); // Dirt then Stone
+          } else {
+            break; // Solid ground reached
+          }
         }
-      }
 
-      // 2. Approach Walkway: place path block at y = groundY
-      chunk.setBlock(lx, groundY, lz, walkwayBlockId);
+        // 2. Surface block at referenceGroundY
+        chunk.setBlock(lx, referenceGroundY, lz, isInFootprint ? 3 : 1); // Stone floor inside, grass outside
 
-      // 3. Air clearance above walkway: clear 3 blocks high (y = groundY + 1 to groundY + 3)
-      for (let dy = 1; dy <= 3; dy++) {
-        const y = groundY + dy;
-        chunk.setBlock(lx, y, lz, 0); // Air
-      }
-      chunk.isDirty = true;
-    }
-
-    // Phase 2: Process doorway threshold (step = 0, at entranceWX, entranceWZ)
-    const doorLX = entranceWX - chunkMinWX;
-    const doorLZ = entranceWZ - chunkMinWZ;
-    if (doorLX >= 0 && doorLX < CHUNK_SIZE_X && doorLZ >= 0 && doorLZ < CHUNK_SIZE_Z) {
-      // 1. Ensure floor sill at y = groundY is solid stone
-      chunk.setBlock(doorLX, groundY, doorLZ, 3);
-
-      // 2. Downward foundation under door floor if built over air
-      for (let fillY = groundY - 1; fillY >= 1; fillY--) {
-        const below = chunk.getBlock(doorLX, fillY, doorLZ);
-        if (below === 0 || below === 7 || below === 6) {
-          chunk.setBlock(doorLX, fillY, doorLZ, 3); // Stone foundation under door floor
-        } else {
-          break;
+        // 3. Clear air overhead (clear hills, trees, and cliffs above referenceGroundY)
+        const clearTopY = Math.min(CHUNK_HEIGHT - 1, Math.max(naturalH + 6, referenceGroundY + 8));
+        for (let y = referenceGroundY + 1; y <= clearTopY; y++) {
+          chunk.setBlock(lx, y, lz, 0); // Air
         }
-      }
 
-      // 3. FINAL GUARANTEE: The doorway itself MUST be 100% AIR from groundY + 1 to groundY + 3
-      for (let dy = 1; dy <= 3; dy++) {
-        const y = groundY + dy;
-        chunk.setBlock(doorLX, y, doorLZ, 0); // Guaranteed AIR (executed last, nothing can overwrite this)
+        chunk.isDirty = true;
       }
-      chunk.isDirty = true;
     }
   }
+
+  /**
+   * (Legacy - Deactivated in favor of pre-construction flattenBuildSite)
+   */
+  // private clearHouseEntrance(...): void { ... }
 
   /**
    * Spawns 1 Iron Golem and 2 Villager NPCs at the center of the village when the center chunk generates.

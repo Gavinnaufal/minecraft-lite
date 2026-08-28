@@ -570,6 +570,7 @@ async function resetEntireGameState(clearSavedDb = true): Promise<void> {
   ChestManager.getInstance().clearAllChests();
   FurnaceManager.getInstance().clearAllFurnaces();
   CropManager.getInstance().clear();
+  villageGen.clear();
   itemDropManager.clearAll();
 
   // Reset player physics & stats
@@ -1783,6 +1784,7 @@ if (import.meta.env.DEV) {
     worldSeed = seedFromString(seedStr); worldSeedString = seedStr;
     const gens = createGenerators(worldSeed);
     heightMap = gens.heightMap; biomeGen = gens.biomeGen; caveNoise = gens.caveNoise; lakeNoise = gens.lakeNoise;
+    villageGen.clear();
     chunkManager.unloadAllChunks();
     chunkManager.update(player.position.x, player.position.z, gameSettings.renderDistance);
     console.log(`[Seed] Regenerated: "${seedStr}"`);

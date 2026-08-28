@@ -255,33 +255,71 @@ export class VillageGenerator {
   // private clearHouseEntrance(...): void { ... }
 
   /**
-   * Spawns 1 Iron Golem and 2 Villager NPCs at the center of the village when the center chunk generates.
+   * Resets spawned villages registry when starting a new game or resetting world.
+   */
+  clear(): void {
+    this.spawnedVillages.clear();
+  }
+
+  /**
+   * Spawns 1 Iron Golem and 2 Villager NPCs safely on the surface of the village when the center chunk generates.
    */
   spawnVillageNPCsForChunk(chunk: Chunk, mobManager: MobManager, heightMap: HeightMap, biomeGen: BiomeGenerator): void {
     const center = this.getVillageCenter(chunk.chunkX, chunk.chunkZ, heightMap, biomeGen);
     if (!center) return;
 
+    // ONLY spawn when the actual center chunk containing (center.cx, center.cz) is being generated!
+    const centerChunkX = Math.floor(center.cx / CHUNK_SIZE_X);
+    const centerChunkZ = Math.floor(center.cz / CHUNK_SIZE_Z);
+    if (chunk.chunkX !== centerChunkX || chunk.chunkZ !== centerChunkZ) {
+      return;
+    }
+
     const key = `${center.cx},${center.cz}`;
     if (this.spawnedVillages.has(key)) return;
     this.spawnedVillages.add(key);
 
-    const groundY = heightMap.getHeight(center.cx, center.cz);
-    const centerPos = new THREE.Vector3(center.cx, groundY + 1, center.cz);
+    const chunkMinWX = chunk.chunkX * CHUNK_SIZE_X;
+    const chunkMinWZ = chunk.chunkZ * CHUNK_SIZE_Z;
 
-    // Spawn 1 Iron Golem tethered to village
+    // Helper to find the actual solid top surface Y inside the newly generated chunk
+    const getSurfaceY = (wx: number, wz: number): number => {
+      const lx = wx - chunkMinWX;
+      const lz = wz - chunkMinWZ;
+      if (lx >= 0 && lx < CHUNK_SIZE_X && lz >= 0 && lz < CHUNK_SIZE_Z) {
+        for (let y = CHUNK_HEIGHT - 1; y >= 1; y--) {
+          const bid = chunk.getBlock(lx, y, lz);
+          if (bid !== 0 && bid !== 7) {
+            return y;
+          }
+        }
+      }
+      return heightMap.getHeight(wx, wz);
+    };
+
+    // 1. Spawn 1 Iron Golem tethered to village center
+    const golemGroundY = getSurfaceY(center.cx, center.cz);
+    const centerPos = new THREE.Vector3(center.cx + 0.5, golemGroundY + 1.1, center.cz + 0.5);
     const golem = new IronGolem(centerPos);
     golem.setVillageCenter(centerPos);
-    mobManager.spawn(centerPos, golem);
+    mobManager.addMob(golem);
 
-    // Spawn 2 Villagers tethered to village
-    const v1Pos = new THREE.Vector3(center.cx + 2, groundY + 1, center.cz + 2);
+    // 2. Spawn Villager 1
+    const v1X = center.cx + 2;
+    const v1Z = center.cz + 2;
+    const v1GroundY = getSurfaceY(v1X, v1Z);
+    const v1Pos = new THREE.Vector3(v1X + 0.5, v1GroundY + 1.1, v1Z + 0.5);
     const v1 = new Villager(v1Pos);
     v1.setVillageCenter(centerPos);
-    mobManager.spawn(v1Pos, v1);
+    mobManager.addMob(v1);
 
-    const v2Pos = new THREE.Vector3(center.cx - 2, groundY + 1, center.cz - 2);
+    // 3. Spawn Villager 2
+    const v2X = center.cx - 2;
+    const v2Z = center.cz - 2;
+    const v2GroundY = getSurfaceY(v2X, v2Z);
+    const v2Pos = new THREE.Vector3(v2X + 0.5, v2GroundY + 1.1, v2Z + 0.5);
     const v2 = new Villager(v2Pos);
     v2.setVillageCenter(centerPos);
-    mobManager.spawn(v2Pos, v2);
+    mobManager.addMob(v2);
   }
 }

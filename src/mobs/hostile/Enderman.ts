@@ -85,6 +85,13 @@ export class Enderman extends Mob {
       this.enderParticles.push(pMesh);
     }
 
+    // 7. Full-Body Combat Hitbox (Invisible volume covering the full 2.9m height for reliable targeting)
+    const hitboxGeo = new THREE.BoxGeometry(0.7, 2.9, 0.7);
+    const hitboxMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
+    const hitboxMesh = new THREE.Mesh(hitboxGeo, hitboxMat);
+    hitboxMesh.position.set(0, 1.45, 0);
+    enderGroup.add(hitboxMesh);
+
     this.mesh = enderGroup;
     this.mesh.position.copy(position);
   }

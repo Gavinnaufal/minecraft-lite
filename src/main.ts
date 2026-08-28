@@ -1291,29 +1291,34 @@ engine.setUpdateCallback((deltaTime) => {
 
     for (let i = 0; i < mobManager.mobs.length; i++) {
       const mob = mobManager.mobs[i];
+      const mobH = (mob as any).height || 1.8;
+      const mobCenterY = mob.position.y + mobH * 0.5;
+
       const dx = mob.position.x - px;
-      const dy = mob.position.y - py;
+      const dy = mobCenterY - (py + 1.62);
       const dz = mob.position.z - pz;
       const distSq = dx * dx + dy * dy + dz * dz;
 
       if (distSq <= maxDistSq) {
-        // Fast ray-to-mob center vector projection (bounding sphere ~1.5m radius)
+        // Fast ray-to-mob center vector projection using true vertical center
         const rayToMobX = mob.position.x - crosshairRay.ray.origin.x;
-        const rayToMobY = mob.position.y - crosshairRay.ray.origin.y;
+        const rayToMobY = mobCenterY - crosshairRay.ray.origin.y;
         const rayToMobZ = mob.position.z - crosshairRay.ray.origin.z;
         const rDir = crosshairRay.ray.direction;
         const proj = rayToMobX * rDir.x + rayToMobY * rDir.y + rayToMobZ * rDir.z;
 
-        if (proj > 0 && proj <= crosshairRay.far + 1.5) {
+        const maxRayExt = crosshairRay.far + Math.max(1.8, mobH * 0.6);
+        if (proj > 0 && proj <= maxRayExt) {
           const closeX = crosshairRay.ray.origin.x + rDir.x * proj;
           const closeY = crosshairRay.ray.origin.y + rDir.y * proj;
           const closeZ = crosshairRay.ray.origin.z + rDir.z * proj;
           const perpX = closeX - mob.position.x;
-          const perpY = closeY - mob.position.y;
+          const perpY = closeY - mobCenterY;
           const perpZ = closeZ - mob.position.z;
           const perpDistSq = perpX * perpX + perpY * perpY + perpZ * perpZ;
 
-          if (perpDistSq <= 2.25) { // Bounding sphere radius <= 1.5m
+          const boundRadius = Math.max(1.6, mobH * 0.65);
+          if (perpDistSq <= boundRadius * boundRadius) {
             candidateMeshes.push(mob.mesh);
           }
         }
@@ -1829,6 +1834,18 @@ if (import.meta.env.DEV) {
     hotbar.addItem('bandage', count);
     console.log(`[Debug] Added ${count}x Bandage to hotbar`);
   };
+  win.spawnMob = (type = 'enderman') => {
+    const pos = new THREE.Vector3(player.position.x + 3, player.position.y, player.position.z + 3);
+    const t = type.toLowerCase();
+    if (t === 'enderman') mobManager.addMob(new Enderman(pos));
+    else if (t === 'zombie') mobManager.addMob(new Zombie(pos));
+    else if (t === 'skeleton') mobManager.addMob(new Skeleton(pos));
+    else if (t === 'spider') mobManager.addMob(new Spider(pos));
+    else if (t === 'cow') mobManager.addMob(new Cow(pos));
+    else if (t === 'golem') mobManager.addMob(new IronGolem(pos));
+    else if (t === 'villager') mobManager.addMob(new Villager(pos));
+    console.log(`[Debug] Spawned ${type} at (${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}, ${pos.z.toFixed(1)})`);
+  };
 
-  console.log('[Debug] Helper commands: clearSave(), setSeed(str), tp(x,y,z), save(), load(), setHunger(n), setHealth(n), giveBandage(n), setDay(n), advanceDay(), setDifficulty("santai"|"normal"|"susah"), setSpeed(n), killPlayer(), showEndGame("win"|"lose")');
+  console.log('[Debug] Helper commands: clearSave(), setSeed(str), tp(x,y,z), spawnMob("enderman"), save(), load(), setHunger(n), setHealth(n), giveBandage(n), setDay(n), advanceDay(), setDifficulty("santai"|"normal"|"susah"), setSpeed(n), killPlayer(), showEndGame("win"|"lose")');
 }

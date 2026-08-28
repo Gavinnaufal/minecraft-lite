@@ -249,6 +249,10 @@ export class Mob {
       this.originalMaterials.clear();
       this.mesh.traverse((child) => {
         if (child instanceof THREE.Mesh) {
+          // Do not overwrite invisible collision / raycast hitboxes
+          if (child.material instanceof THREE.Material && (child.material as any).opacity === 0) {
+            return;
+          }
           this.originalMaterials.set(child, child.material);
           child.material = new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0xaa0000 });
         }

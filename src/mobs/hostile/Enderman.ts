@@ -98,6 +98,8 @@ export class Enderman extends Mob {
 
   private attackTimer = 0;
   private teleTimer = 0;
+  private teleCooldownTimer = 0;
+  private recentHitTimer = 0;
   private spawnGraceTimer = 2.0;
   private wanderDirX = 0;
   private wanderDirZ = 0;
@@ -111,15 +113,17 @@ export class Enderman extends Mob {
     this.animTimer = 0;
     this.attackTimer = 0;
     this.teleTimer = 0;
+    this.teleCooldownTimer = 0;
+    this.recentHitTimer = 0;
     this.spawnGraceTimer = 2.0;
     this.wanderChangeTimer = 0;
     this.stareHoldTimer = 0;
   }
 
-  teleportRandomly(world?: World): void {
+  teleportRandomly(world?: World): boolean {
     const origin = this.position.clone();
-    for (let attempt = 0; attempt < 20; attempt++) {
-      const radius = 8 + Math.random() * 12;
+    for (let attempt = 0; attempt < 25; attempt++) {
+      const radius = 7 + Math.random() * 9;
       const angle = Math.random() * Math.PI * 2;
       const tx = origin.x + Math.cos(angle) * radius;
       const tz = origin.z + Math.sin(angle) * radius;
@@ -127,7 +131,7 @@ export class Enderman extends Mob {
 
       if (world) {
         let foundGround = false;
-        for (let checkY = Math.floor(origin.y) + 5; checkY >= Math.floor(origin.y) - 5; checkY--) {
+        for (let checkY = Math.floor(origin.y) + 4; checkY >= Math.floor(origin.y) - 6; checkY--) {
           const bBelow = world.getBlock(Math.floor(tx), checkY, Math.floor(tz));
           const bHead1 = world.getBlock(Math.floor(tx), checkY + 1, Math.floor(tz));
           const bHead2 = world.getBlock(Math.floor(tx), checkY + 2, Math.floor(tz));
@@ -145,18 +149,20 @@ export class Enderman extends Mob {
       this.position.set(tx, ty, tz);
       this.mesh.position.copy(this.position);
       this.velocity.set(0, 0, 0);
+      this.teleCooldownTimer = 3.5; // Enforce minimum 3.5s cooldown between teleports
+      this.teleTimer = 0;
       AudioManager.getInstance().playSFX('click');
-      break;
+      return true;
     }
+    return false;
   }
 
   override takeDamage(amount: number): boolean {
     const isDead = super.takeDamage(amount);
     this.isProvoked = true;
     this.isHostile = true;
-    if (!isDead && Math.random() < 0.8) {
-      this.teleportRandomly();
-    }
+    // Delay next teleport for 1.8s so player has a fair window for consecutive combo hits!
+    this.recentHitTimer = 1.8;
     return isDead;
   }
 
@@ -165,6 +171,12 @@ export class Enderman extends Mob {
 
     if (this.spawnGraceTimer > 0) {
       this.spawnGraceTimer -= deltaTime;
+    }
+    if (this.teleCooldownTimer > 0) {
+      this.teleCooldownTimer -= deltaTime;
+    }
+    if (this.recentHitTimer > 0) {
+      this.recentHitTimer -= deltaTime;
     }
 
     if (playerPos) {
@@ -205,12 +217,16 @@ export class Enderman extends Mob {
         }
       }
 
-      // Periodic teleportation when provoked
+      // Periodic tactical repositioning teleport when provoked (only when cooldown is ready and not recently hit)
       if (this.isProvoked) {
-        this.teleTimer += deltaTime;
-        if (this.teleTimer >= 6.0) {
+        if (this.recentHitTimer <= 0 && this.teleCooldownTimer <= 0) {
+          this.teleTimer += deltaTime;
+          if (this.teleTimer >= 5.0) {
+            this.teleTimer = 0;
+            this.teleportRandomly(world);
+          }
+        } else {
           this.teleTimer = 0;
-          this.teleportRandomly(world);
         }
 
         const dx = playerPos.x - this.position.x;

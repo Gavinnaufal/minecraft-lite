@@ -66,6 +66,13 @@ export function createItemIcon(itemId: string, size = 28): HTMLElement {
 
   if (itemId === 'stick') {
     svg.innerHTML = `<line x1="8" y1="24" x2="24" y2="8" stroke="#8d6e63" stroke-width="4" stroke-linecap="round"/>`;
+  } else if (itemId === 'fence') {
+    svg.innerHTML = `
+      <rect x="4" y="4" width="6" height="24" rx="1" fill="#8d6e63" stroke="#5d4037" stroke-width="1"/>
+      <rect x="22" y="4" width="6" height="24" rx="1" fill="#8d6e63" stroke="#5d4037" stroke-width="1"/>
+      <rect x="9" y="8" width="14" height="4" rx="0.5" fill="#a1887f" stroke="#5d4037" stroke-width="0.75"/>
+      <rect x="9" y="18" width="14" height="4" rx="0.5" fill="#a1887f" stroke="#5d4037" stroke-width="0.75"/>
+    `;
   } else if (itemId === 'emerald') {
     svg.innerHTML = `
       <polygon points="16,4 25,11 25,21 16,28 7,21 7,11" fill="#00e676" stroke="#00a152" stroke-width="1"/>

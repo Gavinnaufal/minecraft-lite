@@ -18,6 +18,7 @@ const ITEM_COLORS: Record<string, number> = {
   wood_log: 0x5d4037,
   leaves: 0x2e7d32,
   plank: 0xb18c5d,
+  fence: 0xb18c5d,
   crafting_table: 0x8d6e63,
   sandstone: 0xe0d6b8,
   stick: 0x8d6e63,

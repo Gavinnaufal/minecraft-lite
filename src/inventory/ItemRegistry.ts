@@ -86,6 +86,7 @@ const items: ItemType[] = [
   { id: 'nether_brick', name: 'Nether Brick', maxStack: 64, isBlock: true, blockId: 24 },
   { id: 'blaze_rod', name: 'Blaze Rod', maxStack: 64, isBlock: false },
   { id: 'ghast_tear', name: 'Ghast Tear', maxStack: 64, isBlock: false },
+  { id: 'fence', name: 'Fence', maxStack: 64, isBlock: true, blockId: 27 },
 ];
 
 const byId = new Map<string, ItemType>();

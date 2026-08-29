@@ -87,6 +87,12 @@ export const recipes: Recipe[] = [
   { pattern: [['string', 'leaves'], [null, 'leaves'], [null, 'leaves']], result: { itemId: 'bandage', count: 2 } },
   { pattern: [[null, 'leaves'], ['string', 'leaves'], [null, 'leaves']], result: { itemId: 'bandage', count: 2 } },
   { pattern: [[null, 'leaves'], [null, 'leaves'], ['string', 'leaves']], result: { itemId: 'bandage', count: 2 } },
+  // 27. Wooden Fence (2x stick + 1x plank vertically / standard horizontal, 3x fence)
+  { pattern: [['stick'], ['plank'], ['stick']], result: { itemId: 'fence', count: 3 } },
+  { pattern: [['plank'], ['stick'], ['stick']], result: { itemId: 'fence', count: 3 } },
+  { pattern: [['stick'], ['stick'], ['plank']], result: { itemId: 'fence', count: 3 } },
+  { pattern: [['plank', 'stick', 'plank'], ['plank', 'stick', 'plank']], result: { itemId: 'fence', count: 3 } },
+  { pattern: [['stick', 'plank', 'stick'], ['stick', 'plank', 'stick']], result: { itemId: 'fence', count: 3 } },
 ];
 
 export interface SmeltingRecipe {

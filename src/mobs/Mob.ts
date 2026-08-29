@@ -215,6 +215,12 @@ export class Mob {
 
     for (let cx = minX; cx <= maxX; cx++) {
       for (let cz = minZ; cz <= maxZ; cz++) {
+        // Fences are 1.5 blocks tall — land mobs cannot step-jump over them!
+        const stepBlock = world.getBlock(cx, footY + 1, cz);
+        if (stepBlock === 27 || getBlockById(stepBlock)?.name === 'fence') {
+          return false;
+        }
+
         const bHead1 = world.getBlock(cx, headY1, cz);
         const bHead2 = world.getBlock(cx, headY2, cz);
         // If 2nd block height or ceiling is solid, cannot jump over!

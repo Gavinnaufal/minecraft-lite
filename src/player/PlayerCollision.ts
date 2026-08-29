@@ -48,11 +48,12 @@ export class PlayerCollision {
           const blockId = this.world.getBlock(x, y, z);
           const blockDef = getBlockById(blockId);
           if (blockId !== 0 && blockDef?.solid) { // Only collide with solid blocks
+            const isFence = blockId === 27 || blockDef.name === 'fence';
             blocks.push({
               minX: x,
               maxX: x + 1,
               minY: y,
-              maxY: y + 1,
+              maxY: isFence ? y + 1.5 : y + 1,
               minZ: z,
               maxZ: z + 1,
             });

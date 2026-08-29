@@ -132,6 +132,17 @@ const blockTypes: BlockType[] = [
     textureBottom: 'wheat_crop',
     textureSide: 'wheat_crop',
   },
+  {
+    id: 27,
+    name: 'fence',
+    color: 0x8b5a2b,
+    solid: true,
+    transparent: true,
+    hardness: 1.5,
+    textureTop: 'plank',
+    textureBottom: 'plank',
+    textureSide: 'plank',
+  },
 ];
 
 const byId = new Map<number, BlockType>();

@@ -93,6 +93,12 @@ export const recipes: Recipe[] = [
   { pattern: [['stick'], ['stick'], ['plank']], result: { itemId: 'fence', count: 3 } },
   { pattern: [['plank', 'stick', 'plank'], ['plank', 'stick', 'plank']], result: { itemId: 'fence', count: 3 } },
   { pattern: [['stick', 'plank', 'stick'], ['stick', 'plank', 'stick']], result: { itemId: 'fence', count: 3 } },
+  // 28. Spike Trap (4x stick + 2x stone, 2x spike_trap)
+  { pattern: [['stick', 'stone', 'stick'], ['stick', 'stone', 'stick']], result: { itemId: 'spike_trap', count: 2 } },
+  { pattern: [['stone', 'stick', 'stone'], ['stick', 'stick', null]], result: { itemId: 'spike_trap', count: 2 } },
+  { pattern: [['stick', 'stick'], ['stone', 'stone'], ['stick', 'stick']], result: { itemId: 'spike_trap', count: 2 } },
+  { pattern: [['stone', 'stone'], ['stick', 'stick'], ['stick', 'stick']], result: { itemId: 'spike_trap', count: 2 } },
+  { pattern: [['stick', 'stick'], ['stick', 'stick'], ['stone', 'stone']], result: { itemId: 'spike_trap', count: 2 } },
 ];
 
 export interface SmeltingRecipe {

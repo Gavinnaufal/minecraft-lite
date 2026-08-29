@@ -87,6 +87,7 @@ const items: ItemType[] = [
   { id: 'blaze_rod', name: 'Blaze Rod', maxStack: 64, isBlock: false },
   { id: 'ghast_tear', name: 'Ghast Tear', maxStack: 64, isBlock: false },
   { id: 'fence', name: 'Fence', maxStack: 64, isBlock: true, blockId: 27 },
+  { id: 'spike_trap', name: 'Spike Trap', maxStack: 64, isBlock: true, blockId: 28 },
 ];
 
 const byId = new Map<string, ItemType>();

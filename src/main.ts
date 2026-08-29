@@ -440,7 +440,7 @@ cropManager.onCropGrow = (x, y, z, stage) => {
 };
 
 const BLOCK_PARTICLE_COLORS: Record<number, number> = {
-  1: 0x55aa33, 2: 0x795548, 3: 0x9e9e9e, 4: 0xe4c875, 5: 0x5d4037, 6: 0x2e7d32, 8: 0xb18c5d, 9: 0x8d6e63, 10: 0xe0d6b8, 11: 0xffaa00, 12: 0x8b5a2b, 13: 0x4e3629, 14: 0xfbc02d, 25: 0x7cb342, 26: 0x9ccc65, 27: 0xb18c5d
+  1: 0x55aa33, 2: 0x795548, 3: 0x9e9e9e, 4: 0xe4c875, 5: 0x5d4037, 6: 0x2e7d32, 8: 0xb18c5d, 9: 0x8d6e63, 10: 0xe0d6b8, 11: 0xffaa00, 12: 0x8b5a2b, 13: 0x4e3629, 14: 0xfbc02d, 25: 0x7cb342, 26: 0x9ccc65, 27: 0xb18c5d, 28: 0x546e7a
 };
 
 blockBreaker.setOnBlockBroken((x, y, z, blockId) => {
@@ -1259,6 +1259,35 @@ engine.setUpdateCallback((deltaTime) => {
         const headBlock = world.getBlock(mx, my + 2, mz);
         if (!inWater && headBlock === 0) {
           mob.takeDamage(deltaTime * 1.5);
+        }
+      }
+    }
+  }
+
+  // Spike Trap Damage mechanic: Deals periodic damage (2 damage/sec) to hostile mobs stepping on spike_trap (ID 28)
+  for (let i = mobManager.mobs.length - 1; i >= 0; i--) {
+    const mob = mobManager.mobs[i];
+    if (mob.isHostile) {
+      const mx = Math.floor(mob.position.x);
+      const myAtFeet = Math.floor(mob.position.y);
+      const myBelow = Math.floor(mob.position.y - 0.2);
+      const mz = Math.floor(mob.position.z);
+
+      const blockAtFeet = world.getBlock(mx, myAtFeet, mz);
+      const blockBelow = world.getBlock(mx, myBelow, mz);
+
+      if (blockAtFeet === 28 || blockBelow === 28) {
+        const isDead = mob.takeDamage(deltaTime * 2.0);
+        if (Math.random() < 0.15) {
+          particleSystem.spawnBlockBreakParticles(new THREE.Vector3(mob.position.x, mob.position.y + 0.2, mob.position.z), 0x546e7a);
+          AudioManager.getInstance().playSFX('hit');
+        }
+        if (isDead) {
+          const dropPos = mob.position.clone();
+          dropPos.y += 0.5;
+          particleSystem.spawnDeathParticles(dropPos);
+          AudioManager.getInstance().playSFX('break');
+          mobManager.despawn(mob);
         }
       }
     }

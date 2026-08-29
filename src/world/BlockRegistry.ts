@@ -143,6 +143,17 @@ const blockTypes: BlockType[] = [
     textureBottom: 'plank',
     textureSide: 'plank',
   },
+  {
+    id: 28,
+    name: 'spike_trap',
+    color: 0x546e7a,
+    solid: true,
+    transparent: true,
+    hardness: 1.0,
+    textureTop: 'stone',
+    textureBottom: 'stone',
+    textureSide: 'stone',
+  },
 ];
 
 const byId = new Map<number, BlockType>();

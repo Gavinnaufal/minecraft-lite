@@ -73,6 +73,13 @@ export function createItemIcon(itemId: string, size = 28): HTMLElement {
       <rect x="9" y="8" width="14" height="4" rx="0.5" fill="#a1887f" stroke="#5d4037" stroke-width="0.75"/>
       <rect x="9" y="18" width="14" height="4" rx="0.5" fill="#a1887f" stroke="#5d4037" stroke-width="0.75"/>
     `;
+  } else if (itemId === 'spike_trap') {
+    svg.innerHTML = `
+      <rect x="2" y="24" width="28" height="6" rx="1" fill="#455a64" stroke="#263238" stroke-width="1"/>
+      <polygon points="6,24 9,8 12,24" fill="#b0bec5" stroke="#37474f" stroke-width="0.75"/>
+      <polygon points="13,24 16,4 19,24" fill="#cfd8dc" stroke="#37474f" stroke-width="0.75"/>
+      <polygon points="20,24 23,8 26,24" fill="#90a4ae" stroke="#37474f" stroke-width="0.75"/>
+    `;
   } else if (itemId === 'emerald') {
     svg.innerHTML = `
       <polygon points="16,4 25,11 25,21 16,28 7,21 7,11" fill="#00e676" stroke="#00a152" stroke-width="1"/>

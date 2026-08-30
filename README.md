@@ -1,6 +1,6 @@
-# 🌲 Mini Minecraft 3.0: Forest Survival Edition (Voxel Sandbox & Survival Game)
+# 🌲 Mini Minecraft 3.0: Forest Survival & Defense Edition (Voxel Sandbox Game)
 
-Mini Minecraft adalah game sandbox & survival voxel 3D berkinerja tinggi yang dibangun dari nol berbasis **Three.js**, **TypeScript**, dan **Vite**. Project ini menerapkan arsitektur *game engine* modern dengan generasi *mesh* multithreaded (*Web Worker Zero-Copy Transferable ArrayBuffers*), *Frustum Culling*, *Mob Object Pooling*, *Procedural Web Audio API Synthesizer*, *Combat & Armor Mitigation System*, *Procedural Structure & Biome Generation*, *WebSocket Multiplayer*, serta mode permainan **15-Day Forest Survival** berbalut antarmuka bertema **Rustic Wood & Parchment**.
+Mini Minecraft adalah game sandbox & survival voxel 3D berkinerja tinggi yang dibangun dari nol berbasis **Three.js**, **TypeScript**, dan **Vite**. Project ini menerapkan arsitektur *game engine* modern dengan generasi *mesh* multithreaded (*Web Worker Zero-Copy Transferable ArrayBuffers*), *Frustum Culling*, *Mob Object Pooling*, *Procedural Web Audio API Synthesizer*, *Combat & Armor Mitigation System*, *Base Defense & Trap System*, *Procedural Structure & Biome Generation*, *WebSocket Multiplayer*, serta mode permainan **15-Day Forest Survival** berbalut antarmuka bertema **Rustic Wood & Parchment**.
 
 🏆 **Status Proyek: 100% Selesai & Lolos Pengujian Production Build (`tsc && vite build` — 0 Errors)**.
 
@@ -12,7 +12,7 @@ Pemain terdampar di tengah hutan lebat yang liar dan berbahaya. Misimu adalah **
 
 ```
 Pilih Kesulitan → Mulai Hari 1 (06:00 Pagi) → Kumpulkan Sumber Daya Siang Hari
-  → Bangun Markas / Benteng Pertahanan → Tanam & Olah Makanan → Bertahan dari Serbuan Monster Malam
+  → Bangun Markas / Pasang Pagar & Trap → Tanam & Olah Makanan → Bertahan dari Serbuan Monster Malam
   → Eskalasi Kesulitan Meningkat Tiap Hari → Capai Fajar Hari ke-15 → 🎉 MENANG & PULANG!
   
   (Jika Nyawa Habis di Tengah Jalan → ☠️ GAME OVER & Layar Ringkasan Statistik)
@@ -45,6 +45,24 @@ Melacak performa permainan secara real-time dan menampilkannya di Layar Akhir:
 7. 🛠️ **Item Dibuat**: Total item yang di-craft di Meja Crafting.
 8. 🍖 **Makanan Dimakan**: Porsi makanan yang dikonsumsi.
 9. 🏃 **Jarak Ditempuh**: Akumulasi jarak berjalan kaki dalam satuan meter (blok).
+
+---
+
+## 🛡️ Sistem Pertahanan Markas (Base Camp Defense & Fortification)
+
+Untuk menahan gempuran monster malam hari yang semakin intensif, pemain dibekali elemen pertahanan benteng:
+
+### 🪵 1. Pagar Kayu (`fence` — ID 27)
+- **Tinggi Collision Khusus ($1.5\text{ Blok}$)**: Bounding box pagar dihitung hingga ketinggian $y + 1.5$. Karena tinggi lompatan normal pemain dan mob darat adalah $\sim 1.25\text{ blok}$, Zombie, Skeleton, Penduduk Desa, dan Hewan Ternak **tidak bisa melompati atau menerobos pagar 1 lapis**.
+- **Jarak Pandang & Tembus Serangan**: Garis pandang bidikan (*Raycast Crosshair*) tidak terhalang pagar, sehingga pemain **bisa menyerang monster di luar pagar dengan pedang atau panah secara aman**.
+- **Interaksi Panjat Laba-Laba (*Spider Wall-Climbing*)**: Mengikuti mekanik asli Minecraft, Laba-laba (*Spider*) dapat memanjat blok solid secara vertikal, sehingga pemain disarankan memasang kanopi/bibir blok di atas pagar agar laba-laba tidak memanjat masuk.
+- **Resep Crafting**: `1x Stick` + `1x Plank` + `1x Stick` vertikal $\rightarrow$ **`3x Fence`**.
+
+### ⚔️ 2. Perangkap Duri Baja (`spike_trap` — ID 28)
+- **Damage Periodik Otomatis**: Setiap monster agresif (Zombie, Skeleton, Spider, Enderman) yang berdiri atau melangkah di atas blok *Spike Trap* akan menerima **$2.0\text{ HP}$ damage per detik**.
+- **Efek Partikel & Audio**: Memicu suara hantaman duri metalik dan partikel serpihan baja abu-abu kebiruan saat monster terinjak trap.
+- **Proteksi Total untuk Pemain & Hewan**: Pemain dan hewan ternak yang berjalan di atas perangkap duri **100% aman dan tidak menerima damage sama sekali**, memungkinkan pemain bebas menata barisan trap di sekeliling pintu markas.
+- **Resep Crafting**: `4x Stick` + `2x Stone` $\rightarrow$ **`2x Spike Trap`**.
 
 ---
 
@@ -112,17 +130,41 @@ Aktivitas bertani memungkinkan pemain memproduksi bahan makanan berkelanjutan di
 
 ---
 
-## 👹 Eskalasi Bahaya Malam Hari & Kecerdasan AI Monster
+## 👹 Ekologi Mob, Kecerdasan Buatan (AI) & Balancing
 
-Sistem malam hari dirancang menantang dengan eskalasi bertahap:
-- **Pemisahan Kuota Mob (Mob Cap Isolation)**:
-  - **Hewan Siang (`mobCapPassive`)**: 16 ekor di PC / 9 ekor di Mobile (Sapi, Babi, Ayam, Kambing, Kura-kura, Penduduk Desa).
-  - **Monster Malam (`mobCapHostile`)**: Kuota mandiri yang bertambah dinamis seiring bergantinya hari.
-- **Radius Deteksi AI 35 Blok**: Monster malam (Zombie, Skeleton, Spider, Enderman) mendeteksi dan mengejar pemain dari jarak 35 blok.
-- **Kurva Eskalasi Malam (Hari 1 s/d 15)**:
-  - 🟢 **Hari 1–5 (Fase Awal)**: Kuota monster 5 ekor, spawn santai, HP normal (20 HP).
-  - 🟡 **Hari 6–10 (Fase Menengah)**: Kuota monster 11 ekor, spawn lebih sering, monster lebih alot ($+7$ HP ekstra).
-  - 🔴 **Hari 11–15 (Fase Puncak Survival)**: Kuota monster 18 ekor, spawn sangat intensif, monster memiliki darah tebal (hingga $+15$ HP ekstra). Memaksa pemain berlindung di dalam benteng markas!
+### 👾 1. Monster Agresif Malam Hari & Nether (Hostile Mobs)
+- 🧟 **Zombie**: Menyerang jarak dekat, terbakar di bawah sinar matahari langsung saat siang hari.
+- 🏹 **Skeleton**: AI penembak panah jarak jauh dengan balistik proyektil akurat, terbakar di bawah sinar matahari langsung saat siang hari. Menjatuhkan Tulang & Panah.
+- 🕷️ **Spider**: Memiliki model 3D berkaki 8 dengan animasi merayap artikulasi. Berstatus **netral di siang hari** dan **sangat agresif di malam hari** dengan serangan lompat $5.8\text{m}$ serta kemampuan memanjat dinding (*Wall-Climbing*).
+- 👁️ **Enderman**:
+  - Tinggi $2.9\text{m}$ dengan hitbox pertarungan presisi.
+  - **Mekanik Tatapan Mata (*0.8s Gaze Check*)**: Baru menjadi marah (*Provoked*) jika pemain menatap langsung ke arah matanya dengan Pointer Lock aktif selama 0.8 detik.
+  - **Keseimbangan Teleportasi (*Combat Balance*)**: Dilengkapi jeda *cooldown* minimal **3.5 detik** dan jendela jeda **1.8 detik pasca menerima serangan** (*Recent Hit Window*), memungkinkan pemain mendaratkan kombo 2–3 pukulan beruntun sebelum Enderman melakukan teleportasi reposisi taktis.
+  - **Kelemahan Air**: Terbakar/terluka saat menyentuh air dan otomatis teleport menjauh.
+  - Menjatuhkan **Ender Pearl** saat dikalahkan.
+- 🔥 **Blaze**: Mob penghuni Nether Fortress yang melayang dan menembakkan rentetan bola api proyektil.
+- 👻 **Ghast**: Raksasa terbang berukuran $4\times 4$ blok di langit Nether yang menembakkan bola api ledakan.
+
+### 🛡️ 2. NPC & Pelindung Desa (Neutral / Friendly)
+- 👨‍🌾 **Villager (Penduduk Desa)**: Menghuni desa awal (*Starter Village*) pada grid `(0,0)`, berjalan-jalan di jalur desa dan masuk ke dalam rumah.
+- 🤖 **Iron Golem**: Penjaga tangguh dengan **100 HP**. Membantu pemain membasmi monster hostile dengan melontarkan mereka tinggi ke udara.
+
+### 🐮 3. Hewan Jinak (Passive Animals)
+- **Sapi, Babi, Ayam, Kambing, Kura-kura**: Menghasilkan daging, bulu, kulit, dan dapat dikembangbiakkan (*Breeding*) menggunakan pakan favorit (Gandum, Benih, Rumput Laut).
+
+### 📈 4. Kurva Eskalasi Malam (Hari 1 s/d 15)
+- 🟢 **Hari 1–5 (Fase Awal)**: Kuota monster 5 ekor, spawn santai, HP normal (20 HP).
+- 🟡 **Hari 6–10 (Fase Menengah)**: Kuota monster 11 ekor, spawn lebih sering, monster lebih alot ($+7$ HP ekstra).
+- 🔴 **Hari 11–15 (Fase Puncak Survival)**: Kuota monster 18 ekor, spawn sangat intensif, monster memiliki darah tebal (hingga $+15$ HP ekstra). Memaksa pemain memasang pagar dan jebakan duri di sekeliling markas!
+
+---
+
+## 🌋 Dimensi Nether & Benteng Nether Fortress
+
+Pemain dapat menjelajah ke dimensi Nether yang penuh bahaya:
+1. **Portal Nether**: Bangun bingkai Obsidian $4\times 5$ lalu aktifkan portal ungu bercahaya.
+2. **Lingkungan Nether**: Dikelilingi blok Netherrack, Glowstone yang berpendar, Soul Sand yang memperlambat langkah, dan lautan Lava pijar.
+3. **Nether Fortress**: Struktur benteng prosedural berbahan *Nether Brick* yang dijaga oleh monster Blaze dan peti harta karun berharga.
 
 ---
 
@@ -149,11 +191,11 @@ Game ini sepenuhnya responsif dan nyaman dimainkan di ponsel maupun tablet:
 
 ---
 
-## 📜 Panduan Resep Crafting & Smelting (40+ Resep)
+## 📜 Panduan Resep Crafting & Smelting (45+ Resep Lengkap)
 
 Gunakan **Crafting Table** (Grid 3x3), Grid 2x2 Inventaris, atau **Furnace** untuk memproses material:
 
-### 1. Blok, Komponen Dasar & Medis
+### 1. Blok Dasar, Pertahanan & Medis
 - 🪵 **Plank** (4x): `1x Wood Log`
 - 🥢 **Stick** (4x): `2x Planks` vertikal
 - 🛠️ **Crafting Table** (1x): `4x Planks` (Grid 2x2)
@@ -162,6 +204,8 @@ Gunakan **Crafting Table** (Grid 3x3), Grid 2x2 Inventaris, atau **Furnace** unt
 - 💡 **Torch** (4x): `1x Coal` / `1x Wood Log` / `1x Plank` di atas `1x Stick`
 - 🧱 **Sandstone** (1x): `4x Sand` (Grid 2x2)
 - 💡 **Glowstone** (1x): `4x Netherrack` (Grid 2x2)
+- 🪵 **Pagar Kayu (Fence)** (3x): `1x Stick` + `1x Plank` + `1x Stick` (vertikal/horizontal)
+- ⚔️ **Perangkap Duri (Spike Trap)** (2x): `4x Stick` + `2x Stone`
 - 🍞 **Bread** (1x): `3x Wheat` horizontal
 - 🩹 **Bandage** (2x): `3x Leaves` + `1x String` (12 variasi orientasi & offset)
 
@@ -174,7 +218,7 @@ Gunakan **Crafting Table** (Grid 3x3), Grid 2x2 Inventaris, atau **Furnace** unt
 - 🏹 **Bow** (1x): `3x Sticks` melengkung + `3x Strings`.
 - 🏹 **Arrow** (4x): `1x Stone` atas + `1x Stick` tengah + `1x Feather` bawah.
 
-### 3. Set Zirah (Armor Sets)
+### 3. Set Zirah (Armor Sets & Mitigation)
 - 🪖 **Helmet** (*Leather/Iron*): `5x Bahan` pola helm terbalik.
 - 👕 **Chestplate** (*Leather/Iron*): `8x Bahan` mengisi seluruh slot kecuali tengah atas.
 - 👖 **Leggings** (*Leather/Iron*): `7x Bahan` pola celana panjang.
@@ -257,6 +301,8 @@ Hasil bundle minifikasi siap rilis akan disimpan di folder `dist/`.
 ## 🛠️ Perintah Console untuk Pengujian (Debug Helpers)
 
 Tekan **`F12`** di browser untuk membuka Developer Tools Console:
+- `giveItem(itemId, count)`: Menambahkan item apa pun langsung ke inventaris/hotbar (contoh: `giveItem('fence', 32)`, `giveItem('spike_trap', 16)`).
+- `spawnMob(type)`: Memunculkan mob di depan pemain (`'zombie'`, `'skeleton'`, `'spider'`, `'enderman'`, `'villager'`, `'iron_golem'`, `'cow'`, `'pig'`, `'chicken'`).
 - `setHealth(n)`: Mengatur HP pemain ($0-20$).
 - `setHunger(n)`: Mengatur tingkat lapar ($0-20$).
 - `giveBandage(n)`: Memberikan $n$ buah perban ke hotbar.

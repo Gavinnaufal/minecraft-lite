@@ -9,6 +9,7 @@ export class PauseMenu {
   private readonly saveManager: SaveManager;
   private readonly settingsMenu: SettingsMenu;
   private readonly onResumeCallback?: () => void;
+  public onSkipToNight?: () => void;
 
   constructor(saveManager: SaveManager, settingsMenu: SettingsMenu, onResume?: () => void) {
     this.saveManager = saveManager;
@@ -81,7 +82,13 @@ export class PauseMenu {
     // 1. Back to Game
     const btnResume = makeMcBtn('Back to Game', () => this.hide());
 
-    // 2. Save Game
+    // 2. Skip to Night (Ready to Defend)
+    const btnSkipNight = makeMcBtn('🌙 Skip ke Malam (Siap Bertahan)', () => {
+      this.hide();
+      this.onSkipToNight?.();
+    });
+
+    // 3. Save Game
     const btnSave = makeMcBtn('Save World', async () => {
       try {
         await this.saveManager.save();
@@ -91,12 +98,13 @@ export class PauseMenu {
       }
     });
 
-    // 3. Options / Settings
+    // 4. Options / Settings
     const btnSettings = makeMcBtn('Options & Settings...', () => {
       this.settingsMenu.toggle();
     });
 
     btnBox.appendChild(btnResume);
+    btnBox.appendChild(btnSkipNight);
     btnBox.appendChild(btnSave);
     btnBox.appendChild(btnSettings);
 

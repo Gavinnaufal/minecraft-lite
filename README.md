@@ -83,6 +83,10 @@ Pilih Kesulitan → Mulai Hari 1 (06:00 Fajar) → Kumpulkan Kayu & Tambang Ore
 ### ⏰ 2. Siklus Waktu Terpadu (Day/Night Synchronization)
 - **Durasi 1 Hari Penuh**: **10 Menit** (600 detik nyata) $\rightarrow$ Siang 5 menit, Senja 1 menit, Malam 3 menit, Fajar 1 menit.
 - **Inisialisasi Bersih**: Setiap memulai dunia baru (*New Game*) atau mereset game setelah kalah, waktu selalu diawali tepat pada **Hari 1 • Pukul 06:00 Pagi (Fajar Cerah)**.
+- 🌙 **Fitur Skip ke Malam Hari (Ready for Night)**: Jika pemain sudah siap bertahan hidup dan tidak ingin menunggu lama di siang hari:
+  - Tekan tombol **`[N]`** di keyboard atau klik tombol **`🌙 Malam [N]`** di samping widget waktu HUD / Pause Menu.
+  - Waktu akan langsung melompat ke pukul 18:00 (Awal Malam Hari) disertai efek suara *Night Horn*, mengaktifkan serbuan monster malam seketika.
+  - *Catatan: Tombol hanya aktif saat siang hari dan dinonaktifkan otomatis saat malam hari.*
 
 ### 📜 3. Prolog Narasi & Layar Akhir Permainan (End Game Screens)
 - 📖 **Prolog Catatan Survival**: Dialog pembuka saat pertama kali menginjakkan kaki di alam liar.
@@ -385,6 +389,7 @@ Game ini dirancang responsif dan nyaman dimainkan di perangkat layar sentuh pons
 | **Shift + Klik Kiri** | Memakai Zirah Otomatis (*Auto-Equip Armor*) dari Tas ke Slot Zirah |
 | **Scroll Mouse / 1-9** | Mengganti Slot Hotbar Aktif |
 | **E** | Membuka / Menutup Layar Tas Inventaris, Slot Zirah & Meja Crafting |
+| **N** | Melompati Siang Hari & Langsung Mulai Malam (*Skip to Night*) |
 | **F3** | Membuka Debug Overlay (FPS, XYZ, Chunk, Bioma, Dimensi, Mobs, Armor, Proyektil) |
 | **T** | Membuka Kotak Chat Multiplayer |
 | **Escape (ESC)** | Membuka Menu Jeda (Pause Menu) / Menutup Jendela UI Aktif |
@@ -398,7 +403,8 @@ Game ini dirancang responsif dan nyaman dimainkan di perangkat layar sentuh pons
 | **Tombol Serang (⚔️)** | Menghancurkan blok yang disorot / Memukul musuh |
 | **Tombol Pasang (🧱)** | Memasang blok / Menggunakan item aktif / Interaksi |
 | **Tombol Tas (🎒)** | Membuka / Menutup panel inventaris, armor & crafting |
-| **Tombol Menu (☰)** | Membuka Pause Menu & Pengaturan Permainan |
+| **Tombol Menu (☰)** | Membuka Pause Menu (tersedia tombol *Skip ke Malam*) & Pengaturan |
+| **Tombol Malam (🌙)** | Terletak di samping widget jam waktu atas untuk langsung memulai malam |
 | **Ketuk Slot Item** | Memilih item lalu mengetuk slot tujuan untuk memindahkan barang |
 | **Sentuh & Tahan Slot** | Membuka popup pemisah jumlah tumpukan (*Stack Splitter Modal*) |
 
@@ -532,6 +538,7 @@ Tekan tombol **`F12`** di browser untuk membuka jendela *Developer Tools Console
 | `giveBandage(n)` | Memberikan $n$ buah perban penyembuh langsung ke hotbar. |
 | `setDay(n)` | Melompat langsung ke Hari survival tertentu ($1-15$). |
 | `advanceDay()` | Memajukan 1 hari ke depan secara instan. |
+| `skipToNight()` | Melompati siang hari dan langsung memulai malam hari. |
 | `setSpeed(n)` | Mengatur kecepatan siklus waktu (contoh: `setSpeed(20)` untuk mempercepat siang/malam). |
 | `setDifficulty(diff)` | Mengganti tingkat kesulitan (`'santai'`, `'normal'`, atau `'susah'`). |
 | `killPlayer()` | Memicu kematian pemain untuk menguji mekanisme nyawa dan layar Game Over. |

@@ -650,6 +650,29 @@ const pauseMenu = new PauseMenu(saveManager, settingsMenu, () => {
 });
 pauseMenu.create();
 
+function triggerSkipToNight(): void {
+  if (DimensionManager.getInstance().isNether()) {
+    toastSystem.show('Dimensi Nether tidak memiliki siklus siang/malam!', 'info');
+    return;
+  }
+  const skipped = dayNight.skipToNight();
+  if (skipped) {
+    AudioManager.getInstance().playSFX('night_horn');
+    hud.setTime(dayNight.timeOfDay, survivalManager.currentDay);
+    toastSystem.show(`🌑 Malam Hari ke-${survivalManager.currentDay} dimulai! Bersiaplah bertahan!`, 'warning');
+  } else {
+    toastSystem.show('Saat ini sudah malam hari!', 'info');
+  }
+}
+
+hud.onSkipToNight = () => {
+  triggerSkipToNight();
+};
+
+pauseMenu.onSkipToNight = () => {
+  triggerSkipToNight();
+};
+
 const touchControls = TouchControls.getInstance();
 touchControls.onToggleInventory = () => {
   if (furnaceScreen.getIsOpen()) furnaceScreen.close();
@@ -744,6 +767,12 @@ window.addEventListener('keydown', (e) => {
     else if (chestScreen.isOpen) chestScreen.closeChest();
     else inventoryScreen.toggle();
     updateTouchControlsState();
+    return;
+  }
+  if (e.key === 'n' || e.key === 'N') {
+    if (!mainMenu.isOpen && !inventoryScreen.isOpen && !chestScreen.isOpen && !furnaceScreen.getIsOpen() && !tradingScreen.isOpen && !endGameScreen.isOpen) {
+      triggerSkipToNight();
+    }
     return;
   }
   const num = parseInt(e.key);
@@ -1843,6 +1872,9 @@ if (import.meta.env.DEV) {
   };
   win.advanceDay = () => {
     survivalManager.advanceDay();
+  };
+  win.skipToNight = () => {
+    triggerSkipToNight();
   };
   win.setDifficulty = (diff: 'santai' | 'normal' | 'susah') => {
     survivalManager.setDifficulty(diff);

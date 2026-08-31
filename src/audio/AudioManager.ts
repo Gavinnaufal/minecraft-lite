@@ -384,6 +384,39 @@ export class AudioManager {
       filter.connect(masterGain);
       osc.start(now);
       osc.stop(now + 0.25);
+    } else if (name === 'night_horn') {
+      // Dramatic Night Horn / Gong Synthesizer
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc1.type = 'sawtooth';
+      osc1.frequency.setValueAtTime(110, now);
+      osc1.frequency.linearRampToValueAtTime(82.4, now + 0.8);
+      osc1.frequency.exponentialRampToValueAtTime(55, now + 1.8);
+
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(164.8, now);
+      osc2.frequency.linearRampToValueAtTime(123.4, now + 0.8);
+      osc2.frequency.exponentialRampToValueAtTime(55, now + 1.8);
+
+      gain.gain.setValueAtTime(0.0, now);
+      gain.gain.linearRampToValueAtTime(0.65, now + 0.15);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(550, now);
+
+      osc1.connect(filter);
+      osc2.connect(filter);
+      filter.connect(gain);
+      gain.connect(masterGain);
+
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + 1.8);
+      osc2.stop(now + 1.8);
     }
   }
 

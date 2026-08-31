@@ -28,6 +28,14 @@ export class DayNightCycle {
     return this.timeOfDay < 0.25 || this.timeOfDay > 0.75;
   }
 
+  skipToNight(): boolean {
+    if (!this.isNight) {
+      this.timeOfDay = 0.76;
+      return true;
+    }
+    return false;
+  }
+
   update(deltaTime: number): void {
     const timeDelta = (deltaTime * this.timeMultiplier) / this.cycleDuration;
     this.timeOfDay += timeDelta;

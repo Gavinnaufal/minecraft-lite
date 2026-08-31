@@ -31,6 +31,8 @@ export class HUD {
   private timeDisplayContainer: HTMLDivElement;
   private timeDisplay: HTMLSpanElement;
   private timeIcon: HTMLSpanElement;
+  private skipNightBtn: HTMLButtonElement;
+  public onSkipToNight?: () => void;
   private healthContainer: HTMLDivElement;
   private heartEls: HTMLSpanElement[] = [];
   private hungerContainer: HTMLDivElement;
@@ -106,23 +108,51 @@ export class HUD {
     this.coordsDisplay.innerHTML = `<span>${SVG_ICONS.location} XYZ: 0.0, 60.0, 0.0</span> <span style="color:rgba(255,255,255,0.3)">|</span> <span>${SVG_ICONS.compass} South</span> <span style="color:rgba(255,255,255,0.3)">|</span> <span>${SVG_ICONS.fps} 60 FPS</span>`;
     document.body.appendChild(this.coordsDisplay);
 
-    // Top-Center Time Badge
+    // Top-Center Time Badge with Skip to Night button
     this.timeDisplayContainer = document.createElement('div');
     this.timeDisplayContainer.id = 'hud-time';
     this.timeDisplayContainer.style.cssText = `
       position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 100;
       font-family: var(--theme-font, monospace); font-size: 13px; font-weight: bold;
-      color: var(--theme-accent-gold-text, #ffd56b); pointer-events: none;
+      color: var(--theme-accent-gold-text, #ffd56b); pointer-events: auto;
       background: var(--theme-panel-bg-translucent, rgba(35, 23, 16, 0.94));
       border: 2px solid var(--theme-border-gold, #c8963e); border-radius: 4px;
-      padding: 5px 16px; box-shadow: 0 4px 14px rgba(0,0,0,0.7), 0 0 10px rgba(200, 150, 62, 0.25);
+      padding: 4px 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.7), 0 0 10px rgba(200, 150, 62, 0.25);
       display: flex; align-items: center; gap: 6px; text-shadow: 1px 1px 2px #000;
     `;
     this.timeIcon = document.createElement('span');
-    this.timeIcon.style.cssText = 'display: flex; align-items: center;';
+    this.timeIcon.style.cssText = 'display: flex; align-items: center; pointer-events: none;';
     this.timeDisplay = document.createElement('span');
+    this.timeDisplay.style.cssText = 'pointer-events: none;';
     this.timeDisplayContainer.appendChild(this.timeIcon);
     this.timeDisplayContainer.appendChild(this.timeDisplay);
+
+    this.skipNightBtn = document.createElement('button');
+    this.skipNightBtn.id = 'hud-skip-night-btn';
+    this.skipNightBtn.title = 'Mulai Malam Sekarang (Shortcut: [N])';
+    this.skipNightBtn.style.cssText = `
+      margin-left: 6px; padding: 2px 8px; font-family: var(--theme-font, monospace); font-size: 11px; font-weight: bold;
+      color: #ffd56b; background: rgba(30, 20, 15, 0.9);
+      border: 1px solid #c8963e; border-radius: 3px; cursor: pointer; pointer-events: auto;
+      display: flex; align-items: center; gap: 4px; transition: all 0.15s ease;
+      touch-action: manipulation; text-shadow: 1px 1px 0 #000; user-select: none;
+    `;
+    this.skipNightBtn.innerHTML = `🌙 <span class="skip-night-label">Malam [N]</span>`;
+    const triggerSkip = (e?: Event) => {
+      if (e && e.cancelable) e.preventDefault();
+      this.onSkipToNight?.();
+    };
+    this.skipNightBtn.addEventListener('click', triggerSkip);
+    this.skipNightBtn.addEventListener('touchend', triggerSkip, { passive: false });
+    this.skipNightBtn.addEventListener('mouseenter', () => {
+      this.skipNightBtn.style.background = '#543926';
+      this.skipNightBtn.style.borderColor = '#ffcc55';
+    });
+    this.skipNightBtn.addEventListener('mouseleave', () => {
+      this.skipNightBtn.style.background = 'rgba(30, 20, 15, 0.9)';
+      this.skipNightBtn.style.borderColor = '#c8963e';
+    });
+    this.timeDisplayContainer.appendChild(this.skipNightBtn);
     document.body.appendChild(this.timeDisplayContainer);
 
     // Top-Right Controls Guide Badge
@@ -133,11 +163,12 @@ export class HUD {
       background: var(--theme-panel-bg-translucent, rgba(35, 23, 16, 0.94));
       border: 2px solid var(--theme-border-muted, #543926); border-radius: 4px;
       padding: 6px 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.7);
-      display: flex; gap: 12px; align-items: center;
+      display: flex; gap: 10px; align-items: center;
     `;
     const kStyle = 'background:var(--theme-slot-bg, #1a110a); border:1px solid var(--theme-border-highlight, #704b31); border-radius:3px; padding:1px 5px; color:var(--theme-accent-gold-text, #ffd56b); font-weight:bold; font-size:10px;';
     this.controlsGuide.innerHTML = `
       <div><span style="${kStyle}">E</span> Inv</div>
+      <div><span style="${kStyle}">N</span> Malam</div>
       <div><span style="${kStyle}">Shift</span> Run</div>
       <div><span style="${kStyle}">1-9</span> Slot</div>
       <div><span style="${kStyle}">R-Click</span> Eat / Place</div>
@@ -475,12 +506,17 @@ export class HUD {
   }
 
   setTime(timeOfDay: number, currentDay: number = 1): void {
-    this.timeIcon.innerHTML = timeOfDay > 0.25 && timeOfDay < 0.75 ? SVG_ICONS.sun : SVG_ICONS.moon;
+    const isDay = timeOfDay >= 0.25 && timeOfDay <= 0.75;
+    this.timeIcon.innerHTML = isDay ? SVG_ICONS.sun : SVG_ICONS.moon;
 
     const hour = Math.floor(timeOfDay * 24);
     const min = Math.floor((timeOfDay * 24 - hour) * 60);
     const timeStr = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
     this.timeDisplay.innerHTML = `<span style="color:#ffcc00; font-weight:bold;">Hari ${currentDay}</span><span style="color:rgba(255,255,255,0.4); margin:0 5px;">•</span><span>${timeStr}</span>`;
+
+    if (this.skipNightBtn) {
+      this.skipNightBtn.style.display = isDay ? 'flex' : 'none';
+    }
   }
 
   setCrosshairState(state: 'none' | 'block' | 'mob'): void {

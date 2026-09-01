@@ -46,6 +46,7 @@ export class HUD {
   private underwaterOverlay: HTMLDivElement;
   private coordsDisplay: HTMLDivElement;
   private controlsGuide: HTMLDivElement;
+  private livesDisplay: HTMLSpanElement;
   private itemNameBanner: HTMLDivElement;
   private lowHpVignette: HTMLDivElement;
   private dimensionLabel: string = 'Overworld';
@@ -124,8 +125,12 @@ export class HUD {
     this.timeIcon.style.cssText = 'display: flex; align-items: center; pointer-events: none;';
     this.timeDisplay = document.createElement('span');
     this.timeDisplay.style.cssText = 'pointer-events: none;';
+    this.livesDisplay = document.createElement('span');
+    this.livesDisplay.id = 'hud-lives';
+    this.livesDisplay.style.cssText = 'pointer-events: none; display: inline-flex; align-items: center;';
     this.timeDisplayContainer.appendChild(this.timeIcon);
     this.timeDisplayContainer.appendChild(this.timeDisplay);
+    this.timeDisplayContainer.appendChild(this.livesDisplay);
 
     this.skipNightBtn = document.createElement('button');
     this.skipNightBtn.id = 'hud-skip-night-btn';
@@ -516,6 +521,18 @@ export class HUD {
 
     if (this.skipNightBtn) {
       this.skipNightBtn.style.display = isDay ? 'flex' : 'none';
+    }
+  }
+
+  updateLives(remainingLives: number, maxLives: number = 3, difficulty: string = 'normal'): void {
+    if (!this.livesDisplay) return;
+    if (difficulty === 'susah') {
+      this.livesDisplay.innerHTML = `<span style="color:rgba(255,255,255,0.4); margin:0 4px;">•</span><span style="color:#ff4d4d; font-weight:bold;" title="1 Nyawa (Hardcore)">💀 Hardcore</span>`;
+    } else if (difficulty === 'santai') {
+      this.livesDisplay.innerHTML = `<span style="color:rgba(255,255,255,0.4); margin:0 4px;">•</span><span style="color:#66bb6a; font-weight:bold;" title="Nyawa Bebas (Santai)">❤️ ∞</span>`;
+    } else {
+      // Normal Mode
+      this.livesDisplay.innerHTML = `<span style="color:rgba(255,255,255,0.4); margin:0 4px;">•</span><span style="color:#ffcc00; font-weight:bold;" title="Sisa Nyawa (Mode Normal)">❤️ ${remainingLives}/${maxLives}</span>`;
     }
   }
 

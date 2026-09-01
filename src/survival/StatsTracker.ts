@@ -99,7 +99,7 @@ export class StatsTracker {
     }
 
     return {
-      daysSurvived: survivalManager.currentDay,
+      daysSurvived: Math.min(survivalManager.targetDays, survivalManager.currentDay),
       difficulty: config.name,
       difficultyBadge: config.badge,
       playTimeFormatted: timeStr,

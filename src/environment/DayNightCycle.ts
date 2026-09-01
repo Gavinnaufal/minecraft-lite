@@ -38,10 +38,15 @@ export class DayNightCycle {
 
   update(deltaTime: number): void {
     const timeDelta = (deltaTime * this.timeMultiplier) / this.cycleDuration;
+    const prevTime = this.timeOfDay;
     this.timeOfDay += timeDelta;
 
     if (this.timeOfDay >= 1.0) {
       this.timeOfDay -= 1.0;
+    }
+
+    // Pergantian hari terjadi saat Fajar tiba (06:00 / timeOfDay melintasi batas 0.25)
+    if (prevTime < DayNightCycle.DEFAULT_TIME && this.timeOfDay >= DayNightCycle.DEFAULT_TIME) {
       survivalManager.advanceDay();
     }
   }

@@ -20,7 +20,7 @@ export const DIFFICULTY_CONFIGS: Record<Difficulty, DifficultyConfig> = {
     badge: '🟢 Santai',
     color: '#4caf50',
     icon: '🟢',
-    description: 'Nyawa tidak terbatas. Saat mati hanya menjatuhkan sebagian isi tas. Lapar berkurang lambat.',
+    description: 'Nyawa tidak terbatas. Hari berjalan tetap lanjut dan inventaris aman saat mati. Lapar berkurang lambat.',
     initialLives: 999,
     hungerRate: 0.5,
     mobDifficultyFactor: 0.7,
@@ -105,7 +105,7 @@ export class SurvivalManager {
   }
 
   public checkWinCondition(): void {
-    if (this.gameState === 'playing' && this.currentDay >= this.targetDays) {
+    if (this.gameState === 'playing' && this.currentDay > this.targetDays) {
       this.triggerGameWon();
     }
   }
@@ -120,8 +120,8 @@ export class SurvivalManager {
     }
 
     if (this.difficulty === 'santai') {
-      console.log(`[Survival] Player mati di mode Santai. Tidak ada pengurangan nyawa, item berkurang sebagian.`);
-      return { isGameOver: false, dropPartialItems: true, remainingLives: this.lives };
+      console.log(`[Survival] Player mati di mode Santai. Tidak ada pengurangan nyawa, inventaris aman.`);
+      return { isGameOver: false, dropPartialItems: false, remainingLives: this.lives };
     }
 
     if (this.difficulty === 'susah') {

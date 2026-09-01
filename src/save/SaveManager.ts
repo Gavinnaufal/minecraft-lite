@@ -17,6 +17,7 @@ import { gameSettings } from '../core/GameSettings';
 import { DimensionManager } from '../world/dimension/DimensionManager';
 import { FurnaceManager, type FurnaceData } from '../inventory/FurnaceManager';
 import { CropManager } from '../world/farming/CropManager';
+import type { EquipmentSlots, ArmorSlotType } from '../inventory/EquipmentSlots';
 
 const SAVE_VERSION = 3;
 
@@ -29,6 +30,7 @@ export class SaveManager {
   private hotbar: Hotbar;
   private dayNight: DayNightCycle;
   private mobManager?: MobManager;
+  private equipmentSlots?: EquipmentSlots;
   private autoSaveInterval: ReturnType<typeof setInterval> | null = null;
   private getSeed: () => number;
 
@@ -41,6 +43,7 @@ export class SaveManager {
     dayNight: DayNightCycle,
     getSeed: () => number,
     mobManager?: MobManager,
+    equipmentSlots?: EquipmentSlots,
   ) {
     this.chunkManager = chunkManager;
     this.world = world;
@@ -50,6 +53,11 @@ export class SaveManager {
     this.dayNight = dayNight;
     this.getSeed = getSeed;
     this.mobManager = mobManager;
+    this.equipmentSlots = equipmentSlots;
+  }
+
+  setEquipmentSlots(equipmentSlots: EquipmentSlots): void {
+    this.equipmentSlots = equipmentSlots;
   }
 
   async init(): Promise<void> {
@@ -111,6 +119,13 @@ export class SaveManager {
         breedingCooldown: m.breedingCooldown,
       })) : [];
 
+      const equipmentData = this.equipmentSlots ? {
+        helmet: { ...this.equipmentSlots.slots.helmet },
+        chestplate: { ...this.equipmentSlots.slots.chestplate },
+        leggings: { ...this.equipmentSlots.slots.leggings },
+        boots: { ...this.equipmentSlots.slots.boots },
+      } : undefined;
+
       const data = {
         saveVersion,
         worldSeed,
@@ -119,6 +134,7 @@ export class SaveManager {
         inventory: inventorySlots,
         hotbar: hotbarSlots,
         hotbarIndex,
+        equipment: equipmentData,
         timeOfDay,
         modifiedBlocks,
         furnaces,
@@ -141,6 +157,7 @@ export class SaveManager {
       inventory: { itemId: string | null; count: number }[];
       hotbar: { itemId: string | null; count: number }[];
       hotbarIndex: number;
+      equipment?: Record<ArmorSlotType, { itemId: string | null; count: number }>;
       timeOfDay: number;
       modifiedBlocks?: BlockModification[];
       furnaces?: Record<string, FurnaceData>;
@@ -217,6 +234,13 @@ export class SaveManager {
       this.hotbar.slots[i] = data.hotbar[i] ?? { itemId: null, count: 0 };
     }
     this.hotbar.activeSlotIndex = data.hotbarIndex;
+
+    if (data.equipment && this.equipmentSlots) {
+      this.equipmentSlots.slots.helmet = data.equipment.helmet ?? { itemId: null, count: 0 };
+      this.equipmentSlots.slots.chestplate = data.equipment.chestplate ?? { itemId: null, count: 0 };
+      this.equipmentSlots.slots.leggings = data.equipment.leggings ?? { itemId: null, count: 0 };
+      this.equipmentSlots.slots.boots = data.equipment.boots ?? { itemId: null, count: 0 };
+    }
 
     this.dayNight.timeOfDay = data.timeOfDay;
 

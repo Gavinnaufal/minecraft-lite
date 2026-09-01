@@ -6,6 +6,7 @@ import type { Player } from '../player/Player';
 import type { MobManager } from '../mobs/MobManager';
 import type { EquipmentSlots } from '../inventory/EquipmentSlots';
 import { AudioManager } from '../audio/AudioManager';
+import { statsTracker } from '../survival/StatsTracker';
 
 export class ProjectileManager {
   private static instance: ProjectileManager | null = null;
@@ -108,9 +109,12 @@ export class ProjectileManager {
             ay >= my && ay <= my + mob.height &&
             az >= mz - hw && az <= mz + hw
           ) {
-            mob.takeDamage(4);
+            const isDead = mob.takeDamage(4);
             mob.applyKnockback(arrow.velocity.clone().normalize(), 5.0);
             AudioManager.getInstance().playSFX('hit');
+            if (isDead && mob.isHostile) {
+              statsTracker.recordMonsterKill(1);
+            }
             if (this.scene) this.scene.remove(arrow.mesh);
             this.disposeObject3D(arrow.mesh);
             this.arrows.splice(i, 1);

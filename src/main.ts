@@ -513,11 +513,16 @@ blockBreaker.setOnBlockBroken((x, y, z, blockId) => {
 
 // UI & Screens Setup
 const hud = new HUD(hotbar);
+hud.updateLives(survivalManager.lives, survivalManager.getDifficultyConfig().initialLives, survivalManager.difficulty);
+survivalManager.onLivesChange = (remainingLives, maxLives) => {
+  hud.updateLives(remainingLives, maxLives, survivalManager.difficulty);
+};
 scene.add(camera);
 const handModel = new HandModel(camera, hotbar);
 
 import { EquipmentSlots } from './inventory/EquipmentSlots';
 const equipmentSlots = new EquipmentSlots();
+saveManager.setEquipmentSlots(equipmentSlots);
 
 const inventoryScreen = new InventoryScreen(inventory, hotbar, equipmentSlots);
 inventoryScreen.create();
@@ -562,7 +567,7 @@ async function resetEntireGameState(clearSavedDb = true): Promise<void> {
   dayNight.resetTime();
   statsTracker.reset();
 
-  // Clear all inventories, hotbars, equipment, chests, and furnaces
+  // Clear all inventories, hotbars, equipment, chests, furnaces, and active mobs
   inventory.clear();
   hotbar.clear();
   equipmentSlots.clear();
@@ -572,6 +577,11 @@ async function resetEntireGameState(clearSavedDb = true): Promise<void> {
   CropManager.getInstance().clear();
   villageGen.clear();
   itemDropManager.clearAll();
+  mobManager.clearAllMobs();
+
+  // Reset world blocks and memory chunks to pristine procedural state
+  world.setModifiedBlocks([]);
+  chunkManager.unloadAllChunks();
 
   // Reset player physics & stats
   player.health = 20;
@@ -587,10 +597,14 @@ async function resetEntireGameState(clearSavedDb = true): Promise<void> {
   player.position.z = 0.5;
   camera.position.set(0.5, spawnY + player.eyeHeight, 0.5);
 
+  // Reload pristine chunks around spawn point
+  chunkManager.update(0.5, 0.5, gameSettings.renderDistance);
+
   // Reset dimension & HUD
   DimensionManager.getInstance().currentDimension = DimensionType.OVERWORLD;
   hud.update(20, 20);
   hud.setTime(dayNight.timeOfDay, survivalManager.currentDay);
+  hud.updateLives(survivalManager.lives, survivalManager.getDifficultyConfig().initialLives, survivalManager.difficulty);
   hud.setDimension('overworld');
   hud.updateArmor(0);
 
@@ -612,6 +626,7 @@ const mainMenu = new MainMenu(settingsMenu, async (isLoad) => {
         camera.position.set(player.position.x, player.position.y + player.eyeHeight, player.position.z);
         hud.update(player.health, player.hunger);
         hud.setTime(dayNight.timeOfDay, survivalManager.currentDay);
+        hud.updateLives(survivalManager.lives, survivalManager.getDifficultyConfig().initialLives, survivalManager.difficulty);
         hud.updateArmor(equipmentSlots.getTotalDefense());
       }
     } catch (err) {
@@ -917,7 +932,11 @@ function restartPlayer() {
     dropPartialInventory(deathPos);
     toastSystem.show('⚠️ Kamu pingsan! Sebagian item terjatuh.', 'warning');
   } else if (!deathResult.isGameOver) {
-    toastSystem.show(`💀 Kamu mati! Sisa nyawa: ${deathResult.remainingLives}/3`, 'error');
+    if (survivalManager.difficulty === 'santai') {
+      toastSystem.show('⚠️ Kamu pingsan! Respawn di titik awal (Inventaris aman).', 'info');
+    } else {
+      toastSystem.show(`💀 Kamu mati! Sisa nyawa: ${deathResult.remainingLives}/3`, 'error');
+    }
   }
 
   if (deathResult.isGameOver) {
@@ -986,7 +1005,7 @@ engine.setUpdateCallback((deltaTime) => {
   prevPlayerZ = player.position.z;
 
   // Hunger Drain Simulation
-  const isSprinting = isMoving && !inputManager.isKeyPressed('Shift');
+  const isSprinting = isMoving && (inputManager.isKeyPressed('Shift') || inputManager.isKeyPressed('Control') || inputManager.isKeyPressed('ctrl'));
   const hungerRate = survivalManager.getDifficultyConfig().hungerRate;
   const baseHungerDrainPerSec = (1 / 40); // 1 hunger point every ~40s idle on normal
   const moveMultiplier = isSprinting ? 2.0 : (isMoving ? 1.4 : 1.0);
@@ -1316,6 +1335,7 @@ engine.setUpdateCallback((deltaTime) => {
           dropPos.y += 0.5;
           particleSystem.spawnDeathParticles(dropPos);
           AudioManager.getInstance().playSFX('break');
+          statsTracker.recordMonsterKill(1);
           mobManager.despawn(mob);
         }
       }

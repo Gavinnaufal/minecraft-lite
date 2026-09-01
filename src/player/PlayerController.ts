@@ -59,8 +59,13 @@ export class PlayerController {
     this.wasInWaterLastFrame = inWater;
 
     const len = Math.sqrt(moveX * moveX + moveZ * moveZ);
+    const isSprinting = len > 0 && (inputManager.isKeyPressed('Shift') || inputManager.isKeyPressed('Control') || inputManager.isKeyPressed('ctrl'));
+    const isSneaking = len > 0 && !isSprinting && (inputManager.isKeyPressed('c') || inputManager.isKeyPressed('C'));
+
     if (len > 0) {
-      let speed = PLAYER_SPEED * (inputManager.isKeyPressed('Shift') && !inWater ? 0.5 : 1);
+      let speed = PLAYER_SPEED;
+      if (isSprinting && !inWater) speed *= 1.35;
+      else if (isSneaking && !inWater) speed *= 0.5;
       if (inWater) speed *= 0.8;
       this.player.velocity.x = (moveX / len) * speed;
       this.player.velocity.z = (moveZ / len) * speed;
@@ -70,7 +75,7 @@ export class PlayerController {
     }
 
     // Dynamic FOV Speed Effect
-    const targetFov = len > 0 && !inputManager.isKeyPressed('Shift') && !inWater ? 80.0 : 75.0;
+    const targetFov = isSprinting && !inWater ? 82.0 : 75.0;
     if (Math.abs(camera.fov - targetFov) > 0.05) {
       camera.fov = THREE.MathUtils.lerp(camera.fov, targetFov, deltaTime * 6);
       camera.updateProjectionMatrix();

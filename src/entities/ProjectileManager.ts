@@ -69,7 +69,7 @@ export class ProjectileManager {
       const arrow = this.arrows[i];
 
       // 1. Hit detection against Player
-      if (!arrow.isStuck && player && player.health > 0) {
+      if (!arrow.isStuck && player && player.health > 0 && arrow.shooterId !== 'player') {
         const px = player.position.x;
         const py = player.position.y;
         const pz = player.position.z;
@@ -112,8 +112,11 @@ export class ProjectileManager {
             const isDead = mob.takeDamage(4);
             mob.applyKnockback(arrow.velocity.clone().normalize(), 5.0);
             AudioManager.getInstance().playSFX('hit');
-            if (isDead && mob.isHostile) {
-              statsTracker.recordMonsterKill(1);
+            if (isDead) {
+              if (mob.isHostile) {
+                statsTracker.recordMonsterKill(1);
+              }
+              mobManager.despawn(mob);
             }
             if (this.scene) this.scene.remove(arrow.mesh);
             this.disposeObject3D(arrow.mesh);

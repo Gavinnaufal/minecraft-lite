@@ -1644,6 +1644,33 @@ engine.setUpdateCallback((deltaTime) => {
           hud.update(player.health, player.hunger);
           toastSystem.show('🩹 Memakai Perban! (+6 HP Instan)', 'success');
         }
+      } else if (activeItem.itemId === 'bow') {
+        // Player Bow Shooting mechanic: consume 1 arrow and shoot forward
+        let arrowSlot = hotbar.slots.find((s) => s.itemId === 'arrow' && s.count > 0);
+        if (!arrowSlot) {
+          arrowSlot = inventory.slots.find((s) => s.itemId === 'arrow' && s.count > 0);
+        }
+
+        if (arrowSlot) {
+          arrowSlot.count--;
+          if (arrowSlot.count <= 0) {
+            arrowSlot.itemId = null;
+            arrowSlot.count = 0;
+          }
+
+          const shootDir = new THREE.Vector3();
+          camera.getWorldDirection(shootDir);
+          const shootPos = camera.position.clone().add(shootDir.clone().multiplyScalar(0.6));
+
+          ProjectileManager.getInstance().spawnArrow(shootPos, shootDir, 28.0, 'player');
+          AudioManager.getInstance().playSFX('hit');
+          handModel.triggerSwing();
+          toastSystem.show('🏹 Menembakkan Anak Panah!', 'info');
+        } else {
+          toastSystem.show('⚠️ Butuh Arrow (Anak Panah) untuk menembak!', 'warning');
+        }
+        wasRightDown = inputManager.isRightMouseDown;
+        return;
       } else if (FOOD_DATA[activeItem.itemId]) {
         const food = FOOD_DATA[activeItem.itemId];
         if (player.hunger < 20) {
@@ -1928,5 +1955,67 @@ if (import.meta.env.DEV) {
     console.log(`[Debug] Spawned ${type} at (${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}, ${pos.z.toFixed(1)})`);
   };
 
-  console.log('[Debug] Helper commands: clearSave(), setSeed(str), tp(x,y,z), spawnMob("enderman"), save(), load(), setHunger(n), setHealth(n), giveBandage(n), setDay(n), advanceDay(), setDifficulty("santai"|"normal"|"susah"), setSpeed(n), killPlayer(), showEndGame("win"|"lose")');
+  // Test Helpers for Kill Verification
+  win.spawnTestZombies = (count = 3, hp = 4) => {
+    if (!dayNight.isNight && !DimensionManager.getInstance().isNether()) {
+      console.log('%c⚠️ PERHATIAN: Sedang siang hari! Zombie akan terbakar sinar matahari.', 'color: #ffaa00; font-weight: bold;');
+      console.log('💡 Disarankan tekan tombol [N] di keyboard atau ketik skipToNight() agar menjadi malam!');
+    }
+
+    const forwardDir = new THREE.Vector3();
+    camera.getWorldDirection(forwardDir);
+    forwardDir.y = 0;
+    if (forwardDir.lengthSq() < 0.01) forwardDir.set(0, 0, -1);
+    forwardDir.normalize();
+
+    const sideDir = new THREE.Vector3(-forwardDir.z, 0, forwardDir.x);
+
+    for (let i = 0; i < count; i++) {
+      const offset = (i - (count - 1) / 2) * 2.0;
+      const spawnPos = new THREE.Vector3(player.position.x, player.position.y, player.position.z)
+        .add(forwardDir.clone().multiplyScalar(4.0))
+        .add(sideDir.clone().multiplyScalar(offset));
+      spawnPos.y = heightMap.getHeight(spawnPos.x, spawnPos.z) + 1.0;
+
+      const zombie = new Zombie(spawnPos);
+      zombie.health = hp;
+      mobManager.addMob(zombie);
+      console.log(`[Debug] Spawned Zombie #${i + 1} di (${spawnPos.x.toFixed(1)}, ${spawnPos.y.toFixed(1)}, ${spawnPos.z.toFixed(1)}) dengan HP: ${hp}`);
+    }
+
+    console.log(`%c[Debug] ${count}x Zombie (HP: ${hp}) berhasil di-spawn di depanmu! Siap untuk diuji!`, 'color: #00ff88; font-weight: bold;');
+  };
+  win.spawnTestMobs = win.spawnTestZombies;
+
+  win.giveCombatKit = () => {
+    hotbar.addItem('wooden_sword', 1);
+    hotbar.addItem('bow', 1);
+    hotbar.addItem('arrow', 16);
+    hotbar.addItem('spike_trap', 5);
+    console.log('%c[Debug] Combat Kit telah diberikan langsung ke Hotbar!', 'color: #00ff88; font-weight: bold;');
+    console.log('📦 Isi Kit: 1x Wooden Sword, 1x Bow, 16x Arrow, 5x Spike Trap');
+    toastSystem.show('⚔️ Combat Kit diterima (Pedang, Bow, Arrow, Trap)!', 'success');
+  };
+  win.giveTestKit = win.giveCombatKit;
+
+  win.getStats = () => {
+    const summary = statsTracker.getSummary();
+    console.log('%c========================================', 'color: #ffaa00; font-weight: bold;');
+    console.log('%c📊 STATISTIK PERMAINAN (StatsTracker)', 'color: #00ffff; font-weight: bold; font-size: 14px;');
+    console.log('%c========================================', 'color: #ffaa00; font-weight: bold;');
+    console.log(`⚔️  Monster Dikalahkan : %c${summary.monstersKilled}`, 'color: #ff3333; font-weight: bold; font-size: 13px;');
+    console.log(`📅  Hari Bertahan      : ${summary.daysSurvived} / ${survivalManager.targetDays}`);
+    console.log(`🎯  Tingkat Kesulitan  : ${summary.difficulty}`);
+    console.log(`⏱️   Waktu Bermain      : ${summary.playTimeFormatted}`);
+    console.log(`⛏️  Blok Dihancurkan   : ${summary.blocksBroken}`);
+    console.log(`🧱  Blok Dipasang      : ${summary.blocksPlaced}`);
+    console.log(`🔨  Item Dibuat (Craft): ${summary.itemsCrafted}`);
+    console.log(`🍖  Makanan Dikonsumsi : ${summary.foodEaten}`);
+    console.log(`🏃  Jarak Ditempuh     : ${summary.distanceTraveledBlocks.toFixed(1)} meter`);
+    console.log('%c========================================', 'color: #ffaa00; font-weight: bold;');
+    return summary;
+  };
+  win.getKillStats = win.getStats;
+
+  console.log('[Debug] Helper commands: spawnTestZombies(), giveCombatKit(), getStats(), clearSave(), setSeed(str), tp(x,y,z), spawnMob("enderman"), save(), load(), setHunger(n), setHealth(n), giveBandage(n), setDay(n), advanceDay(), setDifficulty("santai"|"normal"|"susah"), setSpeed(n), killPlayer(), showEndGame("win"|"lose")');
 }

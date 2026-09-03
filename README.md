@@ -63,34 +63,38 @@ Menerapkan arsitektur engine modern: *Web Worker Multithreaded Chunk Meshing (Ze
 
 ## 🌲 Mode Permainan Utama: 15-Day Forest Survival Mode
 
-Pemain terdampar di tengah hutan lebat yang misterius dan berbahaya. Misimu adalah **bertahan hidup selama 15 Hari** hingga regu penyelamat tiba di fajar Hari ke-15.
+Pemain terdampar di tengah hutan lebat yang misterius dan berbahaya. Misimu adalah **bertahan hidup selama 15 Hari penuh** hingga regu penyelamat tiba saat matahari terbit di fajar Hari ke-16.
 
 ```
 Pilih Kesulitan → Mulai Hari 1 (06:00 Fajar) → Kumpulkan Kayu & Tambang Ore
   → Bangun Markas / Pasang Pagar & Spike Trap → Tanam Gandum & Ternak Hewan
-  → Bertahan dari Eskalasi Monster Malam → Capai Fajar Hari ke-15 → 🏆 MENANG & PULANG!
+  → Bertahan dari Eskalasi Monster Malam (Hari 1 s/d 15)
+  → Selesaikan Malam ke-15 → Fajar Hari ke-16 Terbit → 🏆 MENANG & DISELAMATKAN!
   
-  (Jika Nyawa Habis di Perjalanan → ☠️ GAME OVER & Ringkasan Statistik Permainan)
+  (Jika Nyawa Habis di Perjalanan → ☠️ GAME OVER & Ringkasan Statistik Lengkap)
 ```
 
-### ⚔️ 1. Tingkat Kesulitan Permainan (Difficulty Settings)
-| Tingkat Kesulitan | Nyawa Awal | Laju Lapar | Karakteristik Tantangan & Penalti Kematian |
-|---|:---:|:---:|---|
-| 🟢 **Santai (Casual)** | $\infty$ (999) | $0.5\times$ | Kematian tidak menghapus dunia, hanya menjatuhkan sebagian kecil item. Monster lebih jinak. |
-| 🟡 **Normal (Standard)** | **3 Nyawa** | $1.0\times$ | Pengalaman survival standar seimbang. Kematian menghabiskan 1 nyawa; habis 3 nyawa = Game Over. |
-| 🔴 **Susah (Hardcore)** | **1 Nyawa** | $1.5\times$ | Sekali mati langsung **GAME OVER** seketika (*Permadeath*). Lapar sangat cepat, monster paling buas. |
+### ⚔️ 1. Tingkat Kesulitan Permainan (Difficulty Settings) & Indikator HUD
+Status nyawa aktif kini dipantau langsung secara real-time pada indikator HUD atas (`#hud-time`):
+
+| Tingkat Kesulitan | Nyawa Awal | Indikator HUD | Laju Lapar | Karakteristik Tantangan & Penalti Kematian |
+|---|:---:|:---:|:---:|---|
+| 🟢 **Santai (Casual)** | $\infty$ (999) | `❤️ ∞` | $0.5\times$ | Kematian tidak menghapus dunia, **seluruh inventaris aman** (`dropPartialItems: false`), hari tetap berlanjut, dan monster lebih jinak. |
+| 🟡 **Normal (Standard)** | **3 Nyawa** | `❤️ 3/3` | $1.0\times$ | Pengalaman survival standar berimbang. Sisa nyawa berkurang 1 saat gugur (`❤️ 2/3`, `❤️ 1/3`); inventaris tetap aman saat respawn; habis seluruh 3 nyawa = **Game Over**. |
+| 🔴 **Susah (Hardcore)** | **1 Nyawa** | `💀 Hardcore` | $1.5\times$ | Sekali mati langsung **GAME OVER** seketika (*Permadeath*). Rasa lapar cepat habis, monster paling ganas. |
 
 ### ⏰ 2. Siklus Waktu Terpadu (Day/Night Synchronization)
 - **Durasi 1 Hari Penuh**: **10 Menit** (600 detik nyata) $\rightarrow$ Siang 5 menit, Senja 1 menit, Malam 3 menit, Fajar 1 menit.
-- **Inisialisasi Bersih**: Setiap memulai dunia baru (*New Game*) atau mereset game setelah kalah, waktu selalu diawali tepat pada **Hari 1 • Pukul 06:00 Pagi (Fajar Cerah)**.
+- **Inisialisasi & Reset Bersih**: Setiap memulai dunia baru (*New Game*) atau mereset game setelah kalah, waktu selalu diawali tepat pada **Hari 1 • Pukul 06:00 Pagi (Fajar Cerah)**. Seluruh entitas mob lama, memori voxel chunk, peti/furnace, dan slot zirah di-reset bersih ke kondisi awal.
+- **Pergantian Hari Presisi (Dawn Trigger)**: Hari berganti tepat saat matahari terbit di fajar (pukul 06:00 / `0.25`), bukan di tengah malam.
 - 🌙 **Fitur Skip ke Malam Hari (Ready for Night)**: Jika pemain sudah siap bertahan hidup dan tidak ingin menunggu lama di siang hari:
   - Tekan tombol **`[N]`** di keyboard atau klik tombol **`🌙 Malam [N]`** di samping widget waktu HUD / Pause Menu.
   - Waktu akan langsung melompat ke pukul 18:00 (Awal Malam Hari) disertai efek suara *Night Horn*, mengaktifkan serbuan monster malam seketika.
   - *Catatan: Tombol hanya aktif saat siang hari dan dinonaktifkan otomatis saat malam hari.*
 
-### 📜 3. Prolog Narasi & Layar Akhir Permainan (End Game Screens)
+### 📜 3. Prolog Narasi & Kondisi Menang Penuh (Hari 15)
 - 📖 **Prolog Catatan Survival**: Dialog pembuka saat pertama kali menginjakkan kaki di alam liar.
-- 🏆 **Layar Kemenangan (Victory Screen)**: Terpicu otomatis di fajar Hari ke-15 dengan cerita penyelamatan heroik.
+- 🏆 **Layar Kemenangan Penuh (Victory Screen)**: Pemain harus menyelesaikan **seluruh siang dan malam ke-15 secara utuh**. Kemenangan terpicu otomatis saat fajar menyingsing di Hari ke-16 (`currentDay > 15`), dengan ringkasan bertahan hidup menampilkan **15 / 15 Hari**.
 - ☠️ **Layar Kekalahan (Defeat Screen)**: Terpicu saat nyawa habis, menampilkan penyebab gugur dan kutipan penutup.
 - 🔄 **Menu & Reset Terpadu**: Tombol kembali ke menu utama membersihkan data sesi dan siap untuk petualangan baru.
 
@@ -99,7 +103,7 @@ Setiap aksi dicatat otomatis ke penyimpanan lokal (`IndexedDB` / `localStorage`)
 1. 📅 **Hari Bertahan**: Total hari yang berhasil dilalui (/ 15 Hari).
 2. 🛡️ **Tingkat Kesulitan**: Santai / Normal / Susah.
 3. ⏱️ **Waktu Bermain**: Durasi nyata permainan (Jam, Menit, Detik).
-4. ⚔️ **Monster Dikalahkan**: Akumulasi musuh yang berhasil ditumpas.
+4. ⚔️ **Monster Dikalahkan**: Akumulasi musuh yang berhasil ditumpas melalui **serangan fisik jarak dekat (*Melee*)**, **tembakan busur panah (*Bow & Arrow*)**, maupun **perangkap duri (*Spike Trap*)**.
 5. ⛏️ **Blok Dihancurkan**: Jumlah blok yang ditambang atau dipecahkan.
 6. 🧱 **Blok Dipasang**: Jumlah blok yang dibangun untuk markas.
 7. 🛠️ **Item Dibuat**: Total item yang di-craft di Meja Crafting.
@@ -131,10 +135,11 @@ Untuk menahan gempuran monster malam hari yang kian agresif seiring bertambahnya
 ### 🍗 1. Bilah Lapar (Hunger Bar)
 - Dirender elegan di sebelah kanan bilah Hotbar menggunakan **10 ikon paha ayam (Drumstick SVG)** beresolusi tajam.
 - Kapasitas maksimal: **20 Poin Lapar**.
-- **Laju Pengurangan**:
-  - Posisi Diam (*Idle*): Berkurang 1 poin setiap $\sim 40$ detik.
-  - Berjalan Kaki Normal: $1.4\times$ lebih cepat.
-  - Berlari Sprint (*Shift / Double Tap W*): $2.0\times$ lebih cepat.
+- **Laju Pengurangan Rasa Lapar & Kecepatan Gerak**:
+  - 🧍 **Posisi Diam (*Idle*)**: Berkurang 1 poin setiap $\sim 40$ detik ($1.0\times$ laju dasar pada mode Normal).
+  - 🚶 **Berjalan Kaki Normal (W/A/S/D)**: $1.4\times$ laju lapar pada kecepatan gerak normal $5.0\text{ blok/detik}$ (FOV $75^\circ$).
+  - 🏃 **Berlari Cepat (*Sprint* — Tahan Shift / Ctrl)**: $2.0\times$ laju lapar, kecepatan lari bertambah menjadi **$6.75\text{ blok/detik}$ ($1.35\times$)** disertai efek dinamis *FOV Speed Zoom* $82^\circ$.
+  - 🤫 **Berjalan Mengendap (*Sneak* — Tombol C)**: $0.5\times$ kecepatan gerak ($2.5\text{ blok/detik}$) untuk navigasi tebing jurang dan menyelam ke dasar air tanpa terpeleset.
 - **Efek Status Lapar**:
   - ☠️ **Kelaparan (Hunger = 0)**: Menerima damage $-1$ HP setiap $3.5$ detik disertai kilatan merah di layar dan peringatan visual.
   - 💖 **Regenerasi Alami (Hunger $\ge 18$)**: Jika HP belum penuh, memulihkan $+1$ HP setiap $4.0$ detik dengan mengonsumsi sedikit poin lapar.
@@ -383,9 +388,10 @@ Game ini dirancang responsif dan nyaman dimainkan di perangkat layar sentuh pons
 |---|---|
 | **W, A, S, D** | Bergerak (Maju, Kiri, Mundur, Kanan) / Berenang mengarah ke sudut kamera |
 | **Spacebar** | Melompat (*Jump*) / Berenang naik ke permukaan air |
-| **Shift / C** | Berjalan Pelan (*Sneak*) / Menyelam turun ke dasar air |
-| **Klik Kiri Mouse** | Menghancurkan Blok / Menyerang Mob / Memukul Panen Tanaman |
-| **Klik Kanan Mouse** | Memasang Blok / Memakan Makanan / Menggunakan Bandage / Membuka Peti & Furnace / Membuka Trade Villager / Memberi Makan Ternak / Mencangkul / Menanam |
+| **Shift / Control** | Berlari Cepat (*Sprint* — Kecepatan $1.35\times$ & efek FOV Zoom) |
+| **C** | Berjalan Pelan (*Sneak*) / Menyelam turun ke dasar air |
+| **Klik Kiri Mouse** | Menghancurkan Blok / Menyerang Musuh (Pedang/Tangan) / Panen Tanaman |
+| **Klik Kanan Mouse** | Memasang Blok / Menembak Busur Panah (*Shoot Bow*) / Memakan Makanan / Menggunakan Bandage / Membuka Peti & Furnace / Trade Villager / Pakan Ternak / Mencangkul / Menanam |
 | **Shift + Klik Kiri** | Memakai Zirah Otomatis (*Auto-Equip Armor*) dari Tas ke Slot Zirah |
 | **Scroll Mouse / 1-9** | Mengganti Slot Hotbar Aktif |
 | **E** | Membuka / Menutup Layar Tas Inventaris, Slot Zirah & Meja Crafting |
@@ -469,8 +475,8 @@ Game ini dirancang responsif dan nyaman dimainkan di perangkat layar sentuh pons
 - 🪓 **Axe** (*Wood / Stone / Iron*): `3x Material` pola sudut atas + `2x Sticks` vertikal (mendukung hadap kanan & kiri).
 - 🧹 **Shovel** (*Wood / Stone / Iron*): `1x Material` di atas + `2x Sticks` vertikal di tengah.
 - 🧑‍🌾 **Hoe** (*Wood / Stone / Iron*): `2x Material` sudut atas + `2x Sticks` vertikal.
-- 🏹 **Bow (1x)**: `3x Sticks` melengkung + `3x String` di sisi samping.
-- 🏹 **Arrow (4x)**: `1x Stone` di atas + `1x Stick` di tengah + `1x Feather` di bawah.
+- 🏹 **Bow (1x)**: `3x Sticks` melengkung + `3x String` di sisi samping (*Pegang Bow di Hotbar lalu **Klik Kanan** untuk meluncurkan proyektil panah balistik Three.js berdaya rusak $4.0\text{ HP}$ per tembakan*).
+- 🏹 **Arrow (4x)**: `1x Stone` di atas + `1x Stick` di tengah + `1x Feather` di bawah (*Amunisi panah yang otomatis dikonsumsi saat menembak*).
 
 ### 🪖 3. Resep Set Zirah Pelindung (Armor Sets)
 - 🪖 **Helmet** (*Leather / Iron*): `5x Material` pola topi helm terbalik.
@@ -531,6 +537,9 @@ Tekan tombol **`F12`** di browser untuk membuka jendela *Developer Tools Console
 
 | Perintah Console | Fungsi & Contoh Penggunaan |
 |---|---|
+| `giveCombatKit()` | Memberikan paket tempur lengkap langsung ke hotbar: **1x Wooden Sword**, **1x Bow**, **16x Arrow**, dan **5x Spike Trap**. |
+| `spawnTestZombies(count, hp)` | Memunculkan zombie ber-HP rendah (default 3 ekor, 4 HP) berjejer di depan pemain untuk uji coba kill cepat pedang, panah, dan trap. |
+| `getStats()` | Mencetak seluruh statistik aktif `StatsTracker` (akumulasi monster dikalahkan, hari bertahan, waktu bermain, dll.) langsung ke console. |
 | `giveItem(itemId, count)` | Memberikan item apa pun ke inventaris pemain (contoh: `giveItem('fence', 32)`, `giveItem('iron_sword', 1)`, `giveItem('spike_trap', 16)`). |
 | `spawnMob(type)` | Memunculkan mob di depan pemain (`'zombie'`, `'skeleton'`, `'spider'`, `'enderman'`, `'villager'`, `'iron_golem'`, `'cow'`, `'pig'`, `'chicken'`, `'blaze'`, `'ghast'`). |
 | `setHealth(n)` | Mengatur HP darah pemain ($0-20$). |

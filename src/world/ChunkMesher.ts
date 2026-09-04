@@ -158,7 +158,7 @@ function doMesh(
           setAxis(px, py, pz, fa.aAxis, a);
           const bid = blocks[blockIndex(px[0], py[0], pz[0])];
 
-          if (bid === 0 || isWater(bid) || bid === 11 || bid === 14) continue;
+          if (bid === 0 || isWater(bid) || bid === 11 || bid === 14 || bid === 25 || bid === 26 || bid === 28) continue;
 
           if (isFaceVisible(blocks, px[0], py[0], pz[0], fa.dir[0], fa.dir[1], fa.dir[2], bid, eastBorder, westBorder, northBorder, southBorder)) {
             mask[b * fa.aSize + a] = bid;
@@ -268,6 +268,57 @@ function doMesh(
           const groupKey1 = `${bid}_1`;
           if (!blockGroups.has(groupKey1)) blockGroups.set(groupKey1, []);
           blockGroups.get(groupKey1)!.push({ positions: pos2, normals: nrm2, uvs: uvs2, indices: idx2 });
+        } else if (bid === 28) {
+          // Spike Trap: Thin metal base plate + 4 sharp intersecting spike blades
+          const yBase = y + 0.06;
+          const yTop = y + 0.65;
+          const xMin = x + 0.1, xMax = x + 0.9;
+          const zMin = z + 0.1, zMax = z + 0.9;
+          const xMid = x + 0.5, zMid = z + 0.5;
+
+          // 1. Horizontal Base Plate (Top)
+          const basePos = [xMax, yBase, zMin, xMin, yBase, zMin, xMin, yBase, zMax, xMax, yBase, zMax];
+          const baseNrm = [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
+          const baseUv = [1, 1, 0, 1, 0, 0.82, 1, 0.82];
+          const baseIdx = [0, 1, 2, 0, 2, 3];
+
+          // 2. Diagonal Blade 1: (xMin, zMin) to (xMax, zMax)
+          const d1Pos = [xMin, yTop, zMin, xMax, yTop, zMax, xMax, y, zMax, xMin, y, zMin];
+          const d1Nrm = [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
+          const d1Uv = [0, 1, 1, 1, 1, 0, 0, 0];
+          const d1Idx = [0, 1, 2, 0, 2, 3];
+
+          // 3. Diagonal Blade 2: (xMin, zMax) to (xMax, zMin)
+          const d2Pos = [xMin, yTop, zMax, xMax, yTop, zMin, xMax, y, zMin, xMin, y, zMax];
+          const d2Nrm = [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
+          const d2Uv = [0, 1, 1, 1, 1, 0, 0, 0];
+          const d2Idx = [0, 1, 2, 0, 2, 3];
+
+          // 4. Center Blade X: (xMin, zMid) to (xMax, zMid)
+          const cxPos = [xMin, yTop, zMid, xMax, yTop, zMid, xMax, y, zMid, xMin, y, zMid];
+          const cxNrm = [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
+          const cxUv = [0, 1, 1, 1, 1, 0, 0, 0];
+          const cxIdx = [0, 1, 2, 0, 2, 3];
+
+          // 5. Center Blade Z: (xMid, zMin) to (xMid, zMax)
+          const czPos = [xMid, yTop, zMin, xMid, yTop, zMax, xMid, y, zMax, xMid, y, zMin];
+          const czNrm = [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0];
+          const czUv = [0, 1, 1, 1, 1, 0, 0, 0];
+          const czIdx = [0, 1, 2, 0, 2, 3];
+
+          const quads = [
+            { pos: basePos, nrm: baseNrm, uv: baseUv, idx: baseIdx },
+            { pos: d1Pos, nrm: d1Nrm, uv: d1Uv, idx: d1Idx },
+            { pos: d2Pos, nrm: d2Nrm, uv: d2Uv, idx: d2Idx },
+            { pos: cxPos, nrm: cxNrm, uv: cxUv, idx: cxIdx },
+            { pos: czPos, nrm: czNrm, uv: czUv, idx: czIdx },
+          ];
+
+          quads.forEach((q, qIdx) => {
+            const groupKey = `${bid}_${qIdx}`;
+            if (!blockGroups.has(groupKey)) blockGroups.set(groupKey, []);
+            blockGroups.get(groupKey)!.push({ positions: q.pos, normals: q.nrm, uvs: q.uv, indices: q.idx });
+          });
         }
       }
     }

@@ -147,12 +147,9 @@ const blockTypes: BlockType[] = [
     id: 28,
     name: 'spike_trap',
     color: 0x546e7a,
-    solid: true,
+    solid: false,
     transparent: true,
     hardness: 1.0,
-    textureTop: 'stone',
-    textureBottom: 'stone',
-    textureSide: 'stone',
   },
 ];
 
@@ -223,7 +220,7 @@ export function createBlockMaterial(blockId: number): THREE.Material | THREE.Mat
   const texture = loadBlockTexture(block.name);
   const material = new THREE.MeshStandardMaterial({ map: texture });
 
-  if (block.name === 'leaves' || block.name === 'torch' || block.name === 'wheat_crop' || block.name === 'wheat_sprout' || block.name === 'wheat_growing') {
+  if (block.name === 'leaves' || block.name === 'torch' || block.name === 'wheat_crop' || block.name === 'wheat_sprout' || block.name === 'wheat_growing' || block.name === 'spike_trap') {
     material.transparent = false;
     material.alphaTest = 0.5;
     material.depthWrite = true;

@@ -126,6 +126,76 @@ export class HandModel {
       return;
     }
 
+    if (itemId === 'spike_trap') {
+      const trapGroup = new THREE.Group();
+
+      // 1. Base Plate (Dark Iron / Slate Bed)
+      const baseGeo = new THREE.BoxGeometry(0.24, 0.025, 0.24);
+      const baseMat = new THREE.MeshStandardMaterial({
+        color: 0x37474f,
+        roughness: 0.6,
+        metalness: 0.8,
+      });
+      const baseMesh = new THREE.Mesh(baseGeo, baseMat);
+      baseMesh.position.set(0, -0.04, 0);
+      trapGroup.add(baseMesh);
+
+      // 2. Corner Rivets
+      const rivetGeo = new THREE.BoxGeometry(0.025, 0.035, 0.025);
+      const rivetMat = new THREE.MeshStandardMaterial({
+        color: 0x90a4ae,
+        metalness: 0.9,
+        roughness: 0.3,
+      });
+      const rivetCoords = [
+        [-0.09, -0.035, -0.09],
+        [0.09, -0.035, -0.09],
+        [-0.09, -0.035, 0.09],
+        [0.09, -0.035, 0.09],
+      ];
+      for (const [rx, ry, rz] of rivetCoords) {
+        const rivet = new THREE.Mesh(rivetGeo, rivetMat);
+        rivet.position.set(rx, ry, rz);
+        trapGroup.add(rivet);
+      }
+
+      // 3. Sharp Metal Spikes (4 outer pyramids + 1 center taller pyramid)
+      const spikeMat = new THREE.MeshStandardMaterial({
+        color: 0xcfd8dc,
+        roughness: 0.2,
+        metalness: 0.9,
+      });
+
+      // 4 Outer Spikes (4-sided cone pyramids)
+      const outerSpikeGeo = new THREE.ConeGeometry(0.028, 0.13, 4);
+      const outerSpikeCoords = [
+        [-0.065, 0.035, -0.065],
+        [0.065, 0.035, -0.065],
+        [-0.065, 0.035, 0.065],
+        [0.065, 0.035, 0.065],
+      ];
+      for (const [sx, sy, sz] of outerSpikeCoords) {
+        const spike = new THREE.Mesh(outerSpikeGeo, spikeMat);
+        spike.position.set(sx, sy, sz);
+        spike.rotation.y = Math.PI * 0.25;
+        trapGroup.add(spike);
+      }
+
+      // Center Impaling Spike (Taller & thicker)
+      const centerSpikeGeo = new THREE.ConeGeometry(0.034, 0.17, 4);
+      const centerSpike = new THREE.Mesh(centerSpikeGeo, spikeMat);
+      centerSpike.position.set(0, 0.055, 0);
+      centerSpike.rotation.y = Math.PI * 0.25;
+      trapGroup.add(centerSpike);
+
+      // Ergonomic hand placement tilted forward to display menacing spikes
+      trapGroup.position.set(0, 0.06, -0.14);
+      trapGroup.rotation.set(-0.35, 0.35, 0.15);
+      this.itemMesh = trapGroup;
+      this.handGroup.add(this.itemMesh);
+      return;
+    }
+
     const blockId = itemIdToBlockId(itemId);
     if (blockId) {
       // Held Block Mini Cube using exact block texture/material

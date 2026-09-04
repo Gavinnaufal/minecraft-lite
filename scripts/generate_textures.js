@@ -504,6 +504,75 @@ const generators = {
       }
     }
     return pixels;
+  },
+
+  spike_trap: () => {
+    const pixels = new Uint8Array(16 * 16 * 4);
+    const baseDark = parseHex('#263238');
+    const baseMid = parseHex('#37474f');
+    const baseLight = parseHex('#546e7a');
+    const rivet = parseHex('#90a4ae');
+
+    const spikeTip = parseHex('#ffffff');
+    const spikeHighlight = parseHex('#eceff1');
+    const spikeMid = parseHex('#b0bec5');
+    const spikeDark = parseHex('#607d8b');
+    const spikeShadow = parseHex('#455a64');
+
+    for (let y = 0; y < 16; y++) {
+      for (let x = 0; x < 16; x++) {
+        const i = y * 16 + x;
+        let col = [0, 0, 0, 0];
+
+        // Base plate at bottom (y: 13 to 15)
+        if (y >= 13 && y <= 15) {
+          if (y === 13) {
+            col = (x === 0 || x === 15) ? rivet : baseLight;
+          } else if (y === 14) {
+            col = (x === 1 || x === 14) ? rivet : baseMid;
+          } else {
+            col = baseDark;
+          }
+        }
+        // Spike 1 (Left): base x: 1..3, tip at x=2, y=4
+        else if (x >= 1 && x <= 3) {
+          if (y === 4 && x === 2) col = spikeTip;
+          else if (y === 5 && x === 2) col = spikeHighlight;
+          else if (y >= 6 && y <= 8 && x === 2) col = spikeHighlight;
+          else if (y >= 8 && y <= 12) {
+            col = (x === 1) ? spikeShadow : (x === 2 ? spikeMid : spikeDark);
+          }
+        }
+        // Spike 2 (Center-Left tall): base x: 5..7, tip at x=6, y=1
+        else if (x >= 5 && x <= 7) {
+          if (y === 1 && x === 6) col = spikeTip;
+          else if (y >= 2 && y <= 4 && x === 6) col = spikeHighlight;
+          else if (y >= 5 && y <= 12) {
+            col = (x === 5) ? spikeShadow : (x === 6 ? spikeHighlight : spikeMid);
+          }
+        }
+        // Spike 3 (Center-Right tall): base x: 8..10, tip at x=9, y=1
+        else if (x >= 8 && x <= 10) {
+          if (y === 1 && x === 9) col = spikeTip;
+          else if (y >= 2 && y <= 4 && x === 9) col = spikeHighlight;
+          else if (y >= 5 && y <= 12) {
+            col = (x === 8) ? spikeHighlight : (x === 9 ? spikeMid : spikeDark);
+          }
+        }
+        // Spike 4 (Right): base x: 12..14, tip at x=13, y=4
+        else if (x >= 12 && x <= 14) {
+          if (y === 4 && x === 13) col = spikeTip;
+          else if (y === 5 && x === 13) col = spikeHighlight;
+          else if (y >= 6 && y <= 8 && x === 13) col = spikeHighlight;
+          else if (y >= 8 && y <= 12) {
+            col = (x === 12) ? spikeMid : (x === 13 ? spikeDark : spikeShadow);
+          }
+        }
+
+        pixels.set(col, i * 4);
+      }
+    }
+    return pixels;
   }
 };
 

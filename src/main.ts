@@ -983,6 +983,7 @@ let prevPlayerZ = player.position.z;
 let starveTimer = 0;
 let regenTimer = 0;
 let bandageCooldownTimer = 0;
+const mobSpikeTimers = new WeakMap<any, number>();
 
 engine.setUpdateCallback((deltaTime) => {
   if (mainMenu.isOpen || pauseMenu.isOpen || inventoryScreen.isOpen || chestScreen.isOpen || furnaceScreen.getIsOpen() || chatBox.visible || endGameScreen.isOpen) {
@@ -1312,32 +1313,58 @@ engine.setUpdateCallback((deltaTime) => {
     }
   }
 
-  // Spike Trap Damage mechanic: Deals periodic damage (2 damage/sec) to hostile mobs stepping on spike_trap (ID 28)
+  // Spike Trap Damage mechanic: Deals periodic damage to hostile mobs stepping on spike_trap (ID 28)
   for (let i = mobManager.mobs.length - 1; i >= 0; i--) {
     const mob = mobManager.mobs[i];
     if (mob.isHostile) {
-      const mx = Math.floor(mob.position.x);
-      const myAtFeet = Math.floor(mob.position.y);
-      const myBelow = Math.floor(mob.position.y - 0.2);
-      const mz = Math.floor(mob.position.z);
+      const hw = (mob.width ?? 0.8) / 2;
+      const minX = Math.floor(mob.position.x - hw + 0.05);
+      const maxX = Math.floor(mob.position.x + hw - 0.05);
+      const minZ = Math.floor(mob.position.z - hw + 0.05);
+      const maxZ = Math.floor(mob.position.z + hw - 0.05);
+      const footY = Math.floor(mob.position.y);
+      const belowY = Math.floor(mob.position.y - 0.25);
+      const nearGroundY = Math.floor(mob.position.y + 0.05);
 
-      const blockAtFeet = world.getBlock(mx, myAtFeet, mz);
-      const blockBelow = world.getBlock(mx, myBelow, mz);
+      let isOverSpike = false;
+      for (let x = minX; x <= maxX; x++) {
+        for (let z = minZ; z <= maxZ; z++) {
+          if (world.getBlock(x, footY, z) === 28 || world.getBlock(x, belowY, z) === 28 || world.getBlock(x, nearGroundY, z) === 28) {
+            isOverSpike = true;
+            break;
+          }
+        }
+        if (isOverSpike) break;
+      }
 
-      if (blockAtFeet === 28 || blockBelow === 28) {
-        const isDead = mob.takeDamage(deltaTime * 2.0);
-        if (Math.random() < 0.15) {
-          particleSystem.spawnBlockBreakParticles(new THREE.Vector3(mob.position.x, mob.position.y + 0.2, mob.position.z), 0x546e7a);
+      if (isOverSpike) {
+        let timer = mobSpikeTimers.get(mob) ?? 0;
+        const isFirstStep = !mobSpikeTimers.has(mob);
+        timer += deltaTime;
+
+        // Trigger damage tick immediately upon stepping or every 0.4 seconds
+        if (isFirstStep || timer >= 0.4) {
+          timer = 0;
+          const damageAmount = 1.5; // 1.5 HP damage per tick (~3.75 DPS)
+          const isDead = mob.takeDamage(damageAmount);
+
+          particleSystem.spawnBlockBreakParticles(new THREE.Vector3(mob.position.x, mob.position.y + 0.2, mob.position.z), 0xcfd8dc);
           AudioManager.getInstance().playSFX('hit');
+
+          if (isDead) {
+            mobSpikeTimers.delete(mob);
+            const dropPos = mob.position.clone();
+            dropPos.y += 0.5;
+            particleSystem.spawnDeathParticles(dropPos);
+            AudioManager.getInstance().playSFX('break');
+            statsTracker.recordMonsterKill(1);
+            mobManager.despawn(mob);
+            continue;
+          }
         }
-        if (isDead) {
-          const dropPos = mob.position.clone();
-          dropPos.y += 0.5;
-          particleSystem.spawnDeathParticles(dropPos);
-          AudioManager.getInstance().playSFX('break');
-          statsTracker.recordMonsterKill(1);
-          mobManager.despawn(mob);
-        }
+        mobSpikeTimers.set(mob, timer);
+      } else if (mobSpikeTimers.has(mob)) {
+        mobSpikeTimers.delete(mob);
       }
     }
   }

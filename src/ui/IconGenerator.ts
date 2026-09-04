@@ -75,10 +75,25 @@ export function createItemIcon(itemId: string, size = 28): HTMLElement {
     `;
   } else if (itemId === 'spike_trap') {
     svg.innerHTML = `
-      <rect x="2" y="24" width="28" height="6" rx="1" fill="#455a64" stroke="#263238" stroke-width="1"/>
-      <polygon points="6,24 9,8 12,24" fill="#b0bec5" stroke="#37474f" stroke-width="0.75"/>
-      <polygon points="13,24 16,4 19,24" fill="#cfd8dc" stroke="#37474f" stroke-width="0.75"/>
-      <polygon points="20,24 23,8 26,24" fill="#90a4ae" stroke="#37474f" stroke-width="0.75"/>
+      <rect x="1" y="23" width="30" height="7" rx="1" fill="#37474f" stroke="#212121" stroke-width="1"/>
+      <line x1="2" y1="24" x2="30" y2="24" stroke="#546e7a" stroke-width="1"/>
+      <circle cx="3.5" cy="26.5" r="1" fill="#90a4ae"/>
+      <circle cx="28.5" cy="26.5" r="1" fill="#90a4ae"/>
+      <!-- Spike 1 (Left) -->
+      <polygon points="3,23 6,10 9,23" fill="#607d8b" stroke="#263238" stroke-width="0.5"/>
+      <polygon points="6,10 6,23 9,23" fill="#b0bec5"/>
+      <!-- Spike 2 (Mid-Left) -->
+      <polygon points="9,23 12,6 15,23" fill="#78909c" stroke="#263238" stroke-width="0.5"/>
+      <polygon points="12,6 12,23 15,23" fill="#cfd8dc"/>
+      <!-- Spike 3 (Center Tall Spike) -->
+      <polygon points="13,23 16,2 19,23" fill="#90a4ae" stroke="#263238" stroke-width="0.5"/>
+      <polygon points="16,2 16,23 19,23" fill="#ffffff"/>
+      <!-- Spike 4 (Mid-Right) -->
+      <polygon points="17,23 20,6 23,23" fill="#78909c" stroke="#263238" stroke-width="0.5"/>
+      <polygon points="20,6 20,23 23,23" fill="#cfd8dc"/>
+      <!-- Spike 5 (Right) -->
+      <polygon points="23,23 26,10 29,23" fill="#607d8b" stroke="#263238" stroke-width="0.5"/>
+      <polygon points="26,10 26,23 29,23" fill="#b0bec5"/>
     `;
   } else if (itemId === 'emerald') {
     svg.innerHTML = `

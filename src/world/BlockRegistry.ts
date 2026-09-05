@@ -135,13 +135,13 @@ const blockTypes: BlockType[] = [
   {
     id: 27,
     name: 'fence',
-    color: 0x8b5a2b,
+    color: 0x785a37,
     solid: true,
     transparent: true,
     hardness: 1.5,
-    textureTop: 'plank',
-    textureBottom: 'plank',
-    textureSide: 'plank',
+    textureTop: 'wood_log_top',
+    textureBottom: 'wood_log_top',
+    textureSide: 'wood_log',
   },
   {
     id: 28,

@@ -196,6 +196,51 @@ export class HandModel {
       return;
     }
 
+    if (itemId === 'fence') {
+      const fenceGroup = new THREE.Group();
+
+      const logTex = loadBlockTexture('wood_log');
+      const logTopTex = loadBlockTexture('wood_log_top');
+
+      const postMat = [
+        new THREE.MeshStandardMaterial({ map: logTex }),
+        new THREE.MeshStandardMaterial({ map: logTex }),
+        new THREE.MeshStandardMaterial({ map: logTopTex }),
+        new THREE.MeshStandardMaterial({ map: logTopTex }),
+        new THREE.MeshStandardMaterial({ map: logTex }),
+        new THREE.MeshStandardMaterial({ map: logTex }),
+      ];
+      const railMat = new THREE.MeshStandardMaterial({ map: logTex });
+
+      // Left post (width 0.045, height 0.28, depth 0.045)
+      const postGeo = new THREE.BoxGeometry(0.045, 0.28, 0.045);
+      const postL = new THREE.Mesh(postGeo, postMat);
+      postL.position.set(-0.065, 0.08, 0);
+      fenceGroup.add(postL);
+
+      // Right post
+      const postR = new THREE.Mesh(postGeo, postMat);
+      postR.position.set(0.065, 0.08, 0);
+      fenceGroup.add(postR);
+
+      // Top rail (connects between posts)
+      const railGeo = new THREE.BoxGeometry(0.18, 0.035, 0.025);
+      const railTop = new THREE.Mesh(railGeo, railMat);
+      railTop.position.set(0, 0.15, 0);
+      fenceGroup.add(railTop);
+
+      // Bottom rail
+      const railBottom = new THREE.Mesh(railGeo, railMat);
+      railBottom.position.set(0, 0.05, 0);
+      fenceGroup.add(railBottom);
+
+      fenceGroup.position.set(0, 0.03, -0.14);
+      fenceGroup.rotation.set(-0.25, 0.45, 0.1);
+      this.itemMesh = fenceGroup;
+      this.handGroup.add(this.itemMesh);
+      return;
+    }
+
     const blockId = itemIdToBlockId(itemId);
     if (blockId) {
       // Held Block Mini Cube using exact block texture/material

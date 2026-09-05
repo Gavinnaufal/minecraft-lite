@@ -160,7 +160,7 @@ function meshSolid(
           setAxis(px, py, pz, fa.aAxis, a);
           const x = px[0], y = py[0], z = pz[0];
           const bid = blocks[blockIndex(x, y, z)];
-          if (bid === 0 || isWater(bid) || bid === 11 || bid === 14 || bid === 25 || bid === 26 || bid === 28) continue;
+          if (bid === 0 || isWater(bid) || bid === 11 || bid === 14 || bid === 25 || bid === 26 || bid === 27 || bid === 28) continue;
 
           if (isFaceVisible(blocks, x, y, z, fa.dir[0], fa.dir[1], fa.dir[2], bid, eastBorder, westBorder, northBorder, southBorder)) {
             mask[b * fa.aSize + a] = bid;
@@ -321,6 +321,83 @@ function meshSolid(
             if (!blockGroups.has(groupKey)) blockGroups.set(groupKey, []);
             blockGroups.get(groupKey)!.push({ positions: q.pos, normals: q.nrm, uvs: q.uv, indices: q.idx });
           });
+        } else if (bid === 27) {
+          // Wooden Fence: 1.5 blocks tall post + dynamic connecting crossbars
+          const pMinX = x + 0.375, pMaxX = x + 0.625;
+          const pMinZ = z + 0.375, pMaxZ = z + 0.625;
+          const y0 = y, y15 = y + 1.5;
+
+          const addFace = (faIdx: number, p: number[], uv: number[], n: number[]) => {
+            const groupKey = `${bid}_${faIdx}`;
+            if (!blockGroups.has(groupKey)) blockGroups.set(groupKey, []);
+            blockGroups.get(groupKey)!.push({ positions: p, normals: n, uvs: uv, indices: [0, 1, 2, 0, 2, 3] });
+          };
+
+          // 1. Central Post (Height: y to y + 1.5)
+          // Top (+Y -> faIdx 0)
+          addFace(0, [pMaxX, y15, pMinZ, pMinX, y15, pMinZ, pMinX, y15, pMaxZ, pMaxX, y15, pMaxZ], [1, 1, 0, 1, 0, 0, 1, 0], [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0]);
+          // Bottom (-Y -> faIdx 1)
+          addFace(1, [pMinX, y0, pMinZ, pMaxX, y0, pMinZ, pMaxX, y0, pMaxZ, pMinX, y0, pMaxZ], [0, 1, 1, 1, 1, 0, 0, 0], [0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0]);
+          // East (+X -> faIdx 2)
+          addFace(2, [pMaxX, y15, pMinZ, pMaxX, y15, pMaxZ, pMaxX, y0, pMaxZ, pMaxX, y0, pMinZ], [0, 1.5, 0.25, 1.5, 0.25, 0, 0, 0], [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0]);
+          // West (-X -> faIdx 3)
+          addFace(3, [pMinX, y15, pMaxZ, pMinX, y15, pMinZ, pMinX, y0, pMinZ, pMinX, y0, pMaxZ], [0.25, 1.5, 0, 1.5, 0, 0, 0.25, 0], [-1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0]);
+          // South (+Z -> faIdx 4)
+          addFace(4, [pMaxX, y15, pMaxZ, pMinX, y15, pMaxZ, pMinX, y0, pMaxZ, pMaxX, y0, pMaxZ], [0.25, 1.5, 0, 1.5, 0, 0, 0.25, 0], [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1]);
+          // North (-Z -> faIdx 5)
+          addFace(5, [pMinX, y15, pMinZ, pMaxX, y15, pMinZ, pMaxX, y0, pMinZ, pMinX, y0, pMinZ], [0, 1.5, 0.25, 1.5, 0.25, 0, 0, 0], [0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1]);
+
+          // Check neighbor connections
+          const checkConnect = (nx: number, nz: number): boolean => {
+            if (nx >= 0 && nx < CHUNK_SIZE_X && nz >= 0 && nz < CHUNK_SIZE_Z) {
+              const nb = blocks[blockIndex(nx, y, nz)];
+              return nb === 27 || isOpaque(nb);
+            }
+            if (nx >= CHUNK_SIZE_X && eastBorder) return eastBorder[borderIndexX(y, nz)] === 27 || isOpaque(eastBorder[borderIndexX(y, nz)]);
+            if (nx < 0 && westBorder) return westBorder[borderIndexX(y, nz)] === 27 || isOpaque(westBorder[borderIndexX(y, nz)]);
+            if (nz >= CHUNK_SIZE_Z && southBorder) return southBorder[borderIndexZ(nx, y)] === 27 || isOpaque(southBorder[borderIndexZ(nx, y)]);
+            if (nz < 0 && northBorder) return northBorder[borderIndexZ(nx, y)] === 27 || isOpaque(northBorder[borderIndexZ(nx, y)]);
+            return false;
+          };
+
+          const connE = checkConnect(x + 1, z);
+          const connW = checkConnect(x - 1, z);
+          const connN = checkConnect(x, z - 1);
+          const connS = checkConnect(x, z + 1);
+
+          // Horizontal Rails (Upper: y+1.05 to y+1.3, Lower: y+0.4 to y+0.65)
+          const addRailX = (xStart: number, xEnd: number) => {
+            const rz0 = z + 0.4375, rz1 = z + 0.5625;
+            for (const [ry0, ry1] of [[y + 0.4, y + 0.65], [y + 1.05, y + 1.3]]) {
+              // Top
+              addFace(0, [xEnd, ry1, rz0, xStart, ry1, rz0, xStart, ry1, rz1, xEnd, ry1, rz1], [1, 1, 0, 1, 0, 0, 1, 0], [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0]);
+              // Bottom
+              addFace(1, [xStart, ry0, rz0, xEnd, ry0, rz0, xEnd, ry0, rz1, xStart, ry0, rz1], [0, 1, 1, 1, 1, 0, 0, 0], [0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0]);
+              // South
+              addFace(4, [xEnd, ry1, rz1, xStart, ry1, rz1, xStart, ry0, rz1, xEnd, ry0, rz1], [1, 0.25, 0, 0.25, 0, 0, 1, 0], [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1]);
+              // North
+              addFace(5, [xStart, ry1, rz0, xEnd, ry1, rz0, xEnd, ry0, rz0, xStart, ry0, rz0], [0, 0.25, 1, 0.25, 1, 0, 0, 0], [0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1]);
+            }
+          };
+
+          const addRailZ = (zStart: number, zEnd: number) => {
+            const rx0 = x + 0.4375, rx1 = x + 0.5625;
+            for (const [ry0, ry1] of [[y + 0.4, y + 0.65], [y + 1.05, y + 1.3]]) {
+              // Top
+              addFace(0, [rx1, ry1, zStart, rx0, ry1, zStart, rx0, ry1, zEnd, rx1, ry1, zEnd], [1, 1, 0, 1, 0, 0, 1, 0], [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0]);
+              // Bottom
+              addFace(1, [rx0, ry0, zStart, rx1, ry0, zStart, rx1, ry0, zEnd, rx0, ry0, zEnd], [0, 1, 1, 1, 1, 0, 0, 0], [0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0]);
+              // East
+              addFace(2, [rx1, ry1, zStart, rx1, ry1, zEnd, rx1, ry0, zEnd, rx1, ry0, zStart], [0, 0.25, 1, 0.25, 1, 0, 0, 0], [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0]);
+              // West
+              addFace(3, [rx0, ry1, zEnd, rx0, ry1, zStart, rx0, ry0, zStart, rx0, ry0, zEnd], [1, 0.25, 0, 0.25, 0, 0, 1, 0], [-1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0]);
+            }
+          };
+
+          if (connE) addRailX(pMaxX, x + 1.0);
+          if (connW) addRailX(x, pMinX);
+          if (connS) addRailZ(pMaxZ, z + 1.0);
+          if (connN) addRailZ(z, pMinZ);
         }
       }
     }

@@ -101,13 +101,20 @@ export class Mob {
 
     if (this.velocity.y <= 0) {
       // Falling — check blocks under feet
-      const checkY = Math.floor(this.position.y);
-      if (this.mobHasBlockBelow(world, checkY, hw)) {
-        this.position.y = checkY + 1;
+      const fenceYBelow = Math.floor(this.position.y - 0.45);
+      if (this.position.y <= fenceYBelow + 1.55 && this.mobHasFenceBelow(world, fenceYBelow, hw)) {
+        this.position.y = fenceYBelow + 1.5;
         this.velocity.y = 0;
         this.isGrounded = true;
       } else {
-        this.isGrounded = false;
+        const checkY = Math.floor(this.position.y);
+        if (this.mobHasBlockBelow(world, checkY, hw)) {
+          this.position.y = checkY + 1;
+          this.velocity.y = 0;
+          this.isGrounded = true;
+        } else {
+          this.isGrounded = false;
+        }
       }
     } else {
       // Rising — check blocks above head
@@ -125,12 +132,12 @@ export class Mob {
 
     if (this.mobHasBodyCollision(world, hw)) {
       // Check if it's a 1-block step with open headroom above
-      if (this.isGrounded && this.canMobJumpOver(world, prevX, this.position.z, hw)) {
+      if (this.isGrounded && this.canMobJumpOver(world, this.position.x, this.position.z, hw)) {
         this.position.x = prevX;
         this.velocity.y = 7.5; // Jump over 1-block step
         this.isGrounded = false;
       } else {
-        // Blocked by 2+ tall wall or ceiling! Strictly hold mob back!
+        // Blocked by 2+ tall wall, fence, or ceiling! Strictly hold mob back!
         this.position.x = prevX;
         this.velocity.x = 0;
       }
@@ -141,12 +148,12 @@ export class Mob {
     this.position.z += this.velocity.z * deltaTime;
 
     if (this.mobHasBodyCollision(world, hw)) {
-      if (this.isGrounded && this.canMobJumpOver(world, this.position.x, prevZ, hw)) {
+      if (this.isGrounded && this.canMobJumpOver(world, this.position.x, this.position.z, hw)) {
         this.position.z = prevZ;
         this.velocity.y = 7.5; // Jump over 1-block step
         this.isGrounded = false;
       } else {
-        // Blocked by 2+ tall wall or ceiling! Strictly hold mob back!
+        // Blocked by 2+ tall wall, fence, or ceiling! Strictly hold mob back!
         this.position.z = prevZ;
         this.velocity.z = 0;
       }
@@ -174,6 +181,22 @@ export class Mob {
     return false;
   }
 
+  /** Check if any fence block is under the mob's footprint at the given Y. */
+  private mobHasFenceBelow(world: World, checkY: number, hw: number): boolean {
+    const minX = Math.floor(this.position.x - hw + 0.05);
+    const maxX = Math.floor(this.position.x + hw - 0.05);
+    const minZ = Math.floor(this.position.z - hw + 0.05);
+    const maxZ = Math.floor(this.position.z + hw - 0.05);
+
+    for (let x = minX; x <= maxX; x++) {
+      for (let z = minZ; z <= maxZ; z++) {
+        const b = world.getBlock(x, checkY, z);
+        if (b === 27 || getBlockById(b)?.name === 'fence') return true;
+      }
+    }
+    return false;
+  }
+
   /** Check if any solid block is at the given Y across the mob's footprint. */
   private mobHasBlockAt(world: World, checkY: number, hw: number): boolean {
     return this.mobHasBlockBelow(world, checkY, hw);
@@ -183,16 +206,26 @@ export class Mob {
   private mobHasBodyCollision(world: World, hw: number): boolean {
     const minX = Math.floor(this.position.x - hw);
     const maxX = Math.floor(this.position.x + hw);
-    const minY = Math.floor(this.position.y + 0.1);
+    const minY = Math.floor(this.position.y - 0.5);
     const maxY = Math.floor(this.position.y + this.height - 0.1);
     const minZ = Math.floor(this.position.z - hw);
     const maxZ = Math.floor(this.position.z + hw);
+
+    const mobMinY = this.position.y + 0.1;
+    const mobMaxY = this.position.y + this.height - 0.1;
 
     for (let y = minY; y <= maxY; y++) {
       for (let x = minX; x <= maxX; x++) {
         for (let z = minZ; z <= maxZ; z++) {
           const b = world.getBlock(x, y, z);
-          if (b !== 0 && getBlockById(b)?.solid) return true;
+          if (b === 0) continue;
+          const def = getBlockById(b);
+          if (!def?.solid) continue;
+          const isFence = b === 27 || def.name === 'fence';
+          const blockTop = isFence ? y + 1.5 : y + 1.0;
+          if (mobMinY < blockTop && mobMaxY > y) {
+            return true;
+          }
         }
       }
     }
@@ -201,7 +234,7 @@ export class Mob {
 
   /**
    * Check if a hurdle ahead is strictly a 1-block step with clear headroom above.
-   * If wall is 2+ blocks tall or headroom is blocked, returns false (mob stays blocked).
+   * If wall is 2+ blocks tall or hurdle is a 1.5-tall fence or headroom is blocked, returns false (mob stays blocked).
    */
   private canMobJumpOver(world: World, x: number, z: number, hw: number): boolean {
     const footY = Math.floor(this.position.y);
@@ -216,6 +249,11 @@ export class Mob {
     for (let cx = minX; cx <= maxX; cx++) {
       for (let cz = minZ; cz <= maxZ; cz++) {
         // Fences are 1.5 blocks tall — land mobs cannot step-jump over them!
+        const hurdleBlock = world.getBlock(cx, footY, cz);
+        if (hurdleBlock === 27 || getBlockById(hurdleBlock)?.name === 'fence') {
+          return false;
+        }
+
         const stepBlock = world.getBlock(cx, footY + 1, cz);
         if (stepBlock === 27 || getBlockById(stepBlock)?.name === 'fence') {
           return false;
